@@ -44,7 +44,6 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
   { href: '/dashboard/admin/attendance', role: Role.ADMIN, paths: ['/attendance', '/headcount', '/online-attendance'] },
   { href: '/dashboard/admin/books', role: Role.ADMIN, paths: ['/books', '/book-collections', '/uploads/image'] },
   { href: '/dashboard/admin/calendar', role: Role.ADMIN, paths: ['/events', '/calendar'] },
-  { href: '/dashboard/admin/courses', role: Role.ADMIN, paths: ['/courses', '/uploads/image'] },
   { href: '/dashboard/admin/departments', role: Role.ADMIN, paths: ['/departments', '/units', '/members/search'] },
   { href: '/dashboard/admin/emails', role: Role.ADMIN, paths: ['/emails', '/uploads'] },
   { href: '/dashboard/admin/events', role: Role.ADMIN, paths: ['/events', '/uploads/image'] },

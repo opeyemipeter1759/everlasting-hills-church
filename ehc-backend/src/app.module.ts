@@ -56,7 +56,6 @@ import { CommunityModule } from './community/community.module';
 import { HomeCellModule } from './home-cell/home-cell.module';
 import { JobsModule } from './jobs/jobs.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
-import { CoursesModule } from './courses/courses.module';
 import { ClassesModule } from './classes/classes.module';
 import { StatusReportsModule } from './status-reports/status-reports.module';
 import { OnlineAttendanceModule } from './online-attendance/online-attendance.module';
@@ -184,7 +183,6 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     ArticlesModule,
     ServiceTeamsModule,
     GatheringsModule,
-    CoursesModule,
     ClassesModule,
     StatusReportsModule,
     OnlineAttendanceModule,

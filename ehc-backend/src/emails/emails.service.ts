@@ -186,17 +186,16 @@ export class EmailsService implements OnModuleInit {
     });
   }
 
-  // ── System-triggered notifications (new sermon / new course) ────────────
+  // ── System-triggered notifications (new sermon) ─────────────────────────
 
   /**
-   * Fire-and-forget: callers (sermon/course creation) don't await this, so a
+   * Fire-and-forget: callers (sermon creation) don't await this, so a
    * slow or failing send never blocks the response. Logged, not thrown.
    */
-  async notifyNewContent(args: { kind: 'sermon' | 'course'; title: string; path: string }) {
-    const isSermon = args.kind === 'sermon';
-    const subject = `New ${isSermon ? 'Sermon' : 'Course'}: ${args.title}`;
+  async notifyNewContent(args: { kind: 'sermon'; title: string; path: string }) {
+    const subject = `New Sermon: ${args.title}`;
     const url = `${this.frontendUrl}${args.path}`;
-    const body = `<p>${isSermon ? 'A new sermon just went live' : 'A new course is now available'} at Everlasting Hills — <strong>${escapeHtml(args.title)}</strong>.</p><p><a href="${url}" style="color:#87102C;font-weight:700">${isSermon ? 'Watch it now' : 'Start learning'} →</a></p>`;
+    const body = `<p>A new sermon just went live at Everlasting Hills — <strong>${escapeHtml(args.title)}</strong>.</p><p><a href="${url}" style="color:#87102C;font-weight:700">Watch it now →</a></p>`;
 
     try {
       await this.send({ subject, body, audience: { mode: 'ALL' } }, null);

@@ -1,21 +1,17 @@
 "use client";
 
 import ScrollReveal from "@/components/home/ScrollReveal";
-import { useCourses, useMyCourseProgress } from "@/lib/api/courses";
-import { CourseCertificateBadge } from "./CourseCertificateBadge";
+import { useClasses } from "@/lib/api/classes";
+import { ClassCertificateBadge } from "./ClassCertificateBadge";
 
 /**
- * Section — a badge for every course the member has completed, each linking to its
- * downloadable/shareable certificate. Fetched client-side (course data isn't part of
- * the server-rendered `/auth/me` payload this page otherwise runs on).
+ * Section — a badge for every class the member has finished, each linking to its
+ * certificate. Fetched client-side (class data isn't part of the server-rendered
+ * `/auth/me` payload this page otherwise runs on).
  */
 export function CertificatesSection() {
-  const { data: catalog = [], isLoading: catalogLoading } = useCourses();
-  const { data: progress = {}, isLoading: progressLoading } = useMyCourseProgress();
-
-  if (catalogLoading || progressLoading) return null;
-
-  const completed = catalog.filter((c) => progress[c.id]?.completed);
+  const { data } = useClasses();
+  const completed = (data?.classes ?? []).filter((c) => c.enrollment?.status === "COMPLETED");
   if (completed.length === 0) return null;
 
   return (
@@ -29,8 +25,8 @@ export function CertificatesSection() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-          {completed.map((course) => (
-            <CourseCertificateBadge key={course.id} course={course} completedAt={progress[course.id]?.completedAt ?? null} />
+          {completed.map((item) => (
+            <ClassCertificateBadge key={item.slug} item={item} />
           ))}
         </div>
       </section>

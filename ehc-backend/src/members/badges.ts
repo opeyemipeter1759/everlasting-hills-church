@@ -141,7 +141,7 @@ export const BADGE_TRACKS: Track[] = [
   },
   {
     key: 'courses',
-    unit: ['course completed', 'courses completed'],
+    unit: ['class completed', 'classes completed'],
     tiers: [
       { at: 1, name: 'Disciple' },
       { at: 3, name: 'Grounded' },

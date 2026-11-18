@@ -13,8 +13,7 @@ MEMBER PAGES (every signed-in member):
 - /dashboard/sermon — browse and watch/listen to past sermons, leave comments.
 - /dashboard/reading — the daily Bible reading plan: today's portion, mark as read, streak. /dashboard/reading/plans to switch plans.
 - /dashboard/prayer-watch — sign up for an overnight prayer watch hour ("Prayer Watchmen Family"), request a different hour.
-- /dashboard/classes — apply to and attend a class (a cohort with weekly lessons).
-- /dashboard/courses and /dashboard/explore-courses — self-paced courses: enroll, watch lessons, take exams, get certificates.
+- /dashboard/classes — apply to and attend a class (a cohort with weekly lessons), and get its certificate once it is finished.
 - /dashboard/calendar — upcoming church events and services.
 - /dashboard/giving — give (tithe, offering, project giving); view giving history/receipts.
 - /dashboard/attendance — check in to a service/program that's open for check-in (this is the member's own attendance page, separate from the admin attendance records page).
@@ -35,7 +34,7 @@ ADMIN PAGES (Admin, Admin Head, Super Admin):
 - /dashboard/admin/reading — manage reading plans.
 - /dashboard/admin/prayer-watch — manage prayer watch sign-ups, slots, and slot leaders.
 - /dashboard/admin/calendar and /dashboard/admin/events — manage church events.
-- /dashboard/admin/classes and /dashboard/admin/courses — manage classes/courses, cohorts, enrollments.
+- /dashboard/admin/classes — manage classes, cohorts, enrollments.
 - /dashboard/admin/finance — the finance ledger: tithe/offering/other income & expenses (Pastor and Finance Head only, others are redirected).
 - /dashboard/admin/roles and /dashboard/admin/permissions — assign roles (Admin, Admin Head, Finance Head, etc.) to members.
 - /dashboard/admin/departments, /dashboard/admin/units, /dashboard/admin/service-teams, /dashboard/admin/home-cell — manage ministries/departments/units.

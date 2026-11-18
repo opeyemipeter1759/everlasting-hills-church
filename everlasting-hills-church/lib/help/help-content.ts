@@ -2,7 +2,7 @@
  * Knowledge base for the in-app Help widget (components/help/HelpChatWidget.tsx).
  * Plain data — add or edit topics here without touching the widget itself.
  * Sections are matched against the current URL by longest-prefix match, so a
- * more specific path (e.g. /dashboard/explore-courses) is tried before a
+ * more specific path (e.g. /dashboard/reading/plans) is tried before a
  * shorter one (e.g. /dashboard). ACCOUNT_TOPICS are shown everywhere, since
  * "I forgot my password" isn't tied to any one page.
  */
@@ -74,39 +74,6 @@ export const HELP_SECTIONS: HelpSection[] = [
         steps: [
           "On Prayer Watch, look for an option to request a different hour for your Prayer Watchmen Family.",
           "An admin reviews the request — you'll be told once it's decided.",
-        ],
-      },
-    ],
-  },
-  {
-    pathPrefix: "/dashboard/explore-courses",
-    pageLabel: "Explore courses",
-    topics: [
-      {
-        id: "explore-courses-enroll",
-        question: "How do I enroll in a course?",
-        keywords: ["enroll", "enrol", "course", "signup", "join course"],
-        steps: [
-          "Browse Explore courses and open the one you're interested in.",
-          "Enroll from the course page — it'll then appear under My courses.",
-          "Work through it at your own pace; your progress is saved as you go.",
-        ],
-        cta: { label: "Explore courses", href: "/dashboard/explore-courses" },
-      },
-    ],
-  },
-  {
-    pathPrefix: "/dashboard/courses",
-    pageLabel: "Courses",
-    topics: [
-      {
-        id: "courses-exam-certificate",
-        question: "How do I get my certificate after a course?",
-        keywords: ["certificate", "exam", "finish", "complete", "pass"],
-        steps: [
-          "Watch every lesson in the course — each one is marked as you finish it.",
-          "Once all lessons are done, take the course's exam.",
-          "Pass the exam and your certificate becomes available to download from the course page.",
         ],
       },
     ],
