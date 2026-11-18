@@ -15,6 +15,7 @@ import { VisitorEvents, type VisitorCreatedPayload } from '../../notifications/n
 import { normalizeNigerianPhone } from '../../common/phone.util';
 import { heardFromProblems } from '../first-timer-heard-from.schema';
 import { findPossibleReturn, lagosDay } from './first-timer-return';
+import { weekdayOf, welcomeLinks } from '../../notifications/church-links';
 
 @Injectable()
 export class FirstTimerFormService {
@@ -111,10 +112,13 @@ export class FirstTimerFormService {
     this.emailDispatch.dispatch(
       buildFirstTimerAdminEmail({ data, adminEmail: this.emailDispatch.adminEmail, appUrl: this.emailDispatch.appUrl }),
     );
-    // The guest: warm welcome with service times, address, and ways to connect.
+    // The guest: warm welcome with service times, address, and ways to connect:
+    // the day they came, and the website and the accounts the website shows.
     if (normalizedEmail) {
+      const appUrl = this.emailDispatch.appUrl;
+      const links = await welcomeLinks(this.prisma, this.tenantId, appUrl);
       this.emailDispatch.dispatch(
-        buildFirstTimerWelcomeEmail({ firstName: data.first_name.trim(), email: normalizedEmail, appUrl: this.emailDispatch.appUrl }),
+        buildFirstTimerWelcomeEmail({ firstName: data.first_name.trim(), email: normalizedEmail, appUrl, firstVisitDay: weekdayOf(firstVisitDate), links }),
       );
     }
 

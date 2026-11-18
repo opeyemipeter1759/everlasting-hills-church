@@ -1,15 +1,20 @@
 import type { SendEmailPayload } from '../notification-events';
 import { escapeHtml, greetingHtml, greetingText, renderEmailLayout } from './layout';
 import { CHURCH_INFO } from '../church-info';
+import type { ChurchLink } from '../church-links';
 
 interface Args {
   firstName: string;
   email: string;
   appUrl: string;
+  /** The weekday they first came, e.g. "Wednesday". */
+  firstVisitDay?: string;
+  /** The links to end with; the church's usual socials when not given. */
+  links?: ChurchLink[];
 }
-export function buildFirstTimerWelcomeEmail({ firstName, email, appUrl }: Args): SendEmailPayload {
+export function buildFirstTimerWelcomeEmail({ firstName, email, appUrl, firstVisitDay = 'Sunday', links }: Args): SendEmailPayload {
   const base = appUrl.replace(/\/$/, '');
-  const socials = CHURCH_INFO.socials.filter((s) => s.href);
+  const socials: ChurchLink[] = links ?? CHURCH_INFO.socials.filter((s) => s.href);
 
   const subject = `Welcome to the Everlasting Hills family, ${firstName}`;
 
@@ -18,7 +23,7 @@ export function buildFirstTimerWelcomeEmail({ firstName, email, appUrl }: Args):
     '',
     'Welcome to the Everlasting Hills Church family! We are so glad you chose to worship with us, and we hope your time here felt like a breath of fresh air.',
     '',
-    "You are not here by accident. We believe God has a plan and a purpose for your life, and we'd love to walk alongside you on that journey. Whether Sunday was your first step or you've been searching for a place to belong, know that there is a seat with your name on it here at EHC.",
+    `You are not here by accident. We believe God has a plan and a purpose for your life, and we'd love to walk alongside you on that journey. Whether ${firstVisitDay} was your first step or you've been searching for a place to belong, know that there is a seat with your name on it here at EHC.`,
     '',
     'Service times:',
     ...CHURCH_INFO.services.map((s) => `  • ${s.name}: ${s.time}`),
@@ -52,7 +57,7 @@ export function buildFirstTimerWelcomeEmail({ firstName, email, appUrl }: Args):
   const bodyHtml = `
     ${greetingHtml(firstName)}
     <p style="margin:0 0 16px">Welcome to the <strong>Everlasting Hills Church</strong> family! We are so glad you chose to worship with us, and we hope your time here felt like a breath of fresh air.</p>
-    <p style="margin:0 0 20px">You are not here by accident. We believe God has a plan and a purpose for your life, and we'd love to walk alongside you on that journey. Whether Sunday was your first step or you've been searching for a place to belong, know that there is a seat with your name on it here at EHC.</p>
+    <p style="margin:0 0 20px">You are not here by accident. We believe God has a plan and a purpose for your life, and we'd love to walk alongside you on that journey. Whether ${escapeHtml(firstVisitDay)} was your first step or you've been searching for a place to belong, know that there is a seat with your name on it here at EHC.</p>
 
     <div style="background:#FFF4F6;border:1px solid #E7CDD3;border-radius:12px;padding:18px 20px;margin:0 0 22px">
       <p style="margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:2px;font-weight:800;color:#87102C">Plan your next visit</p>

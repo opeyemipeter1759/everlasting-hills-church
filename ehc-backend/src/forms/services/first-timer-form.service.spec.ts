@@ -14,6 +14,11 @@ function setup(existing: { visitorId?: string; memberId?: string } = {}) {
     visitor: { create: jest.fn(({ data }) => (created.visitor.push(data), Promise.resolve(data))) },
     firstTimerVisit: { create: jest.fn(({ data }) => (created.visit.push(data), Promise.resolve(data))) },
     formSubmission: { create: jest.fn().mockResolvedValue({}) },
+    siteConfig: {
+      findUnique: jest.fn().mockResolvedValue({
+        content: { socials: { facebook: 'https://facebook.example', instagram: '', youtube: 'https://youtube.example', x: '', tiktok: '', whatsapp: '' } },
+      }),
+    },
   };
   const emailDispatch = { dispatch: jest.fn(), adminEmail: 'admin@example.com', appUrl: 'https://example.com' };
   // Sunday 15 November 2026 in Lagos is stored as 23:00 UTC the day before.
@@ -65,12 +70,18 @@ describe('after the form is saved', () => {
     await expect(failing.svc.submitFirstTimer(form as never)).resolves.toMatchObject({ success: true });
   });
 
-  it("sends the church's own welcome email, as it always has", async () => {
+  it("sends the church's own welcome email, with the day they came and the website's links", async () => {
     const { svc, emailDispatch } = setup();
     await svc.submitFirstTimer(withEmail as never);
-    expect(emailDispatch.dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ to: 'ada@example.com', subject: 'Welcome to the Everlasting Hills family, Ada', tag: 'first-timer-welcome' }),
-    );
+    const welcome = emailDispatch.dispatch.mock.calls.map(([p]) => p as { to?: string; subject?: string; text: string; html: string }).find((p) => p.to === 'ada@example.com')!;
+    expect(welcome.subject).toBe('Welcome to the Everlasting Hills family, Ada');
+    // The service they came to was on Sunday 15 November in Lagos.
+    expect(welcome.text).toContain('Whether Sunday was your first step');
+    for (const link of ['https://example.com', 'https://facebook.example', 'https://youtube.example', 'https://chat.whatsapp.com/', 'https://t.me/']) {
+      expect(welcome.html).toContain(link);
+    }
+    // Accounts the website leaves blank are not listed.
+    expect(welcome.text).not.toContain('Instagram');
   });
 });
 

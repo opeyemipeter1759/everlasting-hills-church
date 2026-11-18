@@ -16,16 +16,22 @@ export const CHURCH_INFO = {
     { name: 'Midweek Service', time: 'Wednesdays · 5:30 PM ' },
   ],
 
+  /** The church's WhatsApp community (not the office chat number). */
+  whatsappCommunity: 'https://chat.whatsapp.com/HWAW4Cr3ByqIUJKEtRiWUX',
+  /** The Telegram channel the website's audio sermons come from. */
+  telegramSermons: 'https://t.me/Pastoropeyemipeter',
+
   /**
    * Social / community links. Only entries with a non-empty `href` are rendered.
-   * TODO: add the Telegram channel URL (audio sermons) when available.
+   * The first-timer welcome reads the social accounts from the website's own
+   * settings instead (see church-links.ts); these are the fallback.
    */
   socials: [
     { label: 'Facebook', href: 'https://www.facebook.com/share/1AwdEL3f52/' },
     { label: 'Instagram', href: 'https://www.instagram.com/everlastinghillschurch?igsh=d2YwOWJlc2FtZnNs' },
     { label: 'TikTok', href: 'https://www.tiktok.com/@everlasting_hills_church' },
-    { label: 'WhatsApp Community', href: 'https://wa.me/2347068727719' },
+    { label: 'WhatsApp Community', href: 'https://chat.whatsapp.com/HWAW4Cr3ByqIUJKEtRiWUX' },
     { label: 'YouTube', href: 'https://youtube.com/@everlastinghillschurch?si=3ftJeVz2a6F7Hu3g' },
-    { label: 'Telegram', href: '' },
+    { label: 'Telegram (audio sermons)', href: 'https://t.me/Pastoropeyemipeter' },
   ],
 } as const;
