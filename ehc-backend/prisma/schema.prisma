@@ -777,6 +777,51 @@ model WelfareRequest {
   @@index([memberId])
 }
 
+enum PreMaritalApplicationStatus {
+  NEW
+  IN_REVIEW
+  CLOSED
+}
+
+/// A couple's application for pre-marital counselling, from the public form.
+/// Applying is not a booking: the pastoral team reviews it and contacts the
+/// couple about next steps. Only pastors read and update these (and anyone a
+/// Super Admin gives the page to on the Permissions screen).
+model PreMaritalApplication {
+  id                 String                      @id
+  tenantId           String
+  /// Short code the couple can quote, e.g. PMC-7K4QH2.
+  referenceCode      String                      @unique
+  /// Made by the form when it opens and sent again on a retry, so a double
+  /// click or a retried request saves one application, never two.
+  submissionKey      String
+  groomFirstName     String
+  groomLastName      String
+  groomPhone         String
+  groomEmail         String
+  groomIsMember      Boolean
+  brideFirstName     String
+  brideLastName      String
+  bridePhone         String
+  brideEmail         String
+  brideIsMember      Boolean
+  /// The date they hope to marry, if they have one.
+  weddingDate        DateTime?                   @db.Date
+  /// How long they have known each other: one of the form's options.
+  relationshipLength String?
+  /// Anything else they want the pastors to know.
+  message            String?
+  status             PreMaritalApplicationStatus @default(NEW)
+  statusUpdatedAt    DateTime?
+  /// Profile.id of whoever last changed the status.
+  statusUpdatedById  String?
+  submittedAt        DateTime                    @default(now())
+  Tenant             Tenant                      @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, submissionKey])
+  @@index([tenantId, status, submittedAt])
+}
+
 /// Public "Ask a Question" submissions — same shape and semantics as PrayerRequest
 /// (optional auth, anonymous-name-only, admin list/delete), just a different intake.
 model Question {
@@ -1467,6 +1512,7 @@ model Tenant {
   PaystackWebhookLog       PaystackWebhookLog[]
   PrayerRequest            PrayerRequest[]
   WelfareRequest           WelfareRequest[]
+  PreMaritalApplication    PreMaritalApplication[]
   RoleAssignment           RoleAssignment[]
   Sermon                   Sermon[]
   SermonBookmark           SermonBookmark[]

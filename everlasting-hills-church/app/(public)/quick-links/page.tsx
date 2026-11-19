@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageSquare, Star, Sparkles, Mail, Gift, ArrowRight } from "lucide-react";
+import { MessageSquare, Star, Sparkles, Mail, Gift, ArrowRight, HeartHandshake } from "lucide-react";
 
 const LINKS = [
   {
@@ -25,6 +25,15 @@ const LINKS = [
     icon: Sparkles,
     label: "Share Testimony",
     description: "Tell us what God has done. Your story encourages the whole family.",
+    accent: "#FFB3C1",
+    bg: "bg-white/5",
+    border: "border-white/10",
+  },
+  {
+    href: "/pre-marital-counselling",
+    icon: HeartHandshake,
+    label: "Pre-Marital Counselling",
+    description: "Planning to marry? Apply together and our pastors will be in touch.",
     accent: "#FFB3C1",
     bg: "bg-white/5",
     border: "border-white/10",

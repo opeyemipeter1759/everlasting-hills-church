@@ -103,7 +103,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const res = exception.getResponse();
       // ValidationPipe puts { statusCode, message: string[], error } in res
       if (typeof res === 'object' && res !== null) {
-        const obj = res as { message?: string | string[]; error?: string };
+        const obj = res as { message?: string | string[]; error?: string; details?: unknown };
         const msg = Array.isArray(obj.message) ? obj.message[0] : obj.message;
         if (
           status === HttpStatus.NOT_FOUND &&
@@ -122,7 +122,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
           code:
             obj.error?.toUpperCase().replace(/\s+/g, '_') ??
             this.statusToCode(status),
-          details: Array.isArray(obj.message) ? obj.message : undefined,
+          // ValidationPipe lists its messages; parseSchema (zod) sends { path, message } per field.
+          details: Array.isArray(obj.message) ? obj.message : obj.details,
         };
       }
       return {

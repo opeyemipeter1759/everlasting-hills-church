@@ -44,6 +44,7 @@ const SKIP: RegExp[] = [
   /^\/prayer-watch\/signup$/,
   /^\/forms\/(contact|prayer-request|question|register|salvation|serve-team|testimony|welfare-request)$/,
   /^\/evangelism\/form$/,
+  /^\/pre-marital-counselling$/,
 ];
 
 /** Kept as an action, without what was written: private messages, pastoral notes, reflections. */

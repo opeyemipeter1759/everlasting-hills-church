@@ -134,8 +134,7 @@ import {
   School,
   Compass,
   Users2,
-  Wifi,
-  CalendarClock,
+  Wifi, CalendarClock, HeartHandshake,
   BookMarked,
   Newspaper,
   UserCog,
@@ -249,6 +248,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Giving",            href: "/dashboard/giving",             icon: DollarSign,     minRole: "PASTOR" },
      */  { label: "Reports",           href: "/dashboard/pastor/reports",            icon: FileText,       minRole: "PASTOR" },
       { label: "One-on-One",        href: "/dashboard/one-on-one/manage",         icon: CalendarHeart,  minRole: "PASTOR" },
+      { label: "Pre-Marital Counselling", href: "/dashboard/pastor/pre-marital-counselling", icon: HeartHandshake, minRole: "PASTOR" },
     ],
   },
   {

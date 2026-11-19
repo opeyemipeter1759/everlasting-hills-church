@@ -113,6 +113,17 @@ describe('AllExceptionsFilter', () => {
     );
   });
 
+  it('passes through the per-field details a schema check (parseSchema) attaches', () => {
+    const { host, response } = makeHost();
+    filter.catch(
+      new BadRequestException({ message: 'Invalid input', details: [{ path: 'brideEmail', message: 'Enter a valid email address' }] }),
+      host,
+    );
+    const body = response._body as { error: { details?: unknown; message: string } };
+    expect(body.error.message).toBe('Invalid input');
+    expect(body.error.details).toEqual([{ path: 'brideEmail', message: 'Enter a valid email address' }]);
+  });
+
   it('extracts ValidationPipe field errors into `details`', () => {
     const { host, response } = makeHost();
     const validationError = new BadRequestException({
