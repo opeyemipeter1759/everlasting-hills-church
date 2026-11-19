@@ -9,47 +9,7 @@ type FormValues = {
   name?: string;
   email?: string;
   phone?: string;
-  is_anonymous: "true" | "false";
 };
-
-// ── RadioCard (fixed + reusable) ─────────────────────────────
-function RadioCard({
-  value,
-  label,
-  fieldName,
-  register,
-  validation,
-  hasError,
-}: {
-  value: string;
-  label: string;
-  fieldName: keyof FormValues;
-  register: any;
-  validation?: object;
-  hasError?: boolean;
-}) {
-  return (
-    <label
-      className={
-        "relative flex items-center gap-3 px-5 py-4 rounded-2xl border cursor-pointer transition-all " +
-        "has-[:checked]:border-church-maroon has-[:checked]:bg-[#FFF4F6] " +
-        "hover:opacity-90 " +
-        (hasError ? "border-red-300 bg-red-50/30" : "border-gray-200 bg-white")
-      }
-    >
-      <input
-        type="radio"
-        value={value}
-        className="w-4 h-4 accent-church-maroon cursor-pointer"
-        {...register(fieldName, validation)}
-      />
-
-      <span className="text-[15px] font-semibold text-black">
-        {label}
-      </span>
-    </label>
-  );
-}
 
 export default function PrayerForm() {
   const [submitted, setSubmitted] = useState(false);
@@ -58,33 +18,25 @@ export default function PrayerForm() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    defaultValues: {
-      is_anonymous: "false",
-    },
-  });
-
-  const isAnonymous = watch("is_anonymous") === "true";
+  } = useForm<FormValues>();
 
   const onSubmit = async (data: FormValues) => {
     setServerError("");
 
     try {
-      const anonymous = String(data.is_anonymous) === "true";
-      // Contact fields stay mounted-then-hidden when switching to anonymous, so
-      // react-hook-form still carries their last value (often "") — never send
-      // them at all for an anonymous submission, and drop empty strings
-      // otherwise (an empty "email" fails @IsEmail on the backend).
+      // Contact details are optional. Drop empty strings (an empty "email"
+      // fails @IsEmail on the backend); a request with no contact details at
+      // all is treated as anonymous.
+      const name = data.name?.trim() || undefined;
+      const email = data.email?.trim() || undefined;
+      const phone = data.phone?.trim() || undefined;
       await apiClient.post("/forms/prayer-request", {
         request: data.request,
-        is_anonymous: anonymous,
-        ...(!anonymous && {
-          name: data.name?.trim() || undefined,
-          email: data.email?.trim() || undefined,
-          phone: data.phone?.trim() || undefined,
-        }),
+        is_anonymous: !name && !email && !phone,
+        name,
+        email,
+        phone,
       });
 
       // AI triage now runs server-side (backend, fire-and-forget right after
@@ -117,7 +69,8 @@ export default function PrayerForm() {
         <h3 className="text-xl font-bold text-white">Prayer received</h3>
 
         <p className="text-white/60 max-w-sm leading-relaxed">
-          Your request has been submitted. Our intercessors will stand with you in faith.
+          Your request has been submitted. Our intercessors will stand with you
+          in faith.
         </p>
       </div>
     );
@@ -125,7 +78,6 @@ export default function PrayerForm() {
 
   return (
     <div className="space-y-5 mt-10 text-gray-800 dark:text-gray-100">
-
       {/* HEADER */}
       <div className="mb-8 text-center mt-20">
         <h1 className="text-white text-3xl sm:text-4xl font-bold mb-2">
@@ -134,7 +86,8 @@ export default function PrayerForm() {
 
         <p className="text-white/70 text-sm">
           Send your prayer request(s), knowing that whatever we ask in His name,
-          He will do it. Let&apos;s together glorify the Father through the power of prayer.
+          He will do it. Let&apos;s together glorify the Father through the
+          power of prayer.
         </p>
       </div>
 
@@ -163,37 +116,9 @@ export default function PrayerForm() {
           )}
         </div>
 
-        {/* RADIO (UPDATED TO RADIO CARD) */}
-        <fieldset className="space-y-3">
-          <legend className="text-sm font-semibold text-black">
-            Include your name? <span className="text-red-500">*</span>
-          </legend>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <RadioCard
-              value="false"
-              label="Yes (Include my name)"
-              fieldName="is_anonymous"
-              register={register}
-              validation={{ required: true }}
-              hasError={!!errors.is_anonymous}
-            />
-
-            <RadioCard
-              value="true"
-              label="No"
-              fieldName="is_anonymous"
-              register={register}
-              validation={{ required: true }}
-              hasError={!!errors.is_anonymous}
-            />
-          </div>
-        </fieldset>
-
-        {/* CONDITIONAL FIELDS */}
-        {!isAnonymous && (
+        {/* CONTACT DETAILS (optional) */}
+        <div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
             <div>
               <label className="block text-sm font-semibold text-black mb-2">
                 Name
@@ -204,6 +129,9 @@ export default function PrayerForm() {
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none"
                 {...register("name")}
               />
+              <p className="text-xs text-gray-500 mt-1.5">
+                We ask for your name in case the Pastor wants to reach out.
+              </p>
             </div>
 
             <div>
@@ -242,12 +170,10 @@ export default function PrayerForm() {
               />
             </div>
           </div>
-        )}
+        </div>
 
         {/* ERROR */}
-        {serverError && (
-          <p className="text-red-500 text-sm">{serverError}</p>
-        )}
+        {serverError && <p className="text-red-500 text-sm">{serverError}</p>}
 
         {/* BUTTON */}
         <button
