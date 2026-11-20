@@ -105,7 +105,7 @@ export class MembersFamilyController {
 
   @Get(':id/profile')
   @ApiOperation({
-    summary: "A member's profile as the church family sees it, with their figures, badges, articles and likes: no phone, email or address (MEMBER+)",
+    summary: "A member's profile as the church family sees it, with their figures, badges, articles and likes; phone and email only where the member shares them, never the address (MEMBER+)",
   })
   async profile(@Param('id') id: string, @CurrentUser() actor: AuthUser) {
     const isMe = actor.memberId === id;

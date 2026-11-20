@@ -24,7 +24,7 @@ const blank: ProfileDetails = {
   prayerFocus: null,
   testimony: null,
   openTo: [],
-  visibility: { profile: "MEMBERS", career: "MEMBERS", testimony: "MEMBERS", journey: "MEMBERS", birthday: "MEMBERS", socials: "MEMBERS", phone: "PRIVATE" },
+  visibility: { profile: "MEMBERS", career: "MEMBERS", testimony: "MEMBERS", journey: "MEMBERS", birthday: "MEMBERS", socials: "MEMBERS", phone: "PRIVATE", email: "PRIVATE" },
 };
 vi.mock("@/lib/api/family", () => ({
   useMyProfileDetails: () => ({ data: blank, isLoading: false }),

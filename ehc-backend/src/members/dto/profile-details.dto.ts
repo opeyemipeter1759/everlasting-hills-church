@@ -33,6 +33,7 @@ export class ProfileVisibilityDto {
   @ApiPropertyOptional({ enum: VIS }) @IsOptional() @IsIn(VIS) birthday?: Vis;
   @ApiPropertyOptional({ enum: VIS }) @IsOptional() @IsIn(VIS) socials?: Vis;
   @ApiPropertyOptional({ enum: VIS, description: 'Phone number: PRIVATE unless the member opens it' }) @IsOptional() @IsIn(VIS) phone?: Vis;
+  @ApiPropertyOptional({ enum: VIS, description: 'Email address: PRIVATE unless the member opens it' }) @IsOptional() @IsIn(VIS) email?: Vis;
 }
 
 const year = () => [IsOptional(), IsInt(), Min(1930), Max(THIS_YEAR)];

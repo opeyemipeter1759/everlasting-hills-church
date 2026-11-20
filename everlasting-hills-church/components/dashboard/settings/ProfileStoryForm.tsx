@@ -375,11 +375,12 @@ export default function ProfileStoryForm({ memberId }: { memberId?: string | nul
           <p className="text-right text-xs text-[#8a7e80] dark:text-white/40">{(d.testimony ?? "").length}/3000</p>
         </Block>
 
-        <Block title="Connecting with you" hint="Your contact details stay private unless you choose to share your phone number.">
+        <Block title="Connecting with you" hint="Your contact details stay private unless you choose to share your phone number or email.">
           <div className="space-y-2">
             {(
               [
                 ["phone", "My phone number"],
+                ["email", "My email address"],
                 ["birthday", "My birthday"],
                 ["socials", "My social media links"],
               ] as const

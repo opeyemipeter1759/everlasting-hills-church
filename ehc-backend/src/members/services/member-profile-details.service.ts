@@ -5,11 +5,11 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { UpdateProfileDetailsDto } from '../dto/profile-details.dto';
 
-export const VISIBILITY_KEYS = ['profile', 'career', 'testimony', 'journey', 'birthday', 'socials', 'phone'] as const;
+export const VISIBILITY_KEYS = ['profile', 'career', 'testimony', 'journey', 'birthday', 'socials', 'phone', 'email'] as const;
 export type VisibilityKey = (typeof VISIBILITY_KEYS)[number];
 export type Visibility = Record<VisibilityKey, 'MEMBERS' | 'PRIVATE'>;
 
-/** Everything shown to the church family unless the member says otherwise, except their phone number. */
+/** Everything shown to the church family unless the member says otherwise, except their phone number and email. */
 export const DEFAULT_VISIBILITY: Visibility = {
   profile: 'MEMBERS',
   career: 'MEMBERS',
@@ -18,6 +18,7 @@ export const DEFAULT_VISIBILITY: Visibility = {
   birthday: 'MEMBERS',
   socials: 'MEMBERS',
   phone: 'PRIVATE',
+  email: 'PRIVATE',
 };
 
 export const OPEN_TO = ['PRAYER_PARTNER', 'MENTOR', 'MENTEE', 'FELLOWSHIP', 'NETWORKING', 'VOLUNTEERING'] as const;
@@ -185,9 +186,11 @@ export class MemberProfileDetailsService {
     const v = details.visibility;
     const open = (key: VisibilityKey) => seesAll || v[key] === 'MEMBERS';
     let phone: string | null = null;
-    if (open('phone')) {
-      const member = await this.prisma.member.findUnique({ where: { id: memberId }, select: { phone: true } });
-      phone = member?.phone ?? null;
+    let email: string | null = null;
+    if (open('phone') || open('email')) {
+      const member = await this.prisma.member.findUnique({ where: { id: memberId }, select: { phone: true, email: true } });
+      if (open('phone')) phone = member?.phone ?? null;
+      if (open('email')) email = member?.email ?? null;
     }
     return {
       restricted: !open('profile'),
@@ -215,6 +218,7 @@ export class MemberProfileDetailsService {
       testimony: open('testimony') ? details.testimony : null,
       openTo: details.openTo,
       phone,
+      email,
       showBirthday: open('birthday'),
       showSocials: open('socials'),
     };

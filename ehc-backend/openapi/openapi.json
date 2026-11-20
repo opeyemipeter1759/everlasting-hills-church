@@ -2975,6 +2975,14 @@
             ],
             "type": "string"
           },
+          "email": {
+            "description": "Email address: PRIVATE unless the member opens it",
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
           "journey": {
             "enum": [
               "MEMBERS",
@@ -28322,7 +28330,7 @@
             "access-token": []
           }
         ],
-        "summary": "A member's profile as the church family sees it, with their figures, badges, articles and likes: no phone, email or address (MEMBER+)",
+        "summary": "A member's profile as the church family sees it, with their figures, badges, articles and likes; phone and email only where the member shares them, never the address (MEMBER+)",
         "tags": [
           "members"
         ]

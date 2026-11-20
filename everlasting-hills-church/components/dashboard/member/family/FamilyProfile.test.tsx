@@ -81,6 +81,7 @@ const ada: Profile = {
   testimony: "God healed me in 2019.",
   openTo: ["PRAYER_PARTNER"],
   phone: null,
+  email: null,
 };
 
 beforeEach(() => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Droplets, Flame, GraduationCap, HandHeart, Languages, Phone, Quote, Sparkles, Sprout, Users } from "lucide-react";
+import { Briefcase, Droplets, Flame, GraduationCap, HandHeart, Languages, Mail, Phone, Quote, Sparkles, Sprout, Users } from "lucide-react";
 import type { FamilyProfile } from "@/lib/api/family";
 import { CardTitle, card } from "./ProfileSections";
 
@@ -140,7 +140,7 @@ export function TestimonySection({ p }: { p: FamilyProfile }) {
 
 /** Prayer focus, and a phone number if they chose to share it. */
 export function ConnectSide({ p }: { p: FamilyProfile }) {
-  if (!p.prayerFocus && !p.phone) return null;
+  if (!p.prayerFocus && !p.phone && !p.email) return null;
   return (
     <section className={`${card} space-y-4 p-5`}>
       <CardTitle>Connect with {p.isMe ? "me" : p.firstName}</CardTitle>
@@ -158,6 +158,14 @@ export function ConnectSide({ p }: { p: FamilyProfile }) {
           className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#E7CDD3] px-4 text-sm font-semibold text-[#87102C] hover:bg-[#FFF4F6] dark:border-white/[0.14] dark:text-[#FFB3C1]"
         >
           <Phone size={14} aria-hidden="true" /> {p.phone}
+        </a>
+      )}
+      {p.email && (
+        <a
+          href={`mailto:${p.email}`}
+          className="flex min-h-11 max-w-full items-center gap-2 rounded-full border border-[#E7CDD3] px-4 text-sm font-semibold text-[#87102C] hover:bg-[#FFF4F6] dark:border-white/[0.14] dark:text-[#FFB3C1]"
+        >
+          <Mail size={14} className="shrink-0" aria-hidden="true" /> <span className="truncate">{p.email}</span>
         </a>
       )}
     </section>

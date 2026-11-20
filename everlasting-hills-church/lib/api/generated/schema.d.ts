@@ -5473,7 +5473,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** A member's profile as the church family sees it, with their figures, badges, articles and likes: no phone, email or address (MEMBER+) */
+        /** A member's profile as the church family sees it, with their figures, badges, articles and likes; phone and email only where the member shares them, never the address (MEMBER+) */
         get: operations["MembersFamilyController_profile"];
         put?: never;
         post?: never;
@@ -11265,6 +11265,11 @@ export interface components {
             birthday?: "MEMBERS" | "PRIVATE";
             /** @enum {string} */
             career?: "MEMBERS" | "PRIVATE";
+            /**
+             * @description Email address: PRIVATE unless the member opens it
+             * @enum {string}
+             */
+            email?: "MEMBERS" | "PRIVATE";
             /** @enum {string} */
             journey?: "MEMBERS" | "PRIVATE";
             /**

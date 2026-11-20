@@ -89,6 +89,7 @@ export interface FamilyProfile {
   testimony: string | null;
   openTo: OpenTo[];
   phone: string | null;
+  email: string | null;
 }
 
 /** A member who keeps their profile private: only who they are. */
@@ -114,7 +115,7 @@ export interface ProfileRole {
 export type OpenTo = "PRAYER_PARTNER" | "MENTOR" | "MENTEE" | "FELLOWSHIP" | "NETWORKING" | "VOLUNTEERING";
 export type Visible = "MEMBERS" | "PRIVATE";
 export type Visibility = Record<VisibilityKey, Visible>;
-export type VisibilityKey = "profile" | "career" | "testimony" | "journey" | "birthday" | "socials" | "phone";
+export type VisibilityKey = "profile" | "career" | "testimony" | "journey" | "birthday" | "socials" | "phone" | "email";
 
 /** My spiritual and career profile, as I edit it. */
 export interface ProfileDetails {

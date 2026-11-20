@@ -33,7 +33,7 @@ function setup(row: Record<string, unknown> | null = stored) {
       findUnique: jest.fn().mockResolvedValue(row),
       upsert: jest.fn(({ create }) => Promise.resolve({ ...create })),
     },
-    member: { findUnique: jest.fn().mockResolvedValue({ phone: '0803 000 0000' }) },
+    member: { findUnique: jest.fn().mockResolvedValue({ phone: '0803 000 0000', email: 'ada@example.com' }) },
   };
   return { svc: new MemberProfileDetailsService(prisma as never, config), prisma };
 }
@@ -49,6 +49,7 @@ describe('A member’s spiritual and career profile', () => {
     expect(seen.testimony).toBeNull();
     // Contact details stay private unless the member opens them.
     expect(seen.phone).toBeNull();
+    expect(seen.email).toBeNull();
     expect(prisma.member.findUnique).not.toHaveBeenCalled();
   });
 
@@ -58,6 +59,14 @@ describe('A member’s spiritual and career profile', () => {
     expect(seen.career).toMatchObject({ occupation: 'Civil engineer', employer: 'Ibadan Works' });
     expect(seen.testimony).toBe('God healed me');
     expect(seen.phone).toBe('0803 000 0000');
+    expect(seen.email).toBe('ada@example.com');
+  });
+
+  it('shares the email only when the member opens it, and keeps the phone private on its own', async () => {
+    const { svc } = setup({ ...stored, visibility: { ...(stored as { visibility?: object }).visibility, email: 'MEMBERS' } });
+    const seen = await svc.forViewer('ada', false);
+    expect(seen.email).toBe('ada@example.com');
+    expect(seen.phone).toBeNull();
   });
 
   it('leaves a private profile restricted', async () => {
