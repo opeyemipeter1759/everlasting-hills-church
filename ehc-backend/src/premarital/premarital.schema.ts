@@ -65,6 +65,9 @@ const day = (message: string) =>
 export const publicApplicationSchema = z
   .object({
     submissionKey: z.string().uuid('Reload the page and try again'),
+    applicantRole: z.enum(['GROOM', 'BRIDE'], {
+      error: 'Tell us whether you are the intending groom or the intending bride',
+    }),
     /** Honeypot: hidden from people, filled in by bots. */
     website: z.string().max(500).optional(),
     applicantFirstName: name('your first name'),
@@ -119,6 +122,8 @@ export const listQuerySchema = z.object({
   to: day('Use a date like 2026-11-20').optional(),
   cursor: z.string().min(1).max(64).optional(),
   take: z.coerce.number().int().min(1).max(100).default(25),
+  /** "closed": closed or archived cases that still hold stored document files. */
+  storedFiles: z.literal('closed').optional(),
 });
 
 export const transitionSchema = z.object({
@@ -127,6 +132,10 @@ export const transitionSchema = z.object({
     .string()
     .trim()
     .max(300, 'Keep the reason under 300 characters')
+    .nullish(),
+  /** A Pastor moving past the documents check, with one of the listed reasons. */
+  override: z
+    .object({ reason: z.string().trim().min(1, 'Pick a reason').max(60) })
     .nullish(),
 });
 

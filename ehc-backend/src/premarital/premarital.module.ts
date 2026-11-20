@@ -13,6 +13,19 @@ import { PublicApplicationsService } from './public-applications.service';
 import { PublicPremaritalController } from './public-premarital.controller';
 import { PremaritalSessionsController } from './sessions.controller';
 import { SessionsService } from './sessions.service';
+import { CoupleAccessService } from './documents/couple-access.service';
+import { CoupleDocumentsController } from './documents/couple-documents.controller';
+import { CoupleDocumentsService } from './documents/couple-documents.service';
+import { DocumentCrypto } from './documents/document-crypto';
+import { DocumentDispatchService } from './documents/document-dispatch.service';
+import { DocumentLettersService } from './documents/document-letters.service';
+import { DocumentMailer } from './documents/document-mailer';
+import { DocumentStore, GcsDocumentStore } from './documents/document-storage';
+import { DocumentsAdminService } from './documents/documents-admin.service';
+import { DocumentsConfigService } from './documents/documents-config';
+import { PremaritalDocumentsController } from './documents/documents.controller';
+import { LetterRenderer } from './documents/letter-renderer';
+import { UploadInspector } from './documents/upload-inspector';
 
 /**
  * Pre-marital counselling: the public application, case review, counsellors,
@@ -25,6 +38,8 @@ import { SessionsService } from './sessions.service';
     PublicPremaritalController,
     PremaritalController,
     PremaritalSessionsController,
+    CoupleDocumentsController,
+    PremaritalDocumentsController,
   ],
   providers: [
     CaseAccess,
@@ -35,6 +50,17 @@ import { SessionsService } from './sessions.service';
     CaseReadsService,
     CaseActionsService,
     SessionsService,
+    DocumentsConfigService,
+    LetterRenderer,
+    DocumentCrypto,
+    { provide: DocumentStore, useClass: GcsDocumentStore },
+    UploadInspector,
+    DocumentMailer,
+    DocumentLettersService,
+    CoupleAccessService,
+    CoupleDocumentsService,
+    DocumentDispatchService,
+    DocumentsAdminService,
   ],
   exports: [SessionsService],
 })

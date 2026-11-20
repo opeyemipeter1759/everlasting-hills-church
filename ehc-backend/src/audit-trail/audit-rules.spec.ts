@@ -34,6 +34,25 @@ describe('which requests the audit trail keeps', () => {
     expect(bodyIsPrivate('/follow-up/notes/:kind/:id')).toBe(true);
     expect(bodyIsPrivate('/users/:profileId/grants')).toBe(false);
   });
+
+  // Granting the Pastor role opens medical certificates, so every role change
+  // must be in the trail, with the role named (the body is kept).
+  it.each([
+    '/users/:profileId/grants',
+    '/users/:profileId/grants/:role',
+    '/users/:profileId/marriage-ministry',
+    '/users/:profileId/head-usher',
+  ])('keeps every role change in full: %s', (route) => {
+    expect(skipRoute(route)).toBe(false);
+    expect(bodyIsPrivate(route)).toBe(false);
+  });
+
+  it('keeps counselling document actions without their bodies, and skips the couple page (it keeps its own events)', () => {
+    expect(skipRoute('/premarital/documents/:requirementId/verify')).toBe(false);
+    expect(bodyIsPrivate('/premarital/documents/view')).toBe(true);
+    expect(bodyIsPrivate('/premarital/applications/:id/documents/delete-stored')).toBe(true);
+    expect(skipRoute('/public/premarital/documents/:kind/upload')).toBe(true);
+  });
 });
 
 describe('what of a body the audit trail keeps', () => {

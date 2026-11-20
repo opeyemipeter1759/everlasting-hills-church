@@ -9,14 +9,20 @@ import { useCases } from "@/lib/api/premarital";
 import { STATUS_LABEL, type CaseStatus } from "@/lib/pre-marital/schema";
 import { PageHeader, QueryState, StatusBadge, coupleName, lagosDate, secondary, selectBox } from "./ui";
 
-const STATUS_FILTER = [{ value: "", label: "Every status" }, ...(Object.keys(STATUS_LABEL) as CaseStatus[]).map((s) => ({ value: s, label: STATUS_LABEL[s] }))];
+/** Not a status: closed or archived cases that still hold stored documents. */
+const STORED = "stored-files";
+const STATUS_FILTER = [
+  { value: "", label: "Every status" },
+  ...(Object.keys(STATUS_LABEL) as CaseStatus[]).map((s) => ({ value: s, label: STATUS_LABEL[s] })),
+  { value: STORED, label: "Closed, documents still stored" },
+];
 
 /** Every case this person may see, newest first, 25 at a time. */
 export default function CasesClient() {
   const initial = useSearchParams().get("status") ?? "";
   const [status, setStatus] = useState(initial);
   const [cursors, setCursors] = useState<string[]>([]);
-  const q = useCases({ status, cursor: cursors.at(-1) });
+  const q = useCases(status === STORED ? { storedFiles: "closed", cursor: cursors.at(-1) } : { status, cursor: cursors.at(-1) });
   const items = q.data?.items ?? [];
 
   return (

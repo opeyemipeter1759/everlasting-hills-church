@@ -27,6 +27,12 @@ export const MEMBERSHIP_OPTIONS = [
   { value: "NEITHER", label: "Neither of us is a member yet" },
 ] as const;
 
+export const ROLE_OPTIONS = [
+  { value: "GROOM", label: "Intending groom" },
+  { value: "BRIDE", label: "Intending bride" },
+] as const;
+export type ApplicantRole = "GROOM" | "BRIDE";
+
 export const CONTACT_OPTIONS = [
   { value: "WHATSAPP", label: "WhatsApp" },
   { value: "PHONE_CALL", label: "Phone call" },
@@ -34,6 +40,7 @@ export const CONTACT_OPTIONS = [
 ] as const;
 
 export interface PremaritalFormValues {
+  applicantRole: string;
   applicantFirstName: string;
   applicantLastName: string;
   applicantEmail: string;
@@ -53,6 +60,7 @@ export interface PremaritalFormValues {
 }
 
 export const FORM_DEFAULTS: PremaritalFormValues = {
+  applicantRole: "",
   applicantFirstName: "", applicantLastName: "", applicantEmail: "", applicantPhone: "",
   partnerFirstName: "", partnerLastName: "", partnerEmail: "", partnerPhone: "", partnerConsentToContact: false,
   membership: "", weddingDate: "", preferredContact: "", intro: "", privacyAcknowledged: false, website: "",
@@ -70,6 +78,7 @@ const emailRules = (s: z.ZodString) => s.max(254, "That email address is too lon
 
 export const formSchema = z
   .object({
+    applicantRole: z.enum(["GROOM", "BRIDE"], { error: "Tell us whether you are the intending groom or the intending bride" }),
     applicantFirstName: name("your first name"),
     applicantLastName: name("your last name"),
     applicantEmail: emailRules(z.string().trim().min(1, "Enter your email address")),
@@ -116,6 +125,7 @@ export function toPayload(v: PremaritalFormValues, submissionKey: string) {
   return {
     submissionKey,
     website: v.website,
+    applicantRole: v.applicantRole,
     applicantFirstName: v.applicantFirstName.trim(),
     applicantLastName: v.applicantLastName.trim(),
     applicantEmail: v.applicantEmail.trim(),

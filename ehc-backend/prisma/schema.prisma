@@ -822,6 +822,57 @@ enum CounsellingAttendance {
   ABSENT
 }
 
+/// Pre-marital documents (2026-11-20): who filled in the form.
+enum CounsellingApplicantRole {
+  GROOM
+  BRIDE
+}
+
+enum CounsellingLetterKind {
+  PARENTAL_CONSENT
+  MEDICAL_SCREENING
+}
+
+enum CounsellingTemplateState {
+  DRAFT
+  APPROVED
+}
+
+enum CounsellingRequirementKind {
+  PARENTAL_CONSENT
+  MEDICAL_CERT_GROOM
+  MEDICAL_CERT_BRIDE
+}
+
+enum CounsellingRequirementStatus {
+  PENDING
+  UPLOADED
+  RECEIVED_IN_PERSON
+  VERIFIED
+  NEEDS_REUPLOAD
+}
+
+enum CounsellingReuploadReason {
+  UNREADABLE
+  INCOMPLETE
+  WRONG_DOCUMENT
+  OUTSIDE_VALIDITY_WINDOW
+  MISSING_SIGNATURE
+  OTHER
+}
+
+enum CounsellingTokenScope {
+  ALL
+  GROOM
+  BRIDE
+}
+
+enum CounsellingDispatchStatus {
+  SENT
+  FAILED
+  SKIPPED
+}
+
 enum CounsellingModuleState {
   PROPOSED
   APPROVED
@@ -832,10 +883,10 @@ enum CounsellingModuleState {
 /// src/premarital/case-access.ts. Partial unique index (migration SQL): one open
 /// case per submissionHash per tenant.
 model CounsellingApplication {
-  id                      String                       @id
+  id                      String                           @id
   tenantId                String
   /// Short code the couple can quote, e.g. PMC-7K4QH2.
-  referenceCode           String                       @unique
+  referenceCode           String                           @unique
   /// Made by the form when it opens and sent again on a retry.
   submissionKey           String
   /// sha256 of the normalised applicant and partner contact details.
@@ -850,33 +901,39 @@ model CounsellingApplication {
   partnerPhone            String?
   partnerConsentToContact Boolean
   membership              CounsellingMembership
-  weddingDate             DateTime?                    @db.Date
+  weddingDate             DateTime?                        @db.Date
   preferredContact        CounsellingContactMethod
-  intro                   String?                      @db.VarChar(500)
+  intro                   String?                          @db.VarChar(500)
   /// Null only for applications carried over from the earlier form (before
   /// 2026-11-20), which showed no privacy notice.
-  privacyAcknowledgedAt   DateTime?                    @db.Timestamptz(3)
-  status                  CounsellingStatus            @default(SUBMITTED)
+  privacyAcknowledgedAt   DateTime?                        @db.Timestamptz(3)
+  /// Who filled in the form. Null only for applications from before the
+  /// documents release; new ones must say.
+  applicantRole           CounsellingApplicantRole?
+  status                  CounsellingStatus                @default(SUBMITTED)
   memberId                String?
   /// For a later couple portal: the applicant's own sign-in.
   applicantUserId         String?
   /// Logistics only. Never disclosures.
-  adminNote               String?                      @db.VarChar(500)
-  safeguardingFlaggedAt   DateTime?                    @db.Timestamptz(3)
+  adminNote               String?                          @db.VarChar(500)
+  safeguardingFlaggedAt   DateTime?                        @db.Timestamptz(3)
   safeguardingFlaggedById String?
-  archivedAt              DateTime?                    @db.Timestamptz(3)
+  archivedAt              DateTime?                        @db.Timestamptz(3)
   archivedById            String?
-  submittedAt             DateTime                     @default(now()) @db.Timestamptz(3)
-  updatedAt               DateTime                     @default(now()) @updatedAt @db.Timestamptz(3)
-  Tenant                  Tenant                       @relation(fields: [tenantId], references: [id])
-  Member                  Member?                      @relation(fields: [memberId], references: [id], onDelete: SetNull)
-  ApplicantUser           Profile?                     @relation("CounsellingApplicationApplicant", fields: [applicantUserId], references: [id], onDelete: SetNull)
+  submittedAt             DateTime                         @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime                         @default(now()) @updatedAt @db.Timestamptz(3)
+  Tenant                  Tenant                           @relation(fields: [tenantId], references: [id])
+  Member                  Member?                          @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  ApplicantUser           Profile?                         @relation("CounsellingApplicationApplicant", fields: [applicantUserId], references: [id], onDelete: SetNull)
   Assignments             CounsellingAssignment[]
   Sessions                CounsellingSession[]
   Progress                CounsellingProgress[]
   StatusEvents            CounsellingStatusEvent[]
   WeddingApproval         WeddingApproval?
   Notifications           CounsellingNotificationLog[]
+  DocumentRequirements    CounsellingDocumentRequirement[]
+  AccessTokens            CounsellingAccessToken[]
+  DocumentDispatches      CounsellingDocumentDispatch[]
 
   @@unique([tenantId, submissionKey])
 }
@@ -1033,6 +1090,151 @@ model CounsellingSettings {
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(3)
   updatedBy String?
   Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+/// Letter wording, one row per version. Body is structured blocks, never HTML.
+/// A partial unique index (SQL only) allows one active version per kind.
+model CounsellingDocumentTemplate {
+  id                String                        @id
+  tenantId          String
+  kind              CounsellingLetterKind
+  version           Int
+  body              Json
+  approvalState     CounsellingTemplateState      @default(DRAFT)
+  active            Boolean                       @default(false)
+  createdById       String?
+  createdAt         DateTime                      @default(now()) @db.Timestamptz(3)
+  approvedById      String?
+  approvedAt        DateTime?                     @db.Timestamptz(3)
+  Tenant            Tenant                        @relation(fields: [tenantId], references: [id])
+  ConsentDispatches CounsellingDocumentDispatch[] @relation("DispatchConsentTemplate")
+  MedicalDispatches CounsellingDocumentDispatch[] @relation("DispatchMedicalTemplate")
+
+  @@unique([tenantId, kind, version])
+}
+
+/// The couple's secure upload link. Only the sha256 of the token is stored.
+model CounsellingAccessToken {
+  id            String                    @id
+  tenantId      String
+  applicationId String
+  tokenHash     String                    @unique @db.Char(64)
+  scope         CounsellingTokenScope
+  expiresAt     DateTime                  @db.Timestamptz(3)
+  revokedAt     DateTime?                 @db.Timestamptz(3)
+  lastUsedAt    DateTime?                 @db.Timestamptz(3)
+  /// Null when it was made with the application itself.
+  createdById   String?
+  createdAt     DateTime                  @default(now()) @db.Timestamptz(3)
+  Tenant        Tenant                    @relation(fields: [tenantId], references: [id])
+  Application   CounsellingApplication    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  Otps          CounsellingOtp[]
+  Files         CounsellingDocumentFile[]
+}
+
+/// Six-digit email codes for the upload page, stored as a peppered HMAC.
+model CounsellingOtp {
+  id         String                 @id
+  tenantId   String
+  tokenId    String
+  codeHash   String                 @db.Char(64)
+  expiresAt  DateTime               @db.Timestamptz(3)
+  attempts   Int                    @default(0) @db.SmallInt
+  consumedAt DateTime?              @db.Timestamptz(3)
+  createdAt  DateTime               @default(now()) @db.Timestamptz(3)
+  Tenant     Tenant                 @relation(fields: [tenantId], references: [id])
+  Token      CounsellingAccessToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, tokenId, createdAt])
+}
+
+/// The document checklist: three rows per application. No result values, ever.
+model CounsellingDocumentRequirement {
+  id                 String                       @id
+  tenantId           String
+  applicationId      String
+  kind               CounsellingRequirementKind
+  status             CounsellingRequirementStatus @default(PENDING)
+  uploadedAt         DateTime?                    @db.Timestamptz(3)
+  receivedInPersonAt DateTime?                    @db.Timestamptz(3)
+  receivedById       String?
+  verifiedById       String?
+  verifiedAt         DateTime?                    @db.Timestamptz(3)
+  /// Medical certificates only: the test date the reviewer read off it.
+  testDate           DateTime?                    @db.Date
+  reuploadReason     CounsellingReuploadReason?
+  /// Medical certificates only: when the uploader ticked the storage consent.
+  storageConsentAt   DateTime?                    @db.Timestamptz(3)
+  updatedAt          DateTime                     @default(now()) @updatedAt @db.Timestamptz(3)
+  Tenant             Tenant                       @relation(fields: [tenantId], references: [id])
+  Application        CounsellingApplication       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  Files              CounsellingDocumentFile[]
+
+  @@unique([tenantId, applicationId, kind])
+  @@index([tenantId, status])
+}
+
+/// One uploaded file version, encrypted before storage (AES-256-GCM, a
+/// per-file key wrapped by the master key). A partial unique index (SQL only)
+/// allows one current file per requirement. Files are kept: an object is only
+/// deleted when the couple replaces it or a Pastor deletes a closed case's files.
+model CounsellingDocumentFile {
+  id                   String                         @id
+  tenantId             String
+  requirementId        String
+  storageKey           String                         @unique
+  mimeType             String
+  sizeBytes            Int
+  sha256               String                         @db.Char(64)
+  encryptionKeyVersion Int
+  wrappedDataKey       Bytes
+  uploadedAt           DateTime                       @default(now()) @db.Timestamptz(3)
+  uploadedViaTokenId   String?
+  supersededAt         DateTime?                      @db.Timestamptz(3)
+  purgedAt             DateTime?                      @db.Timestamptz(3)
+  Tenant               Tenant                         @relation(fields: [tenantId], references: [id])
+  Requirement          CounsellingDocumentRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  UploadedVia          CounsellingAccessToken?        @relation(fields: [uploadedViaTokenId], references: [id], onDelete: SetNull)
+  ViewTokens           CounsellingDocumentViewToken[]
+
+  @@index([tenantId, purgedAt, supersededAt])
+}
+
+/// Single-use, one-minute tickets to open one file.
+model CounsellingDocumentViewToken {
+  id        String                  @id
+  tenantId  String
+  fileId    String
+  profileId String
+  tokenHash String                  @unique @db.Char(64)
+  expiresAt DateTime                @db.Timestamptz(3)
+  usedAt    DateTime?               @db.Timestamptz(3)
+  Tenant    Tenant                  @relation(fields: [tenantId], references: [id])
+  File      CounsellingDocumentFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, expiresAt])
+}
+
+/// Each time the letters were emailed (or failed to be). No PDF is stored:
+/// letters are rebuilt from these template versions and issue date.
+model CounsellingDocumentDispatch {
+  id                String                       @id
+  tenantId          String
+  applicationId     String
+  consentTemplateId String?
+  medicalTemplateId String?
+  issueDate         DateTime                     @db.Date
+  status            CounsellingDispatchStatus
+  resendMessageId   String?
+  /// Null when sent automatically with the application.
+  requestedById     String?
+  sentAt            DateTime                     @default(now()) @db.Timestamptz(3)
+  Tenant            Tenant                       @relation(fields: [tenantId], references: [id])
+  Application       CounsellingApplication       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  ConsentTemplate   CounsellingDocumentTemplate? @relation("DispatchConsentTemplate", fields: [consentTemplateId], references: [id])
+  MedicalTemplate   CounsellingDocumentTemplate? @relation("DispatchMedicalTemplate", fields: [medicalTemplateId], references: [id])
+
+  @@index([tenantId, applicationId, sentAt])
 }
 
 /// Public "Ask a Question" submissions — same shape and semantics as PrayerRequest
@@ -1677,133 +1879,140 @@ model ServiceHeadcount {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Tenant {
-  id                         String                       @id
-  name                       String
-  slug                       String                       @unique
-  createdAt                  DateTime                     @default(now())
-  ReadingPlan                ReadingPlan[]
-  MemberPlanSubscription     MemberPlanSubscription[]
-  MemberArticle              MemberArticle[]
-  MemberArticleLike          MemberArticleLike[]
-  Announcement               Announcement[]
-  Book                       Book[]
-  BookCollection             BookCollection[]
-  BookComment                BookComment[]
-  EmailTemplate              EmailTemplate[]
-  EmailSend                  EmailSend[]
-  EmailSettings              EmailSettings?
-  Course                     Course[]
-  CommunityPost              CommunityPost[]
-  AttendanceRecord           AttendanceRecord[]
-  AuditLog                   AuditLog[]
-  CareAssignment             CareAssignment[]
-  FollowUpEntry              FollowUpEntry[]
-  FollowUpStatusChange       FollowUpStatusChange[]
-  FollowUpContactLog         FollowUpContactLog[]
-  CmsPage                    Page[]
-  ContentVersion             ContentVersion[]
-  MediaAsset                 MediaAsset[]
-  SiteConfig                 SiteConfig?
-  ContactMessage             ContactMessage[]
-  DiscussionQuestion         DiscussionQuestion[]
-  DiscussionResponse         DiscussionResponse[]
-  EmailSubscriber            EmailSubscriber[]
-  EngagementScore            EngagementScore[]
-  Event                      Event[]
-  EventSchedule              EventSchedule[]
-  EventSection               EventSection[]
-  EventRsvp                  EventRsvp[]
-  FollowUpTask               FollowUpTask[]
-  FormSubmission             FormSubmission[]
-  GivingRecord               GivingRecord[]
-  Household                  Household[]
-  InventoryItem              InventoryItem[]
-  InventoryHistory           InventoryHistory[]
-  KnownDevice                KnownDevice[]
-  ListenProgress             ListenProgress[]
-  Member                     Member[]
-  Notification               Notification[]
-  OnlineCheckIn              OnlineCheckIn[]
-  PastorNote                 PastorNote[]
-  PastoralAlert              PastoralAlert[]
-  PaystackWebhookLog         PaystackWebhookLog[]
-  PrayerRequest              PrayerRequest[]
-  WelfareRequest             WelfareRequest[]
-  CounsellingApplication     CounsellingApplication[]
-  CounsellingAssignment      CounsellingAssignment[]
-  CounsellingModule          CounsellingModule[]
-  CounsellingSession         CounsellingSession[]
-  CounsellingProgress        CounsellingProgress[]
-  CounsellingStatusEvent     CounsellingStatusEvent[]
-  WeddingApproval            WeddingApproval[]
-  MarriageMinistryAssignment MarriageMinistryAssignment[]
-  CounsellingNotificationLog CounsellingNotificationLog[]
-  CounsellingSettings        CounsellingSettings?
-  RoleAssignment             RoleAssignment[]
-  Sermon                     Sermon[]
-  SermonBookmark             SermonBookmark[]
-  SermonComment              SermonComment[]
-  SermonDirectMessage        SermonDirectMessage[]
-  BirthdayGreeting           BirthdayGreeting[]
-  SermonEpisode              SermonEpisode[]
-  SermonNote                 SermonNote[]
-  SermonReaction             SermonReaction[]
-  Service                    Service[]
-  ServiceHeadcount           ServiceHeadcount[]
-  Department                 Department[]
-  DepartmentHead             DepartmentHead[]
-  DepartmentHod              DepartmentHod[]
-  RoleGrant                  RoleGrant[]
-  UnitLeadAssignment         UnitLeadAssignment[]
-  HeadUsherAssignment        HeadUsherAssignment[]
-  FinanceHeadAssignment      FinanceHeadAssignment[]
-  FinanceEntry               FinanceEntry[]
-  ServiceOffering            ServiceOffering[]
-  PrayerWatch                PrayerWatch[]
-  PrayerSlot                 PrayerSlot[]
-  PrayerSignup               PrayerSignup[]
-  SiteSettings               SiteSettings[]
-  Testimonial                Testimonial[]
-  Unit                       Unit[]
-  Visitor                    Visitor[]
-  Report                     Report[]
-  ReportComment              ReportComment[]
-  HomeCell                   HomeCell[]
-  CourseCategory             CourseCategory[]
-  Question                   Question[]
-  UnitPosition               UnitPosition[]
-  UnitTask                   UnitTask[]
-  UnitExpense                UnitExpense[]
-  UnitTaskComment            UnitTaskComment[]
-  UnitTaskReport             UnitTaskReport[]
-  UnitMessage                UnitMessage[]
-  CalendarFeedToken          CalendarFeedToken[]
-  PushSubscription           PushSubscription[]
-  NotificationPreference     NotificationPreference[]
-  RecurringGathering         RecurringGathering[]
-  ServiceAssignment          ServiceAssignment[]
-  FollowUpConnection         FollowUpConnection[]
-  ServiceFollowUpReport      ServiceFollowUpReport[]
-  GoogleCalendarConnection   GoogleCalendarConnection[]
-  NavPermission              NavPermission[]
-  NavPermissionGrant         NavPermissionGrant[]
-  followUpNotes              FollowUpNote[]
-  followUpNoteReactions      FollowUpNoteReaction[]
-  followUpNoteReads          FollowUpNoteRead[]
-  sermonDigests              SermonDigest[]
-  SalvationDecision          SalvationDecision[]
-  PastorHost                 PastorHost[]
-  PastorSessionType          PastorSessionType[]
-  PastorAvailabilityRule     PastorAvailabilityRule[]
-  PastorAvailabilityBlock    PastorAvailabilityBlock[]
-  PastorDelegate             PastorDelegate[]
-  PastoralBooking            PastoralBooking[]
-  PrayerWatchReport          PrayerWatchReport[]
-  ReadinessChecklistItem     ReadinessChecklistItem[]
-  ServiceReadiness           ServiceReadiness[]
-  ServiceInspection          ServiceInspection[]
-  ReadinessUpdate            ReadinessUpdate[]
-  ReadinessTask              ReadinessTask[]
+  id                             String                           @id
+  name                           String
+  slug                           String                           @unique
+  createdAt                      DateTime                         @default(now())
+  ReadingPlan                    ReadingPlan[]
+  MemberPlanSubscription         MemberPlanSubscription[]
+  MemberArticle                  MemberArticle[]
+  MemberArticleLike              MemberArticleLike[]
+  Announcement                   Announcement[]
+  Book                           Book[]
+  BookCollection                 BookCollection[]
+  BookComment                    BookComment[]
+  EmailTemplate                  EmailTemplate[]
+  EmailSend                      EmailSend[]
+  EmailSettings                  EmailSettings?
+  Course                         Course[]
+  CommunityPost                  CommunityPost[]
+  AttendanceRecord               AttendanceRecord[]
+  AuditLog                       AuditLog[]
+  CareAssignment                 CareAssignment[]
+  FollowUpEntry                  FollowUpEntry[]
+  FollowUpStatusChange           FollowUpStatusChange[]
+  FollowUpContactLog             FollowUpContactLog[]
+  CmsPage                        Page[]
+  ContentVersion                 ContentVersion[]
+  MediaAsset                     MediaAsset[]
+  SiteConfig                     SiteConfig?
+  ContactMessage                 ContactMessage[]
+  DiscussionQuestion             DiscussionQuestion[]
+  DiscussionResponse             DiscussionResponse[]
+  EmailSubscriber                EmailSubscriber[]
+  EngagementScore                EngagementScore[]
+  Event                          Event[]
+  EventSchedule                  EventSchedule[]
+  EventSection                   EventSection[]
+  EventRsvp                      EventRsvp[]
+  FollowUpTask                   FollowUpTask[]
+  FormSubmission                 FormSubmission[]
+  GivingRecord                   GivingRecord[]
+  Household                      Household[]
+  InventoryItem                  InventoryItem[]
+  InventoryHistory               InventoryHistory[]
+  KnownDevice                    KnownDevice[]
+  ListenProgress                 ListenProgress[]
+  Member                         Member[]
+  Notification                   Notification[]
+  OnlineCheckIn                  OnlineCheckIn[]
+  PastorNote                     PastorNote[]
+  PastoralAlert                  PastoralAlert[]
+  PaystackWebhookLog             PaystackWebhookLog[]
+  PrayerRequest                  PrayerRequest[]
+  WelfareRequest                 WelfareRequest[]
+  CounsellingApplication         CounsellingApplication[]
+  CounsellingAssignment          CounsellingAssignment[]
+  CounsellingModule              CounsellingModule[]
+  CounsellingSession             CounsellingSession[]
+  CounsellingProgress            CounsellingProgress[]
+  CounsellingStatusEvent         CounsellingStatusEvent[]
+  WeddingApproval                WeddingApproval[]
+  MarriageMinistryAssignment     MarriageMinistryAssignment[]
+  CounsellingNotificationLog     CounsellingNotificationLog[]
+  CounsellingSettings            CounsellingSettings?
+  CounsellingDocumentTemplate    CounsellingDocumentTemplate[]
+  CounsellingAccessToken         CounsellingAccessToken[]
+  CounsellingOtp                 CounsellingOtp[]
+  CounsellingDocumentRequirement CounsellingDocumentRequirement[]
+  CounsellingDocumentFile        CounsellingDocumentFile[]
+  CounsellingDocumentViewToken   CounsellingDocumentViewToken[]
+  CounsellingDocumentDispatch    CounsellingDocumentDispatch[]
+  RoleAssignment                 RoleAssignment[]
+  Sermon                         Sermon[]
+  SermonBookmark                 SermonBookmark[]
+  SermonComment                  SermonComment[]
+  SermonDirectMessage            SermonDirectMessage[]
+  BirthdayGreeting               BirthdayGreeting[]
+  SermonEpisode                  SermonEpisode[]
+  SermonNote                     SermonNote[]
+  SermonReaction                 SermonReaction[]
+  Service                        Service[]
+  ServiceHeadcount               ServiceHeadcount[]
+  Department                     Department[]
+  DepartmentHead                 DepartmentHead[]
+  DepartmentHod                  DepartmentHod[]
+  RoleGrant                      RoleGrant[]
+  UnitLeadAssignment             UnitLeadAssignment[]
+  HeadUsherAssignment            HeadUsherAssignment[]
+  FinanceHeadAssignment          FinanceHeadAssignment[]
+  FinanceEntry                   FinanceEntry[]
+  ServiceOffering                ServiceOffering[]
+  PrayerWatch                    PrayerWatch[]
+  PrayerSlot                     PrayerSlot[]
+  PrayerSignup                   PrayerSignup[]
+  SiteSettings                   SiteSettings[]
+  Testimonial                    Testimonial[]
+  Unit                           Unit[]
+  Visitor                        Visitor[]
+  Report                         Report[]
+  ReportComment                  ReportComment[]
+  HomeCell                       HomeCell[]
+  CourseCategory                 CourseCategory[]
+  Question                       Question[]
+  UnitPosition                   UnitPosition[]
+  UnitTask                       UnitTask[]
+  UnitExpense                    UnitExpense[]
+  UnitTaskComment                UnitTaskComment[]
+  UnitTaskReport                 UnitTaskReport[]
+  UnitMessage                    UnitMessage[]
+  CalendarFeedToken              CalendarFeedToken[]
+  PushSubscription               PushSubscription[]
+  NotificationPreference         NotificationPreference[]
+  RecurringGathering             RecurringGathering[]
+  ServiceAssignment              ServiceAssignment[]
+  FollowUpConnection             FollowUpConnection[]
+  ServiceFollowUpReport          ServiceFollowUpReport[]
+  GoogleCalendarConnection       GoogleCalendarConnection[]
+  NavPermission                  NavPermission[]
+  NavPermissionGrant             NavPermissionGrant[]
+  followUpNotes                  FollowUpNote[]
+  followUpNoteReactions          FollowUpNoteReaction[]
+  followUpNoteReads              FollowUpNoteRead[]
+  sermonDigests                  SermonDigest[]
+  SalvationDecision              SalvationDecision[]
+  PastorHost                     PastorHost[]
+  PastorSessionType              PastorSessionType[]
+  PastorAvailabilityRule         PastorAvailabilityRule[]
+  PastorAvailabilityBlock        PastorAvailabilityBlock[]
+  PastorDelegate                 PastorDelegate[]
+  PastoralBooking                PastoralBooking[]
+  PrayerWatchReport              PrayerWatchReport[]
+  ReadinessChecklistItem         ReadinessChecklistItem[]
+  ServiceReadiness               ServiceReadiness[]
+  ServiceInspection              ServiceInspection[]
+  ReadinessUpdate                ReadinessUpdate[]
+  ReadinessTask                  ReadinessTask[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,

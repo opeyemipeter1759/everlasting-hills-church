@@ -9,6 +9,8 @@ export type CounsellingEntity =
   | 'CounsellingSession'
   | 'CounsellingModule'
   | 'CounsellingSettings'
+  | 'CounsellingDocument'
+  | 'CounsellingDocumentTemplate'
   | 'WeddingApproval';
 
 /**

@@ -18,7 +18,11 @@ const base = {
   applicantPhone: "0803", partnerEmail: null, partnerPhone: "0809", membership: "ONE_MEMBER", preferredContact: "WHATSAPP", intro: "Hello",
   archivedAt: null, member: null, assignments: [], sessions: [], Progress: [], WeddingApproval: null,
   timeline: [{ id: "e1", from: null, to: "SUBMITTED", reason: null, at: "2026-11-18T09:00:00.000Z", by: null }],
+  applicantRole: "GROOM",
+  documentsGate: { status: "FINAL_REVIEW", satisfied: false, canOverride: false, reasons: [] },
 };
+const noDocs = { applicantRole: "GROOM", validFrom: "2026-10-19", requirements: [], links: [], dispatches: [], storedFiles: 0, can: { setRole: false, send: false, reissueLink: false, downloadLetters: false, deleteStored: false } };
+const docsOr = (url: unknown, other: unknown) => (String(url).includes("/documents") ? noDocs : String(url).includes("/modules") ? [] : other);
 const none = { transitions: [], requestInfo: false, admin: false, assign: false, archive: false, safeguarding: false, wedding: false, sessions: false, progress: false };
 
 beforeEach(() => get.mockReset());
@@ -33,7 +37,7 @@ describe("the Marriage dashboard", () => {
   });
 
   it("gives the marriage ministry the next steps but not assignment, safeguarding or wedding approval", async () => {
-    get.mockImplementation(async (url?: string) => (String(url).includes("/modules") ? [] : { ...base, tier: "MINISTRY", adminNote: null, can: { ...none, transitions: ["ADDITIONAL_INFORMATION_REQUIRED", "ACCEPTED_FOR_COUNSELLING", "CLOSED"], requestInfo: true, admin: true } }));
+    get.mockImplementation(async (url?: string) => docsOr(url, { ...base, tier: "MINISTRY", adminNote: null, can: { ...none, transitions: ["ADDITIONAL_INFORMATION_REQUIRED", "ACCEPTED_FOR_COUNSELLING", "CLOSED"], requestInfo: true, admin: true } }));
     render(wrap(<CaseClient id="c1" />));
     expect(await screen.findByText("Tunde Adeyemi & Ada Eze")).toBeTruthy();
     expect(screen.getByRole("combobox", { name: "Next status" })).toBeTruthy();
@@ -45,7 +49,7 @@ describe("the Marriage dashboard", () => {
   });
 
   it("gives a counsellor the case without the team's note or the next steps", async () => {
-    get.mockImplementation(async (url?: string) => (String(url).includes("/modules") ? [] : { ...base, tier: "COUNSELLOR", can: { ...none, sessions: true, progress: true } }));
+    get.mockImplementation(async (url?: string) => docsOr(url, { ...base, tier: "COUNSELLOR", can: { ...none, sessions: true, progress: true } }));
     render(wrap(<CaseClient id="c1" />));
     expect(await screen.findByText("Tunde Adeyemi & Ada Eze")).toBeTruthy();
     expect(screen.queryByRole("combobox", { name: "Next status" })).toBeNull();

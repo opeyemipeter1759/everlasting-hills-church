@@ -15,18 +15,22 @@ function Row({ label, value, href }: { label: string; value: string | null | und
 
 const tel = (v: string | null) => (v ? `tel:${v.replace(/\s/g, "")}` : undefined);
 
-/** Who they are and how to reach them, as they wrote it. */
+/** Who they are and how to reach them, as they wrote it. Named as intending groom and bride once the role is known. */
 export function PeoplePanel({ c }: { c: CaseDetail }) {
+  const role = c.applicantRole;
+  const applicant = role === "GROOM" ? "Intending groom (applied)" : role === "BRIDE" ? "Intending bride (applied)" : "Applicant (role not set)";
+  const partner = role === "GROOM" ? "Intending bride" : role === "BRIDE" ? "Intending groom" : "Partner";
+  const whose = role === "GROOM" ? "Bride's" : role === "BRIDE" ? "Groom's" : "Partner's";
   return (
     <section aria-labelledby="people-heading" className={card}>
       <h2 id="people-heading" className="text-base font-bold text-[#111] dark:text-white">The couple</h2>
       <dl className="mt-1 divide-y divide-gray-100 dark:divide-white/[0.06]">
-        <Row label="Applicant" value={`${c.applicantFirstName} ${c.applicantLastName}`} />
+        <Row label={applicant} value={`${c.applicantFirstName} ${c.applicantLastName}`} />
         <Row label="Phone" value={c.applicantPhone} href={tel(c.applicantPhone)} />
         <Row label="Email" value={c.applicantEmail} href={`mailto:${c.applicantEmail}`} />
-        <Row label="Partner" value={`${c.partnerFirstName} ${c.partnerLastName}`} />
-        <Row label="Partner's phone" value={c.partnerPhone} href={tel(c.partnerPhone)} />
-        <Row label="Partner's email" value={c.partnerEmail} href={c.partnerEmail ? `mailto:${c.partnerEmail}` : undefined} />
+        <Row label={partner} value={`${c.partnerFirstName} ${c.partnerLastName}`} />
+        <Row label={`${whose} phone`} value={c.partnerPhone} href={tel(c.partnerPhone)} />
+        <Row label={`${whose} email`} value={c.partnerEmail} href={c.partnerEmail ? `mailto:${c.partnerEmail}` : undefined} />
         <Row label="Membership" value={MEMBERSHIP_OPTIONS.find((o) => o.value === c.membership)?.label} />
         {c.member && <Row label="Linked member" value={c.member.name} />}
         <Row label="Contact them by" value={CONTACT_OPTIONS.find((o) => o.value === c.preferredContact)?.label} />

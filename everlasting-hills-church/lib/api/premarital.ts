@@ -15,11 +15,13 @@ export interface MarriageAccess {
 
 export interface Overview {
   total: number; new: number; awaitingReview: number; inCounselling: number; upcomingSessions: number; needsAttention: number; completed: number;
+  documentsAwaitingReview: number;
 }
 
 export interface CaseSummary {
   id: string; referenceCode: string; applicantFirstName: string; applicantLastName: string; partnerFirstName: string; partnerLastName: string;
   status: CaseStatus; submittedAt: string; weddingDate: string | null; safeguardingFlaggedAt: string | null;
+  applicantRole: "GROOM" | "BRIDE" | null;
   counsellors: { name: string | null; isLead: boolean }[];
 }
 
@@ -41,6 +43,7 @@ export interface CaseDetail extends Omit<CaseSummary, "counsellors"> {
   WeddingApproval: { approvedAt: string; note: string | null } | null;
   tier: StaffTier | "COUNSELLOR";
   can: { transitions: CaseStatus[]; requestInfo: boolean; admin: boolean; assign: boolean; archive: boolean; safeguarding: boolean; wedding: boolean; sessions: boolean; progress: boolean };
+  documentsGate: { status: CaseStatus; satisfied: boolean; canOverride: boolean; reasons: { code: string; label: string }[] };
 }
 
 export interface CounsellingModule {
@@ -65,7 +68,7 @@ export function useMarriageAccess() {
 
 export const useOverview = () => useQuery({ queryKey: [...K, "overview"], queryFn: () => api.get<Overview>("/premarital/overview") });
 
-export function useCases(q: { status?: string; cursor?: string }) {
+export function useCases(q: { status?: string; cursor?: string; storedFiles?: "closed" }) {
   const params = clean(q);
   return useQuery({ queryKey: [...K, "cases", params], queryFn: () => api.get<{ items: CaseSummary[]; nextCursor: string | null }>("/premarital/applications", params) });
 }

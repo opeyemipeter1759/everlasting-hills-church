@@ -12,6 +12,7 @@ import {
 } from './case-access';
 import { counsellingAudit } from './counselling-audit';
 import { lagosDayStart } from './lagos-time';
+import { DocumentsConfigService } from './documents/documents-config';
 import { listQuerySchema } from './premarital.schema';
 import { ALLOWED } from './status-machine';
 
@@ -32,6 +33,7 @@ export class CaseReadsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly access: CaseAccess,
+    private readonly documents: DocumentsConfigService,
   ) {}
 
   /** What this person may do in the Marriage section; drives the menu. Never 404. */
@@ -86,7 +88,14 @@ export class CaseReadsService {
       by
         .filter((b) => s.includes(b.status))
         .reduce((t, b) => t + b._count._all, 0);
-    const [noLead, upcomingSessions] = await Promise.all([
+    const tier = staffTierOf(actor);
+    const reviewable =
+      tier === 'PASTOR'
+        ? {}
+        : tier
+          ? { kind: 'PARENTAL_CONSENT' as const }
+          : null;
+    const [noLead, upcomingSessions, documentsAwaitingReview] = await Promise.all([
       this.prisma.counsellingApplication.count({
         where: {
           ...where,
@@ -107,6 +116,11 @@ export class CaseReadsService {
             : { counsellorProfileId: actor.profileId! }),
         },
       }),
+      reviewable
+        ? this.prisma.counsellingDocumentRequirement.count({
+            where: { status: 'UPLOADED', ...reviewable, Application: where },
+          })
+        : Promise.resolve(0),
     ]);
     return {
       total: by.reduce((t, b) => t + b._count._all, 0),
@@ -116,6 +130,7 @@ export class CaseReadsService {
       upcomingSessions,
       needsAttention: n('ADDITIONAL_INFORMATION_REQUIRED') + noLead,
       completed: n('COMPLETED'),
+      documentsAwaitingReview,
     };
   }
 
@@ -142,6 +157,15 @@ export class CaseReadsService {
               },
             }
           : {},
+        // Closed or archived cases that still hold stored document files.
+        q.storedFiles === 'closed'
+          ? {
+              OR: [{ status: 'CLOSED' }, { archivedAt: { not: null } }],
+              DocumentRequirements: {
+                some: { Files: { some: { purgedAt: null } } },
+              },
+            }
+          : {},
       ],
     };
     const rows = await this.prisma.counsellingApplication.findMany({
@@ -156,6 +180,7 @@ export class CaseReadsService {
         applicantLastName: true,
         partnerFirstName: true,
         partnerLastName: true,
+        applicantRole: true,
         status: true,
         submittedAt: true,
         weddingDate: true,
@@ -268,6 +293,21 @@ export class CaseReadsService {
       })),
       tier,
       can: this.capabilities(tier, app.status, actor.profileId, Assignments),
+      documentsGate: await this.documentsGate(app.id, tier),
+    };
+  }
+
+  /** The documents check on one status move, for the status panel. */
+  private async documentsGate(applicationId: string, tier: CaseTier) {
+    const settings = await this.documents.values();
+    const verified = await this.prisma.counsellingDocumentRequirement.count({
+      where: { tenantId: this.access.tenantId, applicationId, status: 'VERIFIED' },
+    });
+    return {
+      status: settings.documentsRequiredBefore,
+      satisfied: verified >= 3,
+      canOverride: tier === 'PASTOR',
+      reasons: tier === 'PASTOR' ? settings.overrideReasons : [],
     };
   }
 

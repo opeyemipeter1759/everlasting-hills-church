@@ -14,7 +14,7 @@ export function ChoiceGroup({
   options: readonly { value: string; label: string }[];
   error?: string;
   registration: UseFormRegisterReturn;
-  columns?: 1 | 3;
+  columns?: 1 | 2 | 3;
 }) {
   return (
     <fieldset aria-describedby={error ? `${id}-error` : undefined}>
@@ -22,7 +22,7 @@ export function ChoiceGroup({
         {label}
         <span className="text-red-500" aria-hidden="true"> *</span>
       </legend>
-      <div className={`grid gap-2 ${columns === 3 ? "sm:grid-cols-3" : ""}`}>
+      <div className={`grid gap-2 ${columns === 3 ? "sm:grid-cols-3" : columns === 2 ? "sm:grid-cols-2" : ""}`}>
         {options.map((o) => (
           <label
             key={o.value}

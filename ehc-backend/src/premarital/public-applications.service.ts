@@ -5,7 +5,8 @@ import { parseSchema } from '../common/zod-parse.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { CaseAccess } from './case-access';
 import { counsellingAudit } from './counselling-audit';
-import { CounsellingNotifier } from './counselling-notifier';
+import { DocumentDispatchService } from './documents/document-dispatch.service';
+import { DocumentsConfigService } from './documents/documents-config';
 import {
   publicApplicationSchema,
   type PublicApplicationInput,
@@ -55,7 +56,8 @@ export class PublicApplicationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly access: CaseAccess,
-    private readonly notifier: CounsellingNotifier,
+    private readonly dispatch: DocumentDispatchService,
+    private readonly documents: DocumentsConfigService,
   ) {}
 
   async submit(raw: unknown): Promise<{ referenceCode: string }> {
@@ -72,10 +74,11 @@ export class PublicApplicationsService {
       hash,
     );
     if (existing) return { referenceCode: existing };
+    const settings = await this.documents.values();
 
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const app = await this.prisma.$transaction(async (tx) => {
+        const { app, links } = await this.prisma.$transaction(async (tx) => {
           const created = await tx.counsellingApplication.create({
             data: {
               id: randomUUID(),
@@ -99,6 +102,7 @@ export class PublicApplicationsService {
               preferredContact: input.preferredContact,
               intro: input.intro || null,
               privacyAcknowledgedAt: new Date(),
+              applicantRole: input.applicantRole,
             },
           });
           await tx.counsellingStatusEvent.create({
@@ -118,9 +122,15 @@ export class PublicApplicationsService {
             entity: 'CounsellingApplication',
             entityId: created.id,
           });
-          return created;
+          // The document checklist and the secure link, with the application.
+          const issued = await this.dispatch.prepare(tx, created, settings, null);
+          return { app: created, links: issued };
         });
-        await this.notifier.send(app, 'RECEIVED');
+        // One email: thanks, the two letters and the link. If the letters
+        // cannot be built, a plain acknowledgement goes instead.
+        await this.dispatch
+          .send(app, links, { requestedById: null, acknowledgeOnFailure: true })
+          .catch(() => undefined);
         return { referenceCode: app.referenceCode };
       } catch (err) {
         if (!isUniqueViolation(err)) throw err;

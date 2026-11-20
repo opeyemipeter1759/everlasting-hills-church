@@ -11,6 +11,7 @@ const TILES: { key: keyof Overview; label: string; href?: string }[] = [
   { key: "inCounselling", label: "In counselling", href: "/dashboard/marriage/applications?status=IN_COUNSELLING" },
   { key: "upcomingSessions", label: "Sessions in the next 2 weeks", href: "/dashboard/marriage/sessions" },
   { key: "needsAttention", label: "Need attention" },
+  { key: "documentsAwaitingReview", label: "Documents awaiting review" },
   { key: "completed", label: "Completed", href: "/dashboard/marriage/applications?status=COMPLETED" },
 ];
 

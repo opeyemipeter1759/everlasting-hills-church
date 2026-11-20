@@ -23,6 +23,8 @@ import { CaseAccess } from './case-access';
 import { CaseActionsService } from './case-actions.service';
 import { CaseReadsService } from './case-reads.service';
 import { CounsellingNotifier } from './counselling-notifier';
+import { DocumentDispatchService } from './documents/document-dispatch.service';
+import { DocumentsConfigService } from './documents/documents-config';
 import { ModulesService } from './modules.service';
 import { PolicyService } from './policy';
 import { PremaritalController } from './premarital.controller';
@@ -84,6 +86,15 @@ maybe('Pre-marital counselling over HTTP, against Postgres', () => {
         'SENT'
       ),
     ),
+  };
+  // The documents email replaced the received email; its own tests are in
+  // documents/documents.http.db.spec.ts. Here it stands in and is recorded.
+  const dispatch = {
+    prepare: jest.fn(async () => []),
+    send: jest.fn(async (a: { id: string }) => {
+      sent.push({ event: 'RECEIVED', applicationId: a.id });
+      return 'SENT';
+    }),
   };
   let app: INestApplication;
   const people: Record<
@@ -209,6 +220,8 @@ maybe('Pre-marital counselling over HTTP, against Postgres', () => {
         CaseReadsService,
         CaseActionsService,
         SessionsService,
+        DocumentsConfigService,
+        { provide: DocumentDispatchService, useValue: dispatch },
         { provide: CounsellingNotifier, useValue: notifier },
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: config },
@@ -429,6 +442,19 @@ maybe('Pre-marital counselling over HTTP, against Postgres', () => {
     let id: string;
     beforeAll(async () => {
       id = await caseIn(tenantId);
+      // All three documents accepted, so the documents check lets Final review through.
+      await prisma.counsellingDocumentRequirement.createMany({
+        data: (
+          ['PARENTAL_CONSENT', 'MEDICAL_CERT_GROOM', 'MEDICAL_CERT_BRIDE'] as const
+        ).map((kind) => ({
+          id: randomUUID(),
+          tenantId,
+          applicationId: id,
+          kind,
+          status: 'VERIFIED' as const,
+          verifiedAt: new Date(),
+        })),
+      });
     });
 
     it('moves only along the allowed path, records each step, and completing never approves the wedding', async () => {

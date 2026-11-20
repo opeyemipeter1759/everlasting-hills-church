@@ -8,6 +8,7 @@ vi.mock("@/lib/api/request", () => ({ api: { post: (...a: unknown[]) => post(...
 
 const type = (id: string, value: string) => fireEvent.change(document.getElementById(id)!, { target: { value } });
 function fillValid() {
+  fireEvent.click(screen.getByLabelText("Intending groom"));
   type("pmc-applicantFirstName", "Tunde");
   type("pmc-applicantLastName", "Adeyemi");
   type("pmc-applicantEmail", "tunde@example.com");
@@ -15,7 +16,7 @@ function fillValid() {
   type("pmc-partnerFirstName", "Ada");
   type("pmc-partnerLastName", "Eze");
   type("pmc-partnerPhone", "0809 765 4321");
-  fireEvent.click(screen.getByLabelText(/My partner knows I am applying/));
+  fireEvent.click(screen.getByLabelText(/knows I am applying/));
   fireEvent.click(screen.getByLabelText("One of us is a member"));
   fireEvent.click(screen.getByLabelText("WhatsApp"));
   fireEvent.click(screen.getByLabelText(/I have read how my information/));
@@ -44,7 +45,7 @@ describe("the pre-marital counselling form", () => {
     await act(async () => send());
     const [url, body] = post.mock.calls[0];
     expect(url).toBe("/public/premarital/applications");
-    expect(body).toMatchObject({ applicantFirstName: "Tunde", partnerEmail: null, membership: "ONE_MEMBER", preferredContact: "WHATSAPP", website: "" });
+    expect(body).toMatchObject({ applicantRole: "GROOM", applicantFirstName: "Tunde", partnerEmail: null, membership: "ONE_MEMBER", preferredContact: "WHATSAPP", website: "" });
     expect(screen.getByText("Thank you, Tunde and Ada")).toBeTruthy();
     expect(screen.getByText("PMC-7K4QH2")).toBeTruthy();
     expect(screen.getByText(/does not book a session/)).toBeTruthy();
@@ -81,6 +82,8 @@ describe("the pre-marital counselling form", () => {
     const user = userEvent.setup();
     form();
     await user.tab();
+    await user.keyboard(" "); // I am the: intending groom
+    await user.tab();
     expect(document.activeElement?.id).toBe("pmc-applicantFirstName");
     await user.keyboard("Tunde");
     for (const [text] of [["Adeyemi"], ["tunde@example.com"], ["0803 123 4567"], ["Ada"], ["Eze"], ["0809 765 4321"]]) {
@@ -101,7 +104,16 @@ describe("the pre-marital counselling form", () => {
     await user.tab();
     await user.keyboard("{Enter}");
     expect(post).toHaveBeenCalledTimes(1);
-    expect(post.mock.calls[0][1]).toMatchObject({ applicantFirstName: "Tunde", partnerConsentToContact: true, privacyAcknowledged: true });
+    expect(post.mock.calls[0][1]).toMatchObject({ applicantRole: "GROOM", applicantFirstName: "Tunde", partnerConsentToContact: true, privacyAcknowledged: true });
+  });
+
+  it("asks who is applying, then names the other person by it", () => {
+    form();
+    send();
+    expect(screen.getByText("Tell us whether you are the intending groom or the intending bride")).toBeTruthy();
+    fireEvent.click(screen.getByLabelText("Intending bride"));
+    expect(screen.getByText("The intending groom")).toBeTruthy();
+    expect(screen.getByLabelText(/He knows I am applying/)).toBeTruthy();
   });
 
   it("hides the bot trap from people and screen readers", () => {

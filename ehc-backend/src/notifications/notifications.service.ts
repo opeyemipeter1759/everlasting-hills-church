@@ -60,12 +60,13 @@ export class NotificationsService {
    * The EventEmitter handler awaits this too but its surrounding wrapper treats
    * a rejection as fire-and-forget.
    */
-  async deliver(payload: SendEmailPayload): Promise<void> {
+  /** Sends one email. Answers with Resend's message id, or null when mail is off or the send was suppressed. */
+  async deliver(payload: SendEmailPayload): Promise<string | null> {
     if (!this.resend) {
       this.logger.warn(
         `[${payload.tag}] dropped email to ${recipientForLog(payload)}: Resend not configured`,
       );
-      return;
+      return null;
     }
     if (payload.memberOnly) {
       const activeMember = await this.prisma.member.findFirst({
@@ -80,7 +81,7 @@ export class NotificationsService {
         this.logger.debug(
           `[${payload.tag}] suppressed member email to non-active recipient ${recipientForLog(payload)}`,
         );
-        return;
+        return null;
       }
     }
     // Resend returns { data, error } — it does NOT throw on API-level failures
@@ -93,7 +94,11 @@ export class NotificationsService {
       text: payload.text,
       ...(payload.html ? { html: payload.html } : {}),
       ...(payload.attachments?.length
-        ? { attachments: payload.attachments.map((a) => ({ filename: a.filename, path: a.url })) }
+        ? {
+            attachments: payload.attachments.map((a) =>
+              'content' in a ? { filename: a.filename, content: a.content } : { filename: a.filename, path: a.url },
+            ),
+          }
         : {}),
       ...(payload.headers ? { headers: payload.headers } : {}),
     });
@@ -103,5 +108,6 @@ export class NotificationsService {
       );
     }
     this.logger.debug(`[${payload.tag}] email sent → ${recipientForLog(payload)} (id: ${data?.id ?? 'n/a'})`);
+    return data?.id ?? null;
   }
 }

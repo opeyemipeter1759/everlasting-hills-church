@@ -5,7 +5,7 @@
  * answer or another member's private words is removed.
  */
 const PRIVATE_KEY =
-  /^(applicant|partner)(first|last)?(name|email|phone)?$|^(applicant|partner)(FirstName|LastName|Email|Phone)$|^(intro|adminNote|weddingDate|membership|preferredContact|partnerConsentToContact|privacyAcknowledged|reason|note|prayerPoint|request|body|summary)$/i;
+  /^(applicant|partner)(first|last)?(name|email|phone)?$|^(applicant|partner)(FirstName|LastName|Email|Phone)$|^(intro|adminNote|weddingDate|membership|preferredContact|partnerConsentToContact|privacyAcknowledged|reason|note|prayerPoint|request|body|summary)$|^(token|code|codeHash|tokenHash|ticket|storageKey|wrappedDataKey|testDate|file|files|buffer|sha256|applicantRole|reuploadReason)$/i;
 
 type Bag = Record<string, unknown> | undefined;
 
@@ -40,6 +40,13 @@ export function scrubEvent<E>(input: E): E {
     delete event.request.data;
     delete event.request.cookies;
     delete event.request.query_string;
+    // A document view ticket in the path is single-use, but it still stays out.
+    if (typeof event.request.url === 'string')
+      event.request.url = event.request.url.replace(/\/documents\/view\/[^/?#]+/, '/documents/view/[ticket]');
+    const headers = event.request.headers as Record<string, unknown> | undefined;
+    if (headers)
+      for (const h of Object.keys(headers))
+        if (/^(cookie|authorization|x-ehc-client-ip.*)$/i.test(h)) delete headers[h];
   }
   scrubBag(event.extra);
   for (const ctx of Object.values(event.contexts ?? {})) scrubBag(ctx);

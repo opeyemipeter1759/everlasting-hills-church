@@ -36,9 +36,10 @@ export interface SendEmailPayload {
   text: string;
   /** Optional rendered HTML. Resend sends `html` when present; `text` is still used as the fallback. */
   html?: string;
-  /** Files to attach — Resend fetches each by URL at send time, so nothing is
-   * buffered through the queue. */
-  attachments?: { filename: string; url: string }[];
+  /** Files to attach. A `url` is fetched by Resend at send time, so nothing is
+   * buffered through the queue; `content` is for files made on the spot (the
+   * pre-marital letters) and is never queued. */
+  attachments?: ({ filename: string; url: string } | { filename: string; content: Buffer })[];
   /** Extra headers, e.g. List-Unsubscribe on bulk mail. */
   headers?: Record<string, string>;
   /** Tag for logging — e.g. "first-timer-admin", "prayer-request-visitor". */

@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendBaseUrl } from "@/lib/api/backend-url";
-import {
-  accessTokenNeedsRefresh,
-  clearSessionCookies,
-  getBackendSession,
-  setSessionCookies,
-  withoutSessionTokens,
-  type BackendSession,
-} from "@/lib/auth/server-session";
+import { accessTokenNeedsRefresh, clearSessionCookies, getBackendSession, setSessionCookies, withoutSessionTokens, type BackendSession } from "@/lib/auth/server-session";
 import {
   ACCESS_TOKEN_COOKIE,
   isLogoutPending,
@@ -15,6 +8,7 @@ import {
   REFRESH_TOKEN_COOKIE,
 } from "@/lib/auth/session-constants";
 import { isUnsafeCrossSiteRequest } from "@/lib/api/csrf";
+import { addProxyHeaders, passCoupleCookie } from "@/lib/server/proxy-extras";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -50,14 +44,16 @@ function forwardHeaders(request: NextRequest, accessToken?: string | null): Head
   // turn those records into attacker-controlled data. The deployment proxy may
   // add its own trusted client-IP header on the server-to-server hop.
   if (accessToken) headers.set("authorization", `Bearer ${accessToken}`);
+  addProxyHeaders(request, headers);
   return headers;
 }
 
-function responseHeaders(upstream: Response): Headers {
+function responseHeaders(upstream: Response, request?: NextRequest): Headers {
   const headers = new Headers();
   upstream.headers.forEach((value, name) => {
     if (SAFE_RESPONSE_HEADERS.has(name.toLowerCase())) headers.set(name, value);
   });
+  if (request) passCoupleCookie(request, upstream, headers);
   return headers;
 }
 
@@ -245,7 +241,7 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
 
   const response = new NextResponse(upstream.body, {
     status: upstream.status,
-    headers: responseHeaders(upstream),
+    headers: responseHeaders(upstream, request),
   });
   if (refreshedSession) setSessionCookies(response, refreshedSession);
   if (suppressPendingSession || refreshFailed || upstream.status === 401 || isLogout) {

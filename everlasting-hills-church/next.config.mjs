@@ -65,6 +65,20 @@ const nextConfig = {
     ];
   },
 
+  // The couple's documents page: no referrer, never cached, never indexed.
+  async headers() {
+    return [
+      {
+        source: "/pre-marital-counselling/documents",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "Cache-Control", value: "no-store" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+    ];
+  },
+
   // Don't generate browser source maps for production — smaller bundle, faster cold start.
   productionBrowserSourceMaps: false,
 

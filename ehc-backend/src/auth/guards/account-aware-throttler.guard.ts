@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { verifiedClientIp } from '../../common/client-ip';
 
 /**
  * Default throttling tracks by IP alone, which over-blocks whenever many
@@ -14,7 +15,10 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 @Injectable()
 export class AccountAwareThrottlerGuard extends ThrottlerGuard {
   protected async getTracker(req: Record<string, any>): Promise<string> {
-    const ip: string = req.ip;
+    // The visitor's own IP when our website signed it; otherwise the address
+    // the API sees (for website traffic, one shared and therefore stricter bucket).
+    const visitor = verifiedClientIp(req.headers ?? {}, process.env.CLIENT_IP_SIGNING_SECRET);
+    const ip: string = visitor ? `visitor:${visitor}` : req.ip;
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : null;
     return email ? `${ip}:${email}` : ip;
   }

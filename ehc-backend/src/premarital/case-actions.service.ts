@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
 } from '@nestjs/common';
 import { CounsellingStatus } from '@prisma/client';
@@ -12,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CaseAccess, notFound, requireCan } from './case-access';
 import { counsellingAudit } from './counselling-audit';
 import { CounsellingNotifier } from './counselling-notifier';
+import { DocumentsConfigService } from './documents/documents-config';
 import {
   adminPatchSchema,
   assignSchema,
@@ -37,6 +39,7 @@ export class CaseActionsService {
     private readonly prisma: PrismaService,
     private readonly access: CaseAccess,
     private readonly notifier: CounsellingNotifier,
+    private readonly documents: DocumentsConfigService,
   ) {}
 
   private get tenantId() {
@@ -46,9 +49,37 @@ export class CaseActionsService {
   async transition(actor: AuthUser, id: string, raw: unknown) {
     const { app, tier } = await this.access.open(actor, id);
     requireCan(tier, 'triage');
-    const { to, reason } = parseSchema(transitionSchema, raw);
-    await this.move(actor, app, to, reason);
+    const { to, reason, override } = parseSchema(transitionSchema, raw);
+    const gate = await this.documentsGate(app.id, to);
+    if (gate.blocked) {
+      if (!override)
+        throw new ConflictException(
+          'All three documents must be accepted before this step. A Pastor can override this with a reason.',
+        );
+      if (tier !== 'PASTOR')
+        throw new ForbiddenException('Only a Pastor can move past the documents check.');
+      if (!gate.reasons.some((r) => r.code === override.reason))
+        throw new BadRequestException('Pick one of the listed reasons.');
+    }
+    await this.move(
+      actor,
+      app,
+      to,
+      gate.blocked ? `DOCUMENTS_GATE_OVERRIDE:${override!.reason}` : reason,
+      gate.blocked,
+    );
     return { status: to };
+  }
+
+  /** Whether moving into this status needs all three documents accepted, and whether they are. */
+  private async documentsGate(applicationId: string, to: CounsellingStatus) {
+    const settings = await this.documents.values();
+    if (to !== settings.documentsRequiredBefore)
+      return { blocked: false, reasons: settings.overrideReasons };
+    const verified = await this.prisma.counsellingDocumentRequirement.count({
+      where: { tenantId: this.tenantId, applicationId, status: 'VERIFIED' },
+    });
+    return { blocked: verified < 3, reasons: settings.overrideReasons };
   }
 
   /** Asks the couple for more: only from Under review, and the email never carries the reason. */
@@ -71,8 +102,17 @@ export class CaseActionsService {
     },
     to: CounsellingStatus,
     reason?: string | null,
+    gateOverridden = false,
   ) {
     await this.prisma.$transaction(async (tx) => {
+      if (gateOverridden)
+        await counsellingAudit(tx, {
+          tenantId: this.tenantId,
+          actor,
+          action: 'COUNSELLING_DOCUMENT_GATE_OVERRIDE',
+          entity: 'CounsellingApplication',
+          entityId: app.id,
+        });
       await moveStatus(tx, {
         tenantId: this.tenantId,
         applicationId: app.id,

@@ -1,9 +1,15 @@
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import type { PremaritalFormValues } from "@/lib/pre-marital/schema";
 import { Field, borderFor, describedBy, inputCls } from "../Field";
-import { Tick } from "./ChoiceGroup";
+import { ROLE_OPTIONS } from "@/lib/pre-marital/schema";
+import { ChoiceGroup, Tick } from "./ChoiceGroup";
 
-type Props = { register: UseFormRegister<PremaritalFormValues>; errors: FieldErrors<PremaritalFormValues> };
+type Props = { register: UseFormRegister<PremaritalFormValues>; errors: FieldErrors<PremaritalFormValues>; role?: string };
+
+/** What the other person is called on the form, once the applicant says which of the two they are. */
+export function partnerTitle(role?: string) {
+  return role === "GROOM" ? "The intending bride" : role === "BRIDE" ? "The intending groom" : "Your partner";
+}
 type Key = keyof PremaritalFormValues;
 
 function fieldHelpers({ register, errors }: Props) {
@@ -18,11 +24,12 @@ export function ApplicantFields(props: Props) {
   return (
     <fieldset className="space-y-4">
       <legend className="text-lg font-bold text-gray-900">About you</legend>
+      <ChoiceGroup id="pmc-applicantRole" label="I am the" options={ROLE_OPTIONS} columns={2} error={err("applicantRole")} registration={props.register("applicantRole")} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field id="pmc-applicantFirstName" label="First name" required error={err("applicantFirstName")}>
+        <Field id="pmc-applicantFirstName" label="Your first name" required error={err("applicantFirstName")}>
           <input type="text" autoComplete="given-name" {...input("applicantFirstName")} />
         </Field>
-        <Field id="pmc-applicantLastName" label="Last name" required error={err("applicantLastName")}>
+        <Field id="pmc-applicantLastName" label="Your last name" required error={err("applicantLastName")}>
           <input type="text" autoComplete="family-name" {...input("applicantLastName")} />
         </Field>
         <Field id="pmc-applicantEmail" label="Email address" required error={err("applicantEmail")}>
@@ -41,7 +48,7 @@ export function PartnerFields(props: Props) {
   const { err, input } = fieldHelpers(props);
   return (
     <fieldset className="space-y-4">
-      <legend className="text-lg font-bold text-gray-900">Your partner</legend>
+      <legend className="text-lg font-bold text-gray-900">{partnerTitle(props.role)}</legend>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field id="pmc-partnerFirstName" label="First name" required error={err("partnerFirstName")}>
           <input type="text" autoComplete="off" {...input("partnerFirstName")} />
@@ -57,7 +64,7 @@ export function PartnerFields(props: Props) {
         </Field>
       </div>
       <Tick id="pmc-partnerConsentToContact" error={err("partnerConsentToContact")} registration={props.register("partnerConsentToContact")}>
-        My partner knows I am applying and is happy for the pastoral team to contact them.
+        {props.role === "GROOM" ? "She knows" : props.role === "BRIDE" ? "He knows" : "My partner knows"} I am applying and is happy for the pastoral team to contact them.
       </Tick>
     </fieldset>
   );

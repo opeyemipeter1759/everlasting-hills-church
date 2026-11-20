@@ -31,7 +31,8 @@ export default function PremaritalForm({ privacyNotice, retention }: { privacyNo
   const [problem, setProblem] = useState("");
   const [busy, setBusy] = useState(false);
   const sending = useRef(false);
-  const { register, getValues, setError, clearErrors, formState: { errors } } = useForm<PremaritalFormValues>({ defaultValues: FORM_DEFAULTS });
+  const { register, getValues, setError, clearErrors, watch, formState: { errors } } = useForm<PremaritalFormValues>({ defaultValues: FORM_DEFAULTS });
+  const role = watch("applicantRole");
 
   function show(problems: FieldProblems) {
     Object.entries(problems).forEach(([field, message], i) => setError(field as keyof PremaritalFormValues, { message }, { shouldFocus: i === 0 }));
@@ -83,8 +84,8 @@ export default function PremaritalForm({ privacyNotice, retention }: { privacyNo
         <label htmlFor="pmc-website">Leave this empty</label>
         <input id="pmc-website" type="text" tabIndex={-1} autoComplete="off" {...register("website")} />
       </div>
-      <ApplicantFields register={register} errors={errors} />
-      <PartnerFields register={register} errors={errors} />
+      <ApplicantFields register={register} errors={errors} role={role} />
+      <PartnerFields register={register} errors={errors} role={role} />
       <DetailsFields register={register} errors={errors} privacyNotice={privacyNotice} retention={retention} />
       {problem && (
         <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">

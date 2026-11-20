@@ -1,6 +1,7 @@
 /** A complete, valid public application for the counselling tests. */
 export const validApplication = () => ({
   submissionKey: '6f1c1b1e-2d3a-4b5c-8d7e-9f0a1b2c3d4e',
+  applicantRole: 'GROOM' as 'GROOM' | 'BRIDE',
   applicantFirstName: 'Tunde',
   applicantLastName: 'Adeyemi',
   applicantEmail: 'Tunde@Example.com',

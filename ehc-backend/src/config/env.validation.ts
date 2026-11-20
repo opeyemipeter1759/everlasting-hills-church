@@ -143,6 +143,27 @@ export const envSchema = z.object({
   SUPABASE_STORAGE_BUCKET: z.string().min(1).default('ehc-uploads'),
 
   /**
+   * Pre-marital counselling documents (see docs/runbooks/premarital-documents-infra.md).
+   * COUNSELLING_DOCS_BUCKET is a private Google Cloud Storage bucket of its own.
+   * COUNSELLING_DOC_KEK_V<n> are 32-byte master keys (base64) mounted from
+   * Secret Manager; COUNSELLING_DOC_KEK_CURRENT names the version new files use.
+   * Absent → the upload page and file viewing answer 503; letters still send.
+   */
+  COUNSELLING_DOCS_BUCKET: z.string().min(3).optional(),
+  COUNSELLING_DOC_KEK_V1: z.string().min(1).optional(),
+  COUNSELLING_DOC_KEK_V2: z.string().min(1).optional(),
+  COUNSELLING_DOC_KEK_V3: z.string().min(1).optional(),
+  COUNSELLING_DOC_KEK_CURRENT: z.coerce.number().int().min(1).max(3).optional(),
+  /** The letterhead image behind the letters (PNG or JPEG), relative to the app folder or absolute. */
+  LETTERHEAD_PATH: z.string().min(1).optional(),
+  /**
+   * Shared with the website (Secret Manager). The website signs the visitor's
+   * IP with it, so rate limits count per visitor; without it, or with a bad or
+   * stale signature, requests share the stricter common limit.
+   */
+  CLIENT_IP_SIGNING_SECRET: z.string().min(32).optional(),
+
+  /**
    * Web Push (VAPID). Absent → push endpoints return 503 and scheduled dispatch
    * is skipped, following the same optional-integration pattern as Resend,
    * Paystack and R2 above.

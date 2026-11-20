@@ -77,16 +77,27 @@ export class PolicyService {
     const policy = parseSchema(policySchema, raw);
     const tenantId = this.access.tenantId;
     await this.prisma.$transaction(async (tx) => {
+      // The same row holds the documents settings: keep them.
+      const row = await tx.counsellingSettings.findUnique({
+        where: { tenantId },
+        select: { content: true },
+      });
+      const content = {
+        ...(row?.content && typeof row.content === 'object'
+          ? (row.content as object)
+          : {}),
+        ...policy,
+      } as Prisma.InputJsonValue;
       await tx.counsellingSettings.upsert({
         where: { tenantId },
         create: {
           id: randomUUID(),
           tenantId,
-          content: policy as Prisma.InputJsonValue,
+          content,
           updatedBy: actor.profileId ?? null,
         },
         update: {
-          content: policy as Prisma.InputJsonValue,
+          content,
           updatedBy: actor.profileId ?? null,
         },
       });

@@ -6,6 +6,7 @@ import { useCase } from "@/lib/api/premarital";
 import { QueryState, StatusBadge, card, coupleName, lagosDate } from "../ui";
 import { AdminPanel } from "./AdminPanel";
 import { CounsellorsPanel } from "./CounsellorsPanel";
+import { DocumentsPanel } from "./DocumentsPanel";
 import { PeoplePanel } from "./PeoplePanel";
 import { ProgressPanel } from "./ProgressPanel";
 import { SessionsPanel } from "./SessionsPanel";
@@ -43,6 +44,7 @@ export default function CaseClient({ id }: { id: string }) {
             <div className="min-w-0 space-y-4">
               <StatusPanel c={c} />
               <PeoplePanel c={c} />
+              <DocumentsPanel c={c} />
               <SessionsPanel c={c} />
               <ProgressPanel c={c} />
             </div>
