@@ -1,6 +1,7 @@
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
+import { ALLOW_COUPLE_ACCOUNT_KEY } from '../decorators/couple-account.decorator';
 import { RolesGuard } from './roles.guard';
 import type { AuthUser } from '../types/auth-user';
 
@@ -11,8 +12,9 @@ import type { AuthUser } from '../types/auth-user';
  * SUPER_ADMIN, rejects ADMIN/UNIT_LEAD/MEMBER, rejects unauthenticated.
  */
 
+/** A signed-in church account has a Profile; pass profileId: null for a couple dashboard account. */
 function makeContext(user: Partial<AuthUser> | undefined): ExecutionContext {
-  const request = user === undefined ? {} : { user };
+  const request = user === undefined ? {} : { user: { profileId: 'profile-1', ...user } };
   return {
     getHandler: () => () => undefined,
     getClass: () => class {},
@@ -20,9 +22,9 @@ function makeContext(user: Partial<AuthUser> | undefined): ExecutionContext {
   } as unknown as ExecutionContext;
 }
 
-function makeReflector(required: Role[] | undefined): Reflector {
+function makeReflector(required: Role[] | undefined, allowCoupleAccount?: boolean): Reflector {
   return {
-    getAllAndOverride: jest.fn().mockReturnValue(required),
+    getAllAndOverride: jest.fn((key: string) => (key === ALLOW_COUPLE_ACCOUNT_KEY ? allowCoupleAccount : required)),
   } as unknown as Reflector;
 }
 
@@ -104,5 +106,24 @@ describe('RolesGuard', () => {
         makeContext({ role: Role.HOD, effectiveRoles: [Role.HOD, Role.HEAD_USHER] }),
       ),
     ).toBe(true);
+  });
+
+  describe('couple dashboard accounts (a sign-in with no Profile)', () => {
+    const couple = { role: null, effectiveRoles: [], profileId: null };
+
+    it('are refused on every route not marked for them, even one that only needs a sign-in', () => {
+      expect(() => new RolesGuard(makeReflector(undefined)).canActivate(makeContext(couple))).toThrow(
+        'This account can only open the pre-marital counselling dashboard.',
+      );
+      expect(() => new RolesGuard(makeReflector([Role.MEMBER])).canActivate(makeContext(couple))).toThrow(ForbiddenException);
+    });
+
+    it('reach the routes marked @AllowCoupleAccount', () => {
+      expect(new RolesGuard(makeReflector(undefined, true)).canActivate(makeContext(couple))).toBe(true);
+    });
+
+    it('leave church accounts alone on those routes', () => {
+      expect(new RolesGuard(makeReflector(undefined, true)).canActivate(makeContext({ role: Role.MEMBER }))).toBe(true);
+    });
   });
 });

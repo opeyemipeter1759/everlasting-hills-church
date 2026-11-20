@@ -5,7 +5,7 @@ import { Select } from "@/components/ui/select";
 import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import { openDocument, type RequirementRow } from "@/lib/api/marriage-documents";
-import { STATUS_WORDS } from "@/lib/api/premarital-documents";
+import { STATUS_WORDS } from "@/lib/api/couple";
 import { input, lagosDate, primary, secondary, selectBox, useRun } from "../ui";
 
 export const KIND_LABEL: Record<RequirementRow["kind"], string> = {

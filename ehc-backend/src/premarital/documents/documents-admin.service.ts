@@ -9,11 +9,12 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CaseAccess, notFound, requireCan, type CaseTier } from '../case-access';
 import { counsellingAudit } from '../counselling-audit';
 import { lagosToday } from '../lagos-time';
+import { CoupleAccountsService } from '../couple/couple-accounts.service';
 import { DocumentCrypto } from './document-crypto';
 import { DocumentDispatchService } from './document-dispatch.service';
 import { DocumentLettersService } from './document-letters.service';
 import { DocumentMailer } from './document-mailer';
-import { isMedical, lagosDay, mayOpen, mayReview, maySeeRow, validFrom } from './document-rules';
+import { isMedical, mayOpen, mayReview, maySeeRow, roleOf, validFrom } from './document-rules';
 import { DocumentStore } from './document-storage';
 import { DocumentsConfigService } from './documents-config';
 
@@ -51,6 +52,7 @@ export class DocumentsAdminService {
     private readonly dispatch: DocumentDispatchService,
     private readonly letters: DocumentLettersService,
     private readonly mailer: DocumentMailer,
+    private readonly accounts: CoupleAccountsService,
   ) {}
 
   private get tenantId() {
@@ -59,17 +61,12 @@ export class DocumentsAdminService {
 
   async list(actor: AuthUser, applicationId: string) {
     const { app, tier } = await this.access.open(actor, applicationId);
-    const [reqs, tokens, dispatches, settings] = await Promise.all([
+    const [reqs, participants, dispatches, settings] = await Promise.all([
       this.prisma.counsellingDocumentRequirement.findMany({
         where: { tenantId: this.tenantId, applicationId },
         include: { Files: { where: { supersededAt: null, purgedAt: null }, select: { id: true, uploadedAt: true, mimeType: true } } },
       }),
-      this.prisma.counsellingAccessToken.findMany({
-        where: { tenantId: this.tenantId, applicationId },
-        orderBy: { createdAt: 'desc' },
-        take: 6,
-        select: { scope: true, expiresAt: true, revokedAt: true, lastUsedAt: true, createdAt: true },
-      }),
+      this.accounts.participants(app),
       this.prisma.counsellingDocumentDispatch.findMany({
         where: { tenantId: this.tenantId, applicationId },
         orderBy: { sentAt: 'desc' },
@@ -120,21 +117,25 @@ export class DocumentsAdminService {
             },
           };
         }),
-      links: staff
-        ? tokens.map((t) => ({
-            scope: t.scope,
-            createdAt: t.createdAt,
-            expiresAt: t.expiresAt,
-            lastUsedAt: t.lastUsedAt,
-            state: t.revokedAt ? 'REVOKED' : t.expiresAt <= new Date() ? 'EXPIRED' : 'ACTIVE',
-          }))
+      // Each partner's dashboard sign-in: whether it exists, what kind, when the details were last emailed.
+      accounts: staff
+        ? this.accounts.people(app).map((person) => {
+            const row = participants.find((p) => p.side === person.side);
+            return {
+              side: person.side,
+              role: roleOf(app.applicantRole, person.side),
+              firstName: person.firstName,
+              kind: row?.accountKind ?? null,
+              signInSentAt: row?.signInSentAt ?? null,
+            };
+          })
         : [],
       dispatches: staff ? dispatches.map((d) => ({ id: d.id, status: d.status, sentAt: d.sentAt, automatic: !d.requestedById })) : [],
       storedFiles: stored,
       can: {
         setRole: staff && !app.applicantRole,
         send: staff && !!app.applicantRole && !closed,
-        reissueLink: staff && reqs.length > 0 && !closed,
+        resendSignIn: staff && !closed,
         downloadLetters: staff && !!app.applicantRole,
         deleteStored: tier === 'PASTOR' && closed && stored > 0,
       },
@@ -225,7 +226,7 @@ export class DocumentsAdminService {
     const email = await this.mailer.send(
       app,
       'DOCUMENT_REUPLOAD',
-      buildDocumentReuploadEmail({ firstName: app.applicantFirstName, email: app.applicantEmail, contactUrl: this.mailer.contactUrl }),
+      buildDocumentReuploadEmail({ ...(await this.ownerOf(app, req)), appUrl: this.mailer.appUrl }),
     );
     return { status: 'NEEDS_REUPLOAD' as const, email: email.status };
   }
@@ -243,38 +244,31 @@ export class DocumentsAdminService {
     return { status };
   }
 
-  // ---- Links, letters, role ----
+  // ---- Sign-in, letters, role ----
 
-  /** Sends (or resends) the letters with a new link. Old links stop working. */
+  /** Sends (or resends) the letters, with how to sign in to the dashboard. Makes any missing sign-in first. */
   async send(actor: AuthUser, applicationId: string) {
     const { app, tier } = await this.access.open(actor, applicationId);
     requireCan(tier, 'triage');
     if (!app.applicantRole) throw new BadRequestException('Set who applied (groom or bride) first, so the letters carry the right names.');
     if (app.status === 'CLOSED' || app.archivedAt) throw new ConflictException('This case is closed.');
-    const settings = await this.config.values();
-    const links = await this.prisma.$transaction(async (tx) => {
-      const issued = await this.dispatch.prepare(tx, app, settings, actor.profileId ?? null);
+    await this.prisma.$transaction(async (tx) => {
+      await this.dispatch.prepare(tx, app);
       await counsellingAudit(tx, { tenantId: this.tenantId, actor, action: 'COUNSELLING_DOCUMENTS_SENT', entity: 'CounsellingApplication', entityId: app.id });
-      return issued;
     });
-    const status = await this.dispatch.send(app, links, { requestedById: actor.profileId ?? null, acknowledgeOnFailure: false });
+    const plans = await this.accounts.provision(app);
+    const status = await this.dispatch.send(app, plans, actor.profileId ?? null);
     return { status };
   }
 
-  /** Revokes every link and emails a new one. */
-  async reissueLink(actor: AuthUser, applicationId: string) {
+  /** Makes any missing dashboard sign-in, then emails both partners how to sign in. */
+  async resendSignIn(actor: AuthUser, applicationId: string) {
     const { app, tier } = await this.access.open(actor, applicationId);
     requireCan(tier, 'triage');
     if (app.status === 'CLOSED' || app.archivedAt) throw new ConflictException('This case is closed.');
-    const has = await this.prisma.counsellingDocumentRequirement.count({ where: { tenantId: this.tenantId, applicationId } });
-    if (!has) throw new BadRequestException('Send the documents first.');
-    const settings = await this.config.values();
-    const links = await this.prisma.$transaction(async (tx) => {
-      const issued = await this.dispatch.prepare(tx, app, settings, actor.profileId ?? null);
-      await counsellingAudit(tx, { tenantId: this.tenantId, actor, action: 'COUNSELLING_DOCUMENT_LINK_REISSUED', entity: 'CounsellingApplication', entityId: app.id });
-      return issued;
-    });
-    return { email: await this.dispatch.sendLinks(app, links) };
+    await counsellingAudit(this.prisma, { tenantId: this.tenantId, actor, action: 'COUNSELLING_SIGN_IN_RESENT', entity: 'CounsellingApplication', entityId: app.id });
+    const plans = await this.accounts.provision(app);
+    return { email: await this.dispatch.signIn(app, plans), accounts: plans.map((p) => ({ side: p.side, ready: p.mode !== 'FAILED' })) };
   }
 
   /** The letters as last sent (or as they would be sent today), rebuilt on demand. */
@@ -282,15 +276,7 @@ export class DocumentsAdminService {
     const { app, tier } = await this.access.open(actor, applicationId);
     requireCan(tier, 'triage');
     if (!app.applicantRole) throw new BadRequestException('Set who applied (groom or bride) first.');
-    const last = await this.prisma.counsellingDocumentDispatch.findFirst({
-      where: { tenantId: this.tenantId, applicationId, consentTemplateId: { not: null } },
-      orderBy: { sentAt: 'desc' },
-    });
-    const built = await this.letters.lettersFor(app, {
-      issueDay: last ? last.issueDate.toISOString().slice(0, 10) : lagosDay(new Date()),
-      consentTemplateId: last?.consentTemplateId,
-      medicalTemplateId: last?.medicalTemplateId,
-    });
+    const built = await this.letters.lastSent(app);
     await counsellingAudit(this.prisma, { tenantId: this.tenantId, actor, action: 'COUNSELLING_LETTER_DOWNLOADED', entity: 'CounsellingApplication', entityId: app.id });
     return kind === 'consent' ? built.consent : built.medical;
   }
@@ -333,6 +319,26 @@ export class DocumentsAdminService {
   }
 
   // ---- helpers ----
+
+  /** Who a re-upload email goes to: the certificate's owner, or whoever uploaded the consent letter (else the applicant). */
+  private async ownerOf(
+    app: { tenantId: string; id: string; applicantRole: 'GROOM' | 'BRIDE' | null; applicantFirstName: string; applicantEmail: string; partnerFirstName: string; partnerEmail: string | null },
+    req: { id: string; kind: CounsellingRequirementKind },
+  ): Promise<{ firstName: string; email: string }> {
+    let side: 'APPLICANT' | 'PARTNER' = 'APPLICANT';
+    if (isMedical(req.kind)) {
+      if (roleOf(app.applicantRole, 'PARTNER') === (req.kind === 'MEDICAL_CERT_GROOM' ? 'GROOM' : 'BRIDE')) side = 'PARTNER';
+    } else {
+      const file = await this.prisma.counsellingDocumentFile.findFirst({
+        where: { tenantId: this.tenantId, requirementId: req.id, supersededAt: null, purgedAt: null },
+        select: { UploadedBy: { select: { side: true } } },
+      });
+      side = file?.UploadedBy?.side ?? 'APPLICANT';
+    }
+    return side === 'PARTNER' && app.partnerEmail
+      ? { firstName: app.partnerFirstName, email: app.partnerEmail }
+      : { firstName: app.applicantFirstName, email: app.applicantEmail };
+  }
 
   private async openRequirement(actor: AuthUser, requirementId: string) {
     const req = await this.prisma.counsellingDocumentRequirement.findFirst({ where: { id: requirementId, tenantId: this.tenantId } });

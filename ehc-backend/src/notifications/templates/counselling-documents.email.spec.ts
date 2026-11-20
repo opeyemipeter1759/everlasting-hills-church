@@ -1,19 +1,25 @@
 import {
-  buildDocumentCodeEmail,
-  buildDocumentLinkEmail,
+  buildApplicantWelcomeEmail,
   buildDocumentReuploadEmail,
   buildDocumentsEmail,
+  buildPartnerWelcomeEmail,
+  buildSignInEmail,
+  signInLines,
 } from './counselling-documents.email';
 
-const base = { firstName: 'Tunde', email: 'tunde@example.com', contactUrl: 'https://example.org/contact' };
+const base = { firstName: 'Tunde', email: 'tunde@example.com', appUrl: 'https://example.org/' };
+const letters = { consentPdf: Buffer.from('%PDF-a'), medicalPdf: Buffer.from('%PDF-b') };
+const phone = { mode: 'PHONE' as const, phoneEnding: '4567' };
 
 const EM_DASH = String.fromCharCode(0x2014);
 
-describe('pre-marital documents emails', () => {
+describe('pre-marital dashboard and documents emails', () => {
   const all = [
-    buildDocumentsEmail({ ...base, link: 'https://example.org/pre-marital-counselling/documents#t=abc', validDays: 60, consentPdf: Buffer.from('%PDF-a'), medicalPdf: Buffer.from('%PDF-b') }),
-    buildDocumentLinkEmail({ ...base, link: 'https://example.org/pre-marital-counselling/documents#t=def', validDays: 60 }),
-    buildDocumentCodeEmail({ ...base, code: '123456' }),
+    buildApplicantWelcomeEmail({ ...base, signIn: phone, letters }),
+    buildApplicantWelcomeEmail({ ...base, signIn: phone, letters: null }),
+    buildPartnerWelcomeEmail({ ...base, firstName: 'Ada', email: 'ada@example.com', applicantFirstName: 'Tunde', signIn: phone, letters: null }),
+    buildDocumentsEmail({ ...base, signIn: { mode: 'EXISTING', phoneEnding: '4567' }, ...letters }),
+    buildSignInEmail({ ...base, signIn: { mode: 'MEMBER', phoneEnding: '4567' } }),
     buildDocumentReuploadEmail(base),
   ];
 
@@ -26,15 +32,44 @@ describe('pre-marital documents emails', () => {
     }
   });
 
-  it('attach the two letters under names with no personal details', () => {
-    const files = all[0].attachments as { filename: string; content: Buffer }[];
-    expect(files.map((f) => f.filename)).toEqual(['Parental-Consent.pdf', 'Medical-Screening-Requirement.pdf']);
-    expect(all[0].text).toContain('#t=abc');
-    expect(all[0].text).toContain('60 days');
+  it('tell a new account to sign in with the phone number, digits only, naming it only by its last four digits', () => {
+    const [welcome] = all;
+    expect(welcome.text).toContain('https://example.org/login');
+    expect(welcome.text).toContain('tunde@example.com');
+    expect(welcome.text).toContain('phone number, written as digits only');
+    expect(welcome.text).toContain('ending in 4567');
+    expect(welcome.text).toContain('choose your own password straight away');
+    expect(welcome.html).toContain('How to sign in');
   });
 
-  it('the re-upload notice never says which document or why (that is only on the secure page)', () => {
-    expect(all[3].text).toContain('One of your counselling documents needs to be uploaded again. Please use your secure link');
-    expect(all[3].text.toLowerCase()).not.toMatch(/consent|certificate|unreadable|signature/);
+  it('attach the two letters under names with no personal details, and still welcome the couple when the letters failed', () => {
+    const files = all[0].attachments as { filename: string; content: Buffer }[];
+    expect(files.map((f) => f.filename)).toEqual(['Parental-Consent.pdf', 'Medical-Screening-Requirement.pdf']);
+    expect(all[1].attachments).toBeUndefined();
+    expect(all[1].text).toContain('How to sign in');
+    expect(all[1].text).toContain('will be on your dashboard');
+  });
+
+  it('give the partner their own welcome, naming the applicant by first name only', () => {
+    const partner = all[2];
+    expect(partner.to).toBe('ada@example.com');
+    expect(partner.text).toContain('Tunde has applied for pre-marital counselling for you both');
+    expect(partner.text).toContain('ada@example.com');
+    expect(partner.text).not.toContain('tunde@example.com');
+  });
+
+  it('explain each way of signing in', () => {
+    const at = (mode: Parameters<typeof signInLines>[0]['mode']) => signInLines({ mode, phoneEnding: '1234' }, 'x@example.com', 'https://example.org').join(' ');
+    expect(at('EXISTING')).toContain('password you chose before');
+    expect(at('FORGOT')).toContain('Forgot password');
+    expect(at('MEMBER')).toContain('usual Everlasting Hills account');
+    expect(at('FAILED')).toContain('still setting up your dashboard');
+    expect(at('FAILED')).not.toContain('/login');
+  });
+
+  it('the re-upload notice never says which document or why (that is only on the dashboard)', () => {
+    const notice = all[5];
+    expect(notice.text).toContain('Sign in to your counselling dashboard to see which one and why');
+    expect(notice.text.toLowerCase()).not.toMatch(/consent|certificate|unreadable|signature/);
   });
 });

@@ -1,6 +1,6 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from 'crypto';
+import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 import type { Env } from '../../config/env.validation';
 
 /**
@@ -14,9 +14,6 @@ import type { Env } from '../../config/env.validation';
  *   - the master key comes from Secret Manager, mounted on Cloud Run as
  *     COUNSELLING_DOC_KEK_V<n>; COUNSELLING_DOC_KEK_CURRENT says which version
  *     new files use. Older versions stay mounted while files still use them.
- *
- * The upload page's code pepper and session signing key are derived from the
- * current master key (HKDF), so there is one secret to look after.
  *
  * Without a master key nothing is stored: uploads and views answer 503.
  */
@@ -92,12 +89,6 @@ export class DocumentCrypto {
     } finally {
       dataKey.fill(0);
     }
-  }
-
-  /** A key derived from the current master key for one purpose (code pepper, session signing). */
-  derive(purpose: 'otp-pepper' | 'couple-session'): Buffer {
-    const key = this.kek(this.currentVersion);
-    return Buffer.from(hkdfSync('sha256', key, Buffer.alloc(0), `ehc-counselling-${purpose}`, 32));
   }
 
   private wrap(dataKey: Buffer, version: number): Buffer {

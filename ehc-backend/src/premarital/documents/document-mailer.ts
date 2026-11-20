@@ -27,15 +27,6 @@ export class DocumentMailer {
     this.appUrl = ((config.get('FRONTEND_URL', { infer: true }) as string | undefined) ?? 'https://www.everlastinghills.church').replace(/\/$/, '');
   }
 
-  get contactUrl(): string {
-    return `${this.appUrl}/contact`;
-  }
-
-  /** The couple's upload page, with the token after # so no server ever sees it. */
-  linkFor(rawToken: string): string {
-    return `${this.appUrl}/pre-marital-counselling/documents#t=${rawToken}`;
-  }
-
   async send(app: { id: string; tenantId: string }, event: string, payload: SendEmailPayload): Promise<MailOutcome> {
     let logId: string | null = null;
     try {

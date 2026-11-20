@@ -39,8 +39,8 @@ import {
   type NavPermissionEntry,
   type NavPermissionsMap,
 } from "@/lib/nav-permissions-core";
-
-const ROLELESS_LANDING = "/dashboard/profile";
+// A signed-in person with no church role: a couple dashboard account goes to its dashboard, anyone else to their profile.
+import { rolelessHome } from "@/lib/auth/couple-routing";
 
 // Sermon management is PASTOR+ by role, but every member of the Audio
 // (Post) Production unit gets full Super Admin power over the whole Sermons
@@ -284,7 +284,7 @@ export async function middleware(request: NextRequest) {
     if (isAuthenticated) {
       // Back to the page that sent them here (see the timeout case below), else home.
       const next = safeNextPath(searchParams.get("next"));
-      const landing = normalizeRole(effectiveRole) ? getLandingPage(effectiveRole) : ROLELESS_LANDING;
+      const landing = normalizeRole(effectiveRole) ? getLandingPage(effectiveRole) : rolelessHome(claims);
       return withSessionCookies(NextResponse.redirect(new URL(next ?? landing, request.url)), refreshedSession);
     }
     const response = NextResponse.next();
@@ -307,14 +307,14 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!normalizeRole(effectiveRole)) {
-    if (pathname === ROLELESS_LANDING) {
+    if (pathname === rolelessHome(claims)) {
       return withSessionCookies(
         NextResponse.next(downstreamHeaders ? { request: { headers: downstreamHeaders } } : undefined),
         refreshedSession,
       );
     }
     return withSessionCookies(
-      NextResponse.redirect(new URL(ROLELESS_LANDING, request.url)),
+      NextResponse.redirect(new URL(rolelessHome(claims), request.url)),
       refreshedSession,
     );
   }
@@ -385,7 +385,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/admin/:path*",
-    "/me",
+    "/me", "/couple-dashboard",
     "/me/:path*",
     "/login",
     "/register",

@@ -10,7 +10,7 @@ import { counsellingAudit } from '../counselling-audit';
 import { PENDING } from '../policy';
 
 /**
- * The documents settings (letters, upload page, gate). Every value starts as
+ * The documents settings (letters, dashboard uploads, gate). Every value starts as
  * PENDING_PASTORAL_APPROVAL with the defaults the pastors were given, and the
  * system runs on whatever is saved, approved or not, until a Pastor changes it.
  * Stored under `documents` in CounsellingSettings.content, next to the policy.
@@ -49,9 +49,8 @@ export const documentsConfigSchema = z.object({
   recommendedLabs: entry(z.array(lab).max(10)),
   certReturnInstructions: entry(z.string().trim().min(1).max(1000)),
   consentReturnInstructions: entry(z.string().trim().min(1).max(1000)),
-  documentLinkValidDays: entry(z.number().int().min(1).max(365)),
-  documentPageOtp: entry(z.boolean()),
   maxUploadMb: entry(z.number().int().min(1).max(20)),
+  /** Also attach the two letters to the partner's welcome email (they are on both dashboards either way). */
   sendDocumentsToPartner: entry(z.boolean()),
   documentsRequiredBefore: entry(z.enum(GATE_STATUSES)),
   overrideReasons: entry(z.array(reason).min(1).max(10)),
@@ -80,13 +79,11 @@ export const DEFAULT_DOCUMENTS_CONFIG: DocumentsConfig = {
     { name: 'Total Care Medical Diagnostics', address: '', phone: '' },
   ]),
   certReturnInstructions: pending(
-    'Each of you should upload your medical certificate using the secure link in your email, or bring the original to the church office. Please do not send medical results by email or WhatsApp.',
+    'Each of you should upload your own medical certificate on your counselling dashboard, or bring the original to the church office. Please do not send medical results by email or WhatsApp.',
   ),
   consentReturnInstructions: pending(
-    'Once signed, upload a clear photo or scan of the consent letter using the secure link in your email, or bring it to the church office.',
+    'Once signed, upload a clear photo or scan of the consent letter on your counselling dashboard, or bring it to the church office.',
   ),
-  documentLinkValidDays: pending(60),
-  documentPageOtp: pending(true),
   maxUploadMb: pending(10),
   sendDocumentsToPartner: pending(false),
   documentsRequiredBefore: pending('FINAL_REVIEW' as const),

@@ -19,15 +19,15 @@ import { CaseAccess } from '../case-access';
 import { CaseActionsService } from '../case-actions.service';
 import { CaseReadsService } from '../case-reads.service';
 import { CounsellingNotifier } from '../counselling-notifier';
+import { CoupleAccountsService } from '../couple/couple-accounts.service';
+import { CoupleController } from '../couple/couple.controller';
+import { CoupleDashboardService } from '../couple/couple-dashboard.service';
 import { ModulesService } from '../modules.service';
 import { PolicyService } from '../policy';
 import { PremaritalController } from '../premarital.controller';
 import { validApplication } from '../premarital.fixture-spec';
 import { PublicApplicationsService } from '../public-applications.service';
 import { PublicPremaritalController } from '../public-premarital.controller';
-import { CoupleAccessService } from './couple-access.service';
-import { CoupleDocumentsController } from './couple-documents.controller';
-import { CoupleDocumentsService } from './couple-documents.service';
 import { DocumentCrypto } from './document-crypto';
 import { DocumentDispatchService } from './document-dispatch.service';
 import { DocumentLettersService } from './document-letters.service';
@@ -39,12 +39,43 @@ import { PremaritalDocumentsController } from './documents.controller';
 import { LetterRenderer } from './letter-renderer';
 import { UploadInspector } from './upload-inspector';
 
+/** Supabase Auth, in memory: the accounts the couple dashboard makes and finds. */
+type FakeUser = { id: string; email: string; password: string; app_metadata: Record<string, unknown>; user_metadata: Record<string, unknown> };
+const mockAuth = { users: new Map<string, FakeUser>(), refuseDigits: false, down: false };
+jest.mock('../../members/members-supabase-admin.util', () => ({
+  createAdminClient: () => ({
+    auth: {
+      admin: {
+        createUser: async (u: { email: string; password: string; app_metadata: Record<string, unknown>; user_metadata: Record<string, unknown> }) => {
+          if (mockAuth.down) return { data: { user: null }, error: { message: 'Auth service is down' } };
+          if ([...mockAuth.users.values()].some((x) => x.email.toLowerCase() === u.email.toLowerCase()))
+            return { data: { user: null }, error: { message: 'A user with this email address has already been registered' } };
+          if (mockAuth.refuseDigits && /^\d+$/.test(u.password))
+            return { data: { user: null }, error: { message: 'Password should contain at least one character of each: abc, 123' } };
+          const user = { id: (jest.requireActual('crypto') as typeof import('crypto')).randomUUID(), ...u };
+          mockAuth.users.set(user.id, user);
+          return { data: { user }, error: null };
+        },
+        getUserById: async (id: string) =>
+          mockAuth.users.has(id) ? { data: { user: mockAuth.users.get(id) }, error: null } : { data: { user: null }, error: { message: 'User not found' } },
+        listUsers: async () => ({ data: { users: [...mockAuth.users.values()] }, error: null }),
+        updateUserById: async (id: string, patch: Partial<FakeUser>) => {
+          const user = mockAuth.users.get(id)!;
+          Object.assign(user, patch);
+          return { data: { user }, error: null };
+        },
+      },
+    },
+  }),
+}));
+
 /**
- * Pre-marital documents over HTTP against a disposable Postgres
- * (PIPELINE_TEST_DATABASE_URL; skipped otherwise): the letters email, the
- * couple's page (link, code, scope, uploads) and the office side (viewing,
- * reviewing, the documents check, deleting a closed case's files). Storage
- * and email are in-memory stand-ins; everything else is real.
+ * Pre-marital documents and the couple dashboard over HTTP against a
+ * disposable Postgres (PIPELINE_TEST_DATABASE_URL; skipped otherwise): the
+ * dashboard sign-ins and welcome emails, each partner's dashboard (fenced off
+ * from every other route), uploads, and the office side (viewing, reviewing,
+ * the documents check, deleting a closed case's files). Storage, email and
+ * Supabase Auth are in-memory stand-ins; everything else is real.
  */
 const url = process.env.PIPELINE_TEST_DATABASE_URL;
 const maybe = url ? describe : describe.skip;
@@ -66,8 +97,9 @@ class MemoryStore extends DocumentStore {
   objects = new Map<string, Buffer>();
   ops: string[] = [];
   failPut = false;
+  ready = true;
   get configured() {
-    return true;
+    return this.ready;
   }
   async put(key: string, data: Buffer) {
     if (this.failPut) throw new Error('storage is down');
@@ -85,10 +117,7 @@ class MemoryStore extends DocumentStore {
   }
 }
 
-const COOKIE_PATH = '/api/backend/public/premarital/documents';
-const GENERIC = "This link isn't working. Please ask the church office for a new one.";
-
-maybe('Pre-marital documents over HTTP, against Postgres', () => {
+maybe('Pre-marital documents and the couple dashboard over HTTP, against Postgres', () => {
   const prisma = url ? new PrismaClient({ datasources: { db: { url } } }) : (null as unknown as PrismaClient);
   const tenantId = randomUUID();
   const values: Record<string, unknown> = {
@@ -102,24 +131,25 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
   const mails: { applicationId: string; event: string; payload: SendEmailPayload }[] = [];
   let mailStatus: 'SENT' | 'FAILED' | 'SKIPPED' = 'SENT';
   const mailer = {
-    contactUrl: 'https://example.org/contact',
-    linkFor: (raw: string) => `https://example.org/pre-marital-counselling/documents#t=${raw}`,
+    appUrl: 'https://example.org',
     send: jest.fn(async (a: { id: string }, event: string, payload: SendEmailPayload) => {
       mails.push({ applicationId: a.id, event, payload });
       return { status: mailStatus, messageId: mailStatus === 'SENT' ? 'msg-1' : null };
     }),
   };
-  const acks: string[] = [];
-  const notifier = { send: jest.fn(async (a: { id: string }, event: string) => (event === 'RECEIVED' && acks.push(a.id), 'SENT')) };
+  const notifier = { send: jest.fn(async () => 'SENT') };
   const logs: string[] = [];
   const secrets: string[] = [];
   let app: INestApplication;
   let renderer: LetterRenderer;
-  let coupleAccess: CoupleAccessService;
-  const people: Record<'pastor' | 'superAdmin' | 'ministry' | 'counsellor' | 'member', { profileId: string; header: string }> = {} as never;
+  const people: Record<'pastor' | 'superAdmin' | 'ministry' | 'counsellor' | 'member', { profileId: string; userId: string; header: string; email: string }> =
+    {} as never;
 
-  const header = (profileId: string, roles: Role[]) =>
-    JSON.stringify({ userId: `u-${profileId}`, email: 'x@example.com', role: roles.at(-1), effectiveRoles: [Role.MEMBER, ...roles], unitLeadOf: [], hodOf: [], headUsher: false, profileId, memberId: null, tenantId });
+  const staffHeader = (profileId: string, userId: string, roles: Role[]) =>
+    JSON.stringify({ userId, email: 'x@example.com', role: roles.at(-1) ?? Role.MEMBER, effectiveRoles: [Role.MEMBER, ...roles], unitLeadOf: [], hodOf: [], headUsher: false, profileId, memberId: null, tenantId });
+  /** A couple dashboard sign-in: no Profile, no role. */
+  const coupleHeader = (userId: string) =>
+    JSON.stringify({ userId, email: 'couple@example.com', role: null, effectiveRoles: [], unitLeadOf: [], hodOf: [], headUsher: false, profileId: null, memberId: null, tenantId: null });
   const http = () => request(app.getHttpServer());
   const as = (who: keyof typeof people) => ({
     get: (p: string) => http().get(p).set('x-test-user', people[who].header),
@@ -128,8 +158,9 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
   });
 
   let n = 0;
-  async function apply(role: 'GROOM' | 'BRIDE' = 'GROOM') {
+  async function apply(role: 'GROOM' | 'BRIDE' = 'GROOM', over: Record<string, unknown> = {}) {
     n++;
+    const tag = randomUUID().slice(0, 6);
     const res = await http()
       .post('/public/premarital/applications')
       .send({
@@ -140,34 +171,30 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
         applicantLastName: role === 'GROOM' ? 'Adeyemi' : 'Eze',
         partnerFirstName: role === 'GROOM' ? 'Ada' : 'Tunde',
         partnerLastName: role === 'GROOM' ? 'Eze' : 'Adeyemi',
-        applicantEmail: `couple${n}-${randomUUID().slice(0, 6)}@example.com`,
+        applicantEmail: `applicant${n}-${tag}@example.com`,
+        partnerEmail: `partner${n}-${tag}@example.com`,
         applicantPhone: `0803 ${String(1_000_000 + n).slice(-7)}`,
         partnerPhone: `0809 ${String(2_000_000 + n).slice(-7)}`,
+        ...over,
       })
       .expect(201);
-    return prisma.counsellingApplication.findFirstOrThrow({ where: { tenantId, referenceCode: res.body.data.referenceCode } });
+    const a = await prisma.counsellingApplication.findFirstOrThrow({ where: { tenantId, referenceCode: res.body.data.referenceCode } });
+    secrets.push(a.applicantPhone.replace(/\D/g, ''), a.partnerPhone!.replace(/\D/g, ''));
+    return a;
   }
-  const tokenFrom = (p: SendEmailPayload) => {
-    const raw = /#t=([A-Za-z0-9_-]+)/.exec(p.text)?.[1];
-    if (!raw) throw new Error('no link in the email');
-    secrets.push(raw);
-    return raw;
-  };
-  const lastMail = (applicationId: string, event: string) => [...mails].reverse().find((m) => m.applicationId === applicationId && m.event === event);
-  const cookieOf = (res: request.Response) => String((res.headers['set-cookie'] as unknown as string[])[0]).split(';')[0];
-
-  /** Link, code, verified cookie. */
-  async function signIn(applicationId: string, raw: string) {
-    const access = await http().post('/public/premarital/documents/access').send({ token: raw }).expect(200);
-    const linkCookie = cookieOf(access);
-    await http().post('/public/premarital/documents/code').set('Cookie', linkCookie).expect(200);
-    const code = /Your code is (\d{6})/.exec(lastMail(applicationId, 'DOCUMENT_CODE')!.payload.text)![1];
-    secrets.push(code);
-    const ok = await http().post('/public/premarital/documents/code/verify').set('Cookie', linkCookie).send({ code }).expect(200);
-    return cookieOf(ok);
+  const participant = (applicationId: string, side: 'APPLICANT' | 'PARTNER') =>
+    prisma.counsellingParticipant.findUniqueOrThrow({ where: { applicationId_side: { applicationId, side } } });
+  /** Requests as one partner, through their own sign-in. */
+  async function partner(applicationId: string, side: 'APPLICANT' | 'PARTNER') {
+    const { authUserId } = await participant(applicationId, side);
+    const h = coupleHeader(authUserId);
+    return {
+      get: (p: string) => http().get(p).set('x-test-user', h),
+      post: (p: string, b: object = {}) => http().post(p).set('x-test-user', h).send(b),
+      upload: (kind: string, file: Buffer, name = 'scan.pdf') => http().post(`/counselling/me/documents/${kind}/upload`).set('x-test-user', h).attach('file', file, name),
+    };
   }
-  const upload = (cookie: string, kind: string, file: Buffer, name = 'scan.pdf') =>
-    http().post(`/public/premarital/documents/${kind}/upload`).set('Cookie', cookie).attach('file', file, name);
+  const mailsFor = (applicationId: string) => mails.filter((m) => m.applicationId === applicationId);
   const pdf = async (text = 'certificate') => {
     const d = await PDFDocument.create();
     d.addPage().drawText(text);
@@ -193,13 +220,15 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
       member: [],
     };
     for (const key of Object.keys(roles) as (keyof typeof people)[]) {
-      const profileId = (await prisma.profile.create({ data: { id: randomUUID(), userId: randomUUID(), tenantId } })).id;
-      await prisma.member.create({ data: { id: randomUUID(), tenantId, profileId, firstName: key, lastName: 'Test' } });
-      people[key] = { profileId, header: header(profileId, roles[key]) };
+      const userId = randomUUID();
+      const email = `${key}-${tenantId.slice(0, 6)}@example.com`;
+      const profileId = (await prisma.profile.create({ data: { id: randomUUID(), userId, tenantId } })).id;
+      await prisma.member.create({ data: { id: randomUUID(), tenantId, profileId, firstName: key, lastName: 'Test', email } });
+      people[key] = { profileId, userId, email, header: staffHeader(profileId, userId, roles[key]) };
     }
     const moduleRef = await Test.createTestingModule({
       imports: [ThrottlerModule.forRoot({ throttlers: [{ ttl: 60_000, limit: 1000 }], skipIf: () => true })],
-      controllers: [PublicPremaritalController, PremaritalController, CoupleDocumentsController, PremaritalDocumentsController],
+      controllers: [PublicPremaritalController, PremaritalController, CoupleController, PremaritalDocumentsController],
       providers: [
         CaseAccess,
         PolicyService,
@@ -212,8 +241,8 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
         DocumentCrypto,
         UploadInspector,
         DocumentLettersService,
-        CoupleAccessService,
-        CoupleDocumentsService,
+        CoupleAccountsService,
+        CoupleDashboardService,
         DocumentDispatchService,
         DocumentsAdminService,
         { provide: DocumentStore, useValue: store },
@@ -232,7 +261,6 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
     app.useGlobalInterceptors(new ResponseEnvelopeInterceptor());
     await app.init();
     renderer = moduleRef.get(LetterRenderer);
-    coupleAccess = moduleRef.get(CoupleAccessService);
   });
 
   afterAll(async () => {
@@ -252,58 +280,132 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
     jest.restoreAllMocks();
   });
 
-  describe('the letters email', () => {
-    it('a new application creates the checklist and one link, and sends one email with both letters and the link', async () => {
+  describe('dashboard sign-ins and the welcome emails', () => {
+    it('makes a sign-in for each partner (email, phone digits as a temporary password), and emails each of them; the letters go to the applicant', async () => {
       const a = await apply('GROOM');
       const reqs = await prisma.counsellingDocumentRequirement.findMany({ where: { applicationId: a.id } });
       expect(reqs.map((r) => r.kind).sort()).toEqual(['MEDICAL_CERT_BRIDE', 'MEDICAL_CERT_GROOM', 'PARENTAL_CONSENT']);
-      expect(reqs.every((r) => r.status === 'PENDING')).toBe(true);
-      const tokens = await prisma.counsellingAccessToken.findMany({ where: { applicationId: a.id } });
-      expect(tokens).toHaveLength(1);
-      expect(tokens[0].scope).toBe('ALL');
-      const sentToThem = mails.filter((m) => m.applicationId === a.id);
-      expect(sentToThem.map((m) => m.event)).toEqual(['DOCUMENTS']);
-      const { payload } = sentToThem[0];
-      expect(payload.to).toBe(a.applicantEmail);
-      const files = (payload.attachments ?? []) as { filename: string; content: Buffer }[];
+
+      const rows = await prisma.counsellingParticipant.findMany({ where: { applicationId: a.id }, orderBy: { side: 'asc' } });
+      expect(rows.map((r) => [r.side, r.accountKind])).toEqual([['APPLICANT', 'COUPLE'], ['PARTNER', 'COUPLE']]);
+      expect(rows.every((r) => r.signInSentAt)).toBe(true);
+      const applicantUser = mockAuth.users.get(rows[0].authUserId)!;
+      expect(applicantUser).toMatchObject({
+        email: a.applicantEmail,
+        password: a.applicantPhone.replace(/\D/g, ''),
+        app_metadata: { account: 'counselling_couple' },
+        user_metadata: { needs_password_change: true, temp_password: 'phone' },
+      });
+      expect(mockAuth.users.get(rows[1].authUserId)!.password).toBe(a.partnerPhone!.replace(/\D/g, ''));
+      // No Profile: the API fences these accounts off from everything but the dashboard.
+      expect(await prisma.profile.count({ where: { userId: { in: rows.map((r) => r.authUserId) } } })).toBe(0);
+
+      const sent = mailsFor(a.id);
+      expect(sent.map((m) => m.event)).toEqual(['DOCUMENTS', 'PARTNER_WELCOME']);
+      const [toApplicant, toPartner] = sent.map((m) => m.payload);
+      expect(toApplicant.to).toBe(a.applicantEmail);
+      expect(toPartner.to).toBe(a.partnerEmail);
+      const files = (toApplicant.attachments ?? []) as { filename: string; content: Buffer }[];
       expect(files.map((f) => f.filename)).toEqual(['Parental-Consent.pdf', 'Medical-Screening-Requirement.pdf']);
       for (const f of files) expect(f.content.subarray(0, 5).toString()).toBe('%PDF-');
-      expect(tokenFrom(payload)).toHaveLength(43);
-      // A short, general email: no partner details, nothing medical beyond the letter's name.
-      expect(payload.text).not.toContain('Ada');
-      expect(payload.text.toLowerCase()).not.toMatch(/hiv|hepatitis|genotype|syphilis/);
+      expect(toPartner.attachments).toBeUndefined();
+      expect(toApplicant.text).toContain(`ending in ${a.applicantPhone.replace(/\D/g, '').slice(-4)}`);
+      // Neither email carries the other partner's address, or any password.
+      expect(toApplicant.text).not.toContain(a.partnerEmail!);
+      expect(toPartner.text).not.toContain(a.applicantEmail);
+      for (const p of [toApplicant, toPartner]) {
+        expect(p.text).not.toContain(a.applicantPhone.replace(/\D/g, ''));
+        expect(p.text).not.toContain(a.partnerPhone!.replace(/\D/g, ''));
+        expect(p.text.toLowerCase()).not.toMatch(/hiv|hepatitis|genotype|syphilis/);
+      }
       const dispatch = await prisma.counsellingDocumentDispatch.findFirstOrThrow({ where: { applicationId: a.id } });
       expect(dispatch).toMatchObject({ status: 'SENT', resendMessageId: 'msg-1', requestedById: null });
-      expect(dispatch.consentTemplateId).toBeTruthy();
-      expect(acks).not.toContain(a.id);
+      expect(await prisma.auditLog.count({ where: { tenantId, action: 'COUNSELLING_ACCOUNT_CREATED' } })).toBeGreaterThanOrEqual(2);
     });
 
-    it('refuses an application that does not say groom or bride', async () => {
+    it("refuses an application without the partner's own email and phone, or without groom or bride", async () => {
       const { applicantRole: _drop, ...rest } = validApplication();
       void _drop;
-      const res = await http().post('/public/premarital/applications').send({ ...rest, submissionKey: randomUUID() }).expect(400);
-      expect(JSON.stringify(res.body)).toContain('intending groom or the intending bride');
+      const noRole = await http().post('/public/premarital/applications').send({ ...rest, submissionKey: randomUUID() }).expect(400);
+      expect(JSON.stringify(noRole.body)).toContain('intending groom or the intending bride');
+      const noEmail = await http().post('/public/premarital/applications').send({ ...validApplication(), submissionKey: randomUUID(), partnerEmail: '' }).expect(400);
+      expect(JSON.stringify(noEmail.body)).toContain("Enter your partner's email address");
+      const same = await http()
+        .post('/public/premarital/applications')
+        .send({ ...validApplication(), submissionKey: randomUUID(), partnerEmail: validApplication().applicantEmail })
+        .expect(400);
+      expect(JSON.stringify(same.body)).toContain("partner's own email address");
     });
 
-    it('when the email fails the application stands, a plain acknowledgement goes, the log shows it, and the office can resend', async () => {
+    it('links a member to their usual account instead of making a new one', async () => {
+      const a = await apply('BRIDE', { applicantEmail: people.member.email.toUpperCase() });
+      const row = await participant(a.id, 'APPLICANT');
+      expect(row).toMatchObject({ accountKind: 'MEMBER', authUserId: people.member.userId });
+      expect([...mockAuth.users.values()].some((u) => u.email.toLowerCase() === people.member.email)).toBe(false);
+      expect(mailsFor(a.id)[0].payload.text).toContain('usual Everlasting Hills account');
+    });
+
+    it('reuses a couple account from before: a password someone chose is kept; one never used starts again on the phone number', async () => {
+      const first = await apply();
+      const used = mockAuth.users.get((await participant(first.id, 'APPLICANT')).authUserId)!;
+      used.password = 'chosen-by-them';
+      used.user_metadata = { ...used.user_metadata, needs_password_change: false };
+      await prisma.counsellingApplication.update({ where: { id: first.id }, data: { status: 'CLOSED' } });
+
+      const again = await apply('GROOM', { applicantEmail: first.applicantEmail, partnerEmail: first.partnerEmail, partnerPhone: '0812 555 0101' });
+      expect((await participant(again.id, 'APPLICANT')).authUserId).toBe(used.id);
+      expect(used.password).toBe('chosen-by-them');
+      expect(mailsFor(again.id)[0].payload.text).toContain('password you chose before');
+      const partnerUser = mockAuth.users.get((await participant(again.id, 'PARTNER')).authUserId)!;
+      expect(partnerUser.password).toBe('08125550101');
+      expect(mailsFor(again.id)[1].payload.text).toContain('ending in 0101');
+    });
+
+    it('when the phone number is refused as a password, the account is still made and the email says "Forgot password"', async () => {
+      mockAuth.refuseDigits = true;
+      const a = await apply();
+      mockAuth.refuseDigits = false;
+      const user = mockAuth.users.get((await participant(a.id, 'APPLICANT')).authUserId)!;
+      expect(user.password).not.toMatch(/^\d+$/);
+      expect(user.user_metadata.temp_password).toBe('none');
+      expect(mailsFor(a.id)[0].payload.text).toContain('Forgot password');
+    });
+
+    it('when sign-ins cannot be made the application stands, the applicant still hears from us, and the office makes them later', async () => {
+      mockAuth.down = true;
+      const a = await apply();
+      mockAuth.down = false;
+      expect(await prisma.counsellingParticipant.count({ where: { applicationId: a.id } })).toBe(0);
+      expect(mailsFor(a.id).map((m) => m.event)).toEqual(['DOCUMENTS']);
+      expect(mailsFor(a.id)[0].payload.text).toContain('still setting up your dashboard');
+
+      const list = await as('ministry').get(`/premarital/applications/${a.id}/documents`).expect(200);
+      expect(list.body.data.accounts.map((x: { kind: string | null }) => x.kind)).toEqual([null, null]);
+      const res = await as('ministry').post(`/premarital/applications/${a.id}/sign-in`).expect(201);
+      expect(res.body.data).toMatchObject({ email: 'SENT', accounts: [{ side: 'APPLICANT', ready: true }, { side: 'PARTNER', ready: true }] });
+      expect(mailsFor(a.id).filter((m) => m.event === 'SIGN_IN').map((m) => m.payload.to)).toEqual([a.applicantEmail, a.partnerEmail]);
+      await as('counsellor').post(`/premarital/applications/${a.id}/sign-in`).expect(404);
+    });
+
+    it('when the email fails the application stands, the log shows it, and the office can resend the letters', async () => {
       mailStatus = 'FAILED';
       const a = await apply();
       mailStatus = 'SENT';
-      expect(acks).toContain(a.id);
       expect((await prisma.counsellingDocumentDispatch.findFirstOrThrow({ where: { applicationId: a.id } })).status).toBe('FAILED');
       const res = await as('ministry').post(`/premarital/applications/${a.id}/documents/send`).expect(201);
       expect(res.body.data.status).toBe('SENT');
-      const tokens = await prisma.counsellingAccessToken.findMany({ where: { applicationId: a.id }, orderBy: { createdAt: 'asc' } });
-      expect(tokens).toHaveLength(2);
-      expect(tokens[0].revokedAt).not.toBeNull();
-      expect(tokens[1].revokedAt).toBeNull();
+      const resent = mailsFor(a.id).filter((m) => m.event === 'DOCUMENTS').at(-1)!.payload;
+      expect(resent.text).toContain('Here are your two letters again');
+      expect(resent.text).toContain('ending in');
     });
 
-    it('when the letters cannot be built, a plain acknowledgement goes instead and the failure is logged', async () => {
+    it('when the letters cannot be built, the welcome still goes with the sign-in details and the failure is logged', async () => {
       jest.spyOn(renderer, 'render').mockRejectedValueOnce(new Error('letterhead missing'));
       const a = await apply();
-      expect(acks).toContain(a.id);
-      expect(mails.filter((m) => m.applicationId === a.id && m.event === 'DOCUMENTS')).toHaveLength(0);
+      const [first] = mailsFor(a.id);
+      expect(first.event).toBe('RECEIVED');
+      expect(first.payload.attachments).toBeUndefined();
+      expect(first.payload.text).toContain('How to sign in');
       const d = await prisma.counsellingDocumentDispatch.findFirstOrThrow({ where: { applicationId: a.id } });
       expect(d).toMatchObject({ status: 'FAILED', consentTemplateId: null, medicalTemplateId: null });
     });
@@ -323,91 +425,110 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
       const preview = await as('ministry').post('/premarital/document-templates/MEDICAL_SCREENING/preview', { blocks: v1.body }).expect(200);
       expect(preview.headers['content-type']).toContain('application/pdf');
     });
-
-    it('maps groom and bride by who applied: a bride applying sees the groom (her partner) named first', async () => {
-      const a = await apply('BRIDE');
-      const cookie = await signIn(a.id, tokenFrom(lastMail(a.id, 'DOCUMENTS')!.payload));
-      const page = await http().get('/public/premarital/documents').set('Cookie', cookie).expect(200);
-      expect(page.body.data.firstNames).toEqual(['Tunde', 'Ada']);
-      expect(page.headers['cache-control']).toBe('no-store');
-    });
   });
 
-  describe('the couple page', () => {
-    it('a valid link gives a cookie for these routes only; unknown, expired and revoked links all get the same answer', async () => {
-      const a = await apply();
-      const raw = tokenFrom(lastMail(a.id, 'DOCUMENTS')!.payload);
-      const res = await http().post('/public/premarital/documents/access').send({ token: raw }).expect(200);
-      expect(res.body.data.stage).toBe('CODE');
-      const set = String((res.headers['set-cookie'] as unknown as string[])[0]);
-      expect(set).toContain(`Path=${COOKIE_PATH}`);
-      expect(set).toMatch(/HttpOnly/);
-      expect(set).toMatch(/Secure/);
-      expect(set).toMatch(/SameSite=Strict/);
-      // Without the code, the page stays shut.
-      await http().get('/public/premarital/documents').set('Cookie', cookieOf(res)).expect(404);
-
-      const unknown = await http().post('/public/premarital/documents/access').send({ token: 'x'.repeat(43) }).expect(404);
-      await prisma.counsellingAccessToken.updateMany({ where: { applicationId: a.id }, data: { expiresAt: new Date(Date.now() - 1000) } });
-      const expired = await http().post('/public/premarital/documents/access').send({ token: raw }).expect(404);
-      await prisma.counsellingAccessToken.updateMany({ where: { applicationId: a.id }, data: { expiresAt: new Date(Date.now() + 86_400_000), revokedAt: new Date() } });
-      const revoked = await http().post('/public/premarital/documents/access').send({ token: raw }).expect(404);
-      for (const r of [unknown, expired, revoked]) expect(r.body.error.message).toBe(GENERIC);
+  describe('the couple dashboard', () => {
+    it('shows each partner their own application, sessions and documents, and nothing private', async () => {
+      const a = await apply('BRIDE');
+      await prisma.counsellingApplication.update({ where: { id: a.id }, data: { status: 'ACCEPTED_FOR_COUNSELLING', adminNote: 'Call after 5pm', safeguardingFlaggedAt: new Date() } });
+      await prisma.counsellingAssignment.create({
+        data: { id: randomUUID(), tenantId, applicationId: a.id, counsellorProfileId: people.counsellor.profileId, isLead: true, assignedById: people.pastor.profileId },
+      });
+      await prisma.counsellingSession.create({
+        data: { id: randomUUID(), tenantId, applicationId: a.id, counsellorProfileId: people.counsellor.profileId, scheduledAt: new Date(Date.now() + 3 * 86_400_000), format: 'ONLINE', meetingLink: 'https://meet.example.org/abc', createdById: people.pastor.profileId },
+      });
+      const bride = await partner(a.id, 'APPLICANT');
+      const res = await bride.get('/counselling/me').expect(200);
+      expect(res.headers['cache-control']).toBe('no-store');
+      const d = res.body.data;
+      expect(d.application).toMatchObject({ reference: a.referenceCode, status: 'ACCEPTED_FOR_COUNSELLING', you: { firstName: 'Ada', role: 'BRIDE' }, partner: { firstName: 'Tunde', role: 'GROOM' } });
+      expect(d.application.stages.map((s: { state: string }) => s.state)).toEqual(['DONE', 'DONE', 'CURRENT', 'UPCOMING', 'UPCOMING', 'UPCOMING']);
+      expect(d.counsellors).toEqual([{ name: 'counsellor Test', lead: true }]);
+      expect(d.sessions).toHaveLength(1);
+      expect(d.sessions[0]).toMatchObject({ format: 'ONLINE', meetingLink: 'https://meet.example.org/abc', counsellor: 'counsellor Test' });
+      expect(d.documents.items.map((i: { kind: string; yours: boolean }) => [i.kind, i.yours])).toEqual([
+        ['PARENTAL_CONSENT', true],
+        ['MEDICAL_CERT_GROOM', false],
+        ['MEDICAL_CERT_BRIDE', true],
+      ]);
+      const body = JSON.stringify(res.body);
+      expect(body).not.toMatch(/Call after 5pm|safeguard|adminNote|intro|applicantEmail|partnerEmail|@example\.com/);
     });
 
-    it('the code: a wrong one fails, five wrong tries use it up, and no more than three codes an hour', async () => {
+    it('fences a couple account off from every other route', async () => {
       const a = await apply();
-      const raw = tokenFrom(lastMail(a.id, 'DOCUMENTS')!.payload);
-      const linkCookie = cookieOf(await http().post('/public/premarital/documents/access').send({ token: raw }).expect(200));
-      await http().post('/public/premarital/documents/code').set('Cookie', linkCookie).expect(200);
-      const code = /Your code is (\d{6})/.exec(lastMail(a.id, 'DOCUMENT_CODE')!.payload.text)![1];
-      secrets.push(code);
-      const wrong = code === '000000' ? '111111' : '000000';
-      for (let i = 0; i < 5; i++)
-        await http().post('/public/premarital/documents/code/verify').set('Cookie', linkCookie).send({ code: wrong }).expect(422);
-      await http().post('/public/premarital/documents/code/verify').set('Cookie', linkCookie).send({ code }).expect(422);
-      await http().post('/public/premarital/documents/code').set('Cookie', linkCookie).expect(200);
-      await http().post('/public/premarital/documents/code').set('Cookie', linkCookie).expect(200);
-      await http().post('/public/premarital/documents/code').set('Cookie', linkCookie).expect(429);
-      const fresh = /Your code is (\d{6})/.exec(lastMail(a.id, 'DOCUMENT_CODE')!.payload.text)![1];
-      secrets.push(fresh);
-      await http().post('/public/premarital/documents/code/verify').set('Cookie', linkCookie).send({ code: fresh }).expect(200);
+      const groom = await partner(a.id, 'APPLICANT');
+      for (const path of ['/premarital/overview', `/premarital/applications/${a.id}`, `/premarital/applications/${a.id}/documents`, '/premarital/access']) {
+        const res = await groom.get(path).expect(403);
+        expect(res.body.error.message).toBe('This account can only open the pre-marital counselling dashboard.');
+      }
+      // A sign-in with no application of its own sees nothing.
+      const stranger = coupleHeader(randomUUID());
+      await http().get('/counselling/me').set('x-test-user', stranger).expect(404);
     });
 
-    it('a groom link can neither see nor upload the bride certificate', async () => {
+    it('a member sees the same dashboard through their usual account', async () => {
+      const a = await apply('GROOM', { partnerEmail: people.member.email });
+      expect((await participant(a.id, 'PARTNER')).accountKind).toBe('MEMBER');
+      const res = await as('member').get('/counselling/me').expect(200);
+      expect(res.body.data.application).toMatchObject({ reference: a.referenceCode, you: { firstName: 'Ada', role: 'BRIDE' } });
+      // The menu shows Pre-marital to a member with an application, and not to anyone else.
+      expect((await as('member').get('/premarital/access').expect(200)).body.data.couple).toBe(true);
+      expect((await as('counsellor').get('/premarital/access').expect(200)).body.data.couple).toBe(false);
+    });
+
+    it('lets both partners download both letters', async () => {
       const a = await apply();
-      const raw = await prisma.$transaction((tx) => coupleAccess.createToken(tx, { applicationId: a.id, scope: 'GROOM', validDays: 60, createdById: null }));
-      secrets.push(raw);
-      const cookie = await signIn(a.id, raw);
-      const page = await http().get('/public/premarital/documents').set('Cookie', cookie).expect(200);
-      expect(page.body.data.documents.map((d: { kind: string }) => d.kind)).toEqual(['PARENTAL_CONSENT', 'MEDICAL_CERT_GROOM']);
-      await http().post('/public/premarital/documents/consent').set('Cookie', cookie).send({ kind: 'MEDICAL_CERT_BRIDE' }).expect(404);
-      await upload(cookie, 'MEDICAL_CERT_BRIDE', await pdf()).expect(404);
+      for (const side of ['APPLICANT', 'PARTNER'] as const) {
+        const res = await (await partner(a.id, side)).get('/counselling/me/letters/medical').expect(200);
+        expect(res.headers['content-type']).toContain('application/pdf');
+      }
+      expect(await prisma.auditLog.count({ where: { tenantId, action: 'COUNSELLING_LETTER_DOWNLOADED', entityId: a.id } })).toBe(2);
+    });
+
+    it("each partner uploads only the consent letter and their own certificate; the other's is 404", async () => {
+      const a = await apply('BRIDE');
+      const groom = await partner(a.id, 'PARTNER');
+      await groom.post('/counselling/me/documents/consent', { kind: 'MEDICAL_CERT_BRIDE' }).expect(404);
+      await groom.upload('MEDICAL_CERT_BRIDE', await pdf()).expect(404);
+      await groom.post('/counselling/me/documents/consent', { kind: 'MEDICAL_CERT_GROOM' }).expect(200);
+      await groom.upload('MEDICAL_CERT_GROOM', await pdf()).expect(200);
+      const file = await prisma.counsellingDocumentFile.findFirstOrThrow({ where: { Requirement: { applicationId: a.id, kind: 'MEDICAL_CERT_GROOM' } } });
+      expect(file.uploadedByParticipantId).toBe((await participant(a.id, 'PARTNER')).id);
+    });
+
+    it('says uploads are not open yet while storage is not set up', async () => {
+      const a = await apply();
+      const groom = await partner(a.id, 'APPLICANT');
+      store.ready = false;
+      expect((await groom.get('/counselling/me').expect(200)).body.data.documents.uploadsOpen).toBe(false);
+      await groom.upload('PARENTAL_CONSENT', await pdf()).expect(503);
+      store.ready = true;
     });
 
     describe('uploads', () => {
       let a: Awaited<ReturnType<typeof apply>>;
-      let cookie: string;
+      let groom: Awaited<ReturnType<typeof partner>>;
       beforeAll(async () => {
         a = await apply();
-        cookie = await signIn(a.id, tokenFrom(lastMail(a.id, 'DOCUMENTS')!.payload));
+        groom = await partner(a.id, 'APPLICANT');
       });
 
       it('refuses a renamed .exe, an oversized file and a PDF with JavaScript', async () => {
-        await upload(cookie, 'PARENTAL_CONSENT', Buffer.concat([Buffer.from('MZ'), Buffer.alloc(2000, 1)]), 'letter.pdf').expect(400);
-        await upload(cookie, 'PARENTAL_CONSENT', Buffer.concat([Buffer.from('%PDF-1.4\n'), Buffer.alloc(11 * 1024 * 1024, 32)])).expect(413);
+        await groom.upload('PARENTAL_CONSENT', Buffer.concat([Buffer.from('MZ'), Buffer.alloc(2000, 1)]), 'letter.pdf').expect(400);
+        await groom.upload('PARENTAL_CONSENT', Buffer.concat([Buffer.from('%PDF-1.4\n'), Buffer.alloc(11 * 1024 * 1024, 32)])).expect(413);
         const js = await PDFDocument.create();
         js.addPage();
         js.addJavaScript('x', 'app.alert(1)');
-        await upload(cookie, 'PARENTAL_CONSENT', Buffer.from(await js.save())).expect(400);
+        await groom.upload('PARENTAL_CONSENT', Buffer.from(await js.save())).expect(400);
         expect((await requirement(a.id, 'PARENTAL_CONSENT')).status).toBe('PENDING');
       });
 
       it('blocks a medical certificate until the consent box is ticked, then strips the photo, seals it, and shows status only', async () => {
         const image = await photo();
-        await upload(cookie, 'MEDICAL_CERT_GROOM', image, 'cert.jpg').expect(400);
-        await http().post('/public/premarital/documents/consent').set('Cookie', cookie).send({ kind: 'MEDICAL_CERT_GROOM' }).expect(200);
-        await upload(cookie, 'MEDICAL_CERT_GROOM', image, 'cert.jpg').expect(200);
+        await groom.upload('MEDICAL_CERT_GROOM', image, 'cert.jpg').expect(400);
+        await groom.post('/counselling/me/documents/consent', { kind: 'MEDICAL_CERT_GROOM' }).expect(200);
+        await groom.upload('MEDICAL_CERT_GROOM', image, 'cert.jpg').expect(200);
         const req = await requirement(a.id, 'MEDICAL_CERT_GROOM');
         expect(req.status).toBe('UPLOADED');
         expect(req.storageConsentAt).not.toBeNull();
@@ -418,26 +539,29 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
         // Stored bytes are ciphertext, not the photo.
         expect(sealed.subarray(0, 5).toString()).toBe('EHCD1');
         expect(sealed.includes(image.subarray(0, 64))).toBe(false);
-        const page = await http().get('/public/premarital/documents').set('Cookie', cookie).expect(200);
-        const body = JSON.stringify(page.body);
-        expect(body).not.toMatch(/storageKey|sha256|wrapped|%PDF|EHCD1|base64/);
-        expect(page.body.data.documents.find((d: { kind: string }) => d.kind === 'MEDICAL_CERT_GROOM')).toMatchObject({ status: 'UPLOADED', canUpload: true, needsConsent: false });
+        const page = await groom.get('/counselling/me').expect(200);
+        expect(JSON.stringify(page.body)).not.toMatch(/storageKey|sha256|wrapped|%PDF|EHCD1|base64/);
+        expect(page.body.data.documents.items.find((d: { kind: string }) => d.kind === 'MEDICAL_CERT_GROOM')).toMatchObject({ status: 'UPLOADED', canUpload: true, needsConsent: false });
+        // The other partner sees the status, but cannot upload it or read why it was sent back.
+        const bride = await partner(a.id, 'PARTNER');
+        const theirs = (await bride.get('/counselling/me').expect(200)).body.data.documents.items.find((d: { kind: string }) => d.kind === 'MEDICAL_CERT_GROOM');
+        expect(theirs).toMatchObject({ status: 'UPLOADED', yours: false, canUpload: false, reuploadReason: null });
       });
 
       it('a replacement deletes the old object only after the new one is stored; a failed upload leaves the old file alone', async () => {
-        await upload(cookie, 'PARENTAL_CONSENT', await pdf('first')).expect(200);
+        await groom.upload('PARENTAL_CONSENT', await pdf('first')).expect(200);
         const req = await requirement(a.id, 'PARENTAL_CONSENT');
         const first = await prisma.counsellingDocumentFile.findFirstOrThrow({ where: { requirementId: req.id, supersededAt: null } });
 
         store.failPut = true;
-        await upload(cookie, 'PARENTAL_CONSENT', await pdf('broken')).expect(500);
+        await groom.upload('PARENTAL_CONSENT', await pdf('broken')).expect(500);
         store.failPut = false;
         const still = await prisma.counsellingDocumentFile.findUniqueOrThrow({ where: { id: first.id } });
         expect(still).toMatchObject({ supersededAt: null, purgedAt: null });
         expect(store.objects.has(first.storageKey)).toBe(true);
 
         store.ops.length = 0;
-        await upload(cookie, 'PARENTAL_CONSENT', await pdf('second')).expect(200);
+        await groom.upload('PARENTAL_CONSENT', await pdf('second')).expect(200);
         const second = await prisma.counsellingDocumentFile.findFirstOrThrow({ where: { requirementId: req.id, supersededAt: null, purgedAt: null } });
         expect(store.ops).toEqual([`put:${second.storageKey}`, `remove:${first.storageKey}`]);
         const old = await prisma.counsellingDocumentFile.findUniqueOrThrow({ where: { id: first.id } });
@@ -447,13 +571,18 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
         expect(await prisma.auditLog.count({ where: { tenantId, action: 'COUNSELLING_DOCUMENT_REPLACED_DELETED', entityId: first.id } })).toBe(1);
       });
 
-      it('an accepted document cannot be replaced until a Pastor reopens it', async () => {
+      it('an accepted document cannot be replaced until a Pastor reopens it; a re-upload request goes to whoever uploaded it', async () => {
         const req = await requirement(a.id, 'PARENTAL_CONSENT');
         await as('ministry').post(`/premarital/documents/${req.id}/verify`, {}).expect(201);
-        await upload(cookie, 'PARENTAL_CONSENT', await pdf('third')).expect(409);
+        await groom.upload('PARENTAL_CONSENT', await pdf('third')).expect(409);
         await as('superAdmin').post(`/premarital/documents/${req.id}/reopen`).expect(404);
         await as('pastor').post(`/premarital/documents/${req.id}/reopen`).expect(201);
-        await upload(cookie, 'PARENTAL_CONSENT', await pdf('third')).expect(200);
+        await groom.upload('PARENTAL_CONSENT', await pdf('third')).expect(200);
+        await as('ministry').post(`/premarital/documents/${req.id}/request-reupload`, { reason: 'MISSING_SIGNATURE' }).expect(201);
+        const notice = mailsFor(a.id).filter((m) => m.event === 'DOCUMENT_REUPLOAD').at(-1)!;
+        expect(notice.payload.to).toBe(a.applicantEmail);
+        const page = await groom.get('/counselling/me').expect(200);
+        expect(page.body.data.documents.items.find((d: { kind: string }) => d.kind === 'PARENTAL_CONSENT')).toMatchObject({ status: 'NEEDS_REUPLOAD', reuploadReason: 'MISSING_SIGNATURE' });
       });
     });
   });
@@ -466,11 +595,12 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
       a = await apply();
       other = await apply();
       for (const target of [a, other]) {
-        const cookie = await signIn(target.id, tokenFrom(lastMail(target.id, 'DOCUMENTS')!.payload));
-        await upload(cookie, 'PARENTAL_CONSENT', await pdf('consent')).expect(200);
-        for (const kind of ['MEDICAL_CERT_GROOM', 'MEDICAL_CERT_BRIDE']) {
-          await http().post('/public/premarital/documents/consent').set('Cookie', cookie).send({ kind }).expect(200);
-          await upload(cookie, kind, await photo(), 'cert.jpg').expect(200);
+        const groom = await partner(target.id, 'APPLICANT');
+        const bride = await partner(target.id, 'PARTNER');
+        await groom.upload('PARENTAL_CONSENT', await pdf('consent')).expect(200);
+        for (const [who, kind] of [[groom, 'MEDICAL_CERT_GROOM'], [bride, 'MEDICAL_CERT_BRIDE']] as const) {
+          await who.post('/counselling/me/documents/consent', { kind }).expect(200);
+          await who.upload(kind, await photo(), 'cert.jpg').expect(200);
         }
       }
       photoBytes = await photo();
@@ -480,6 +610,15 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
     });
 
     const ticket = (who: keyof typeof people, reqId: string) => as(who).post(`/premarital/documents/${reqId}/view-ticket`);
+
+    it("lists both partners' sign-ins for the office", async () => {
+      const list = await as('ministry').get(`/premarital/applications/${a.id}/documents`).expect(200);
+      expect(list.body.data.accounts.map((x: { side: string; role: string; kind: string }) => [x.side, x.role, x.kind])).toEqual([
+        ['APPLICANT', 'GROOM', 'COUPLE'],
+        ['PARTNER', 'BRIDE', 'COUPLE'],
+      ]);
+      expect(list.body.data.can.resendSignIn).toBe(true);
+    });
 
     it('only a Pastor opens a medical certificate, the file comes back clean, and every view is audited', async () => {
       const med = await requirement(a.id, 'MEDICAL_CERT_GROOM');
@@ -508,16 +647,20 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
       await ticket('counsellor', (await requirement(other.id, 'PARENTAL_CONSENT')).id).expect(404);
       const list = await as('counsellor').get(`/premarital/applications/${a.id}/documents`).expect(200);
       expect(list.body.data.requirements.map((r: { kind: string }) => r.kind)).toEqual(['PARENTAL_CONSENT']);
+      expect(list.body.data.accounts).toEqual([]);
       await as('counsellor').post(`/premarital/documents/${(await requirement(a.id, 'PARENTAL_CONSENT')).id}/verify`, {}).expect(404);
     });
 
-    it('verifying a medical certificate needs the test date and warns when it is outside the window', async () => {
+    it('verifying a medical certificate needs the test date and warns when it is outside the window; a re-upload request goes to its owner', async () => {
       const med = await requirement(a.id, 'MEDICAL_CERT_GROOM');
       await as('superAdmin').post(`/premarital/documents/${med.id}/verify`, { testDate: '2026-11-01' }).expect(404);
       await as('pastor').post(`/premarital/documents/${med.id}/verify`, {}).expect(400);
       const res = await as('pastor').post(`/premarital/documents/${med.id}/verify`, { testDate: '2020-01-01' }).expect(201);
       expect(res.body.data.warning).toBe('OUTSIDE_VALIDITY_WINDOW');
       secrets.push('2020-01-01');
+      const brideCert = await requirement(a.id, 'MEDICAL_CERT_BRIDE');
+      await as('pastor').post(`/premarital/documents/${brideCert.id}/request-reupload`, { reason: 'UNREADABLE' }).expect(201);
+      expect(mailsFor(a.id).filter((m) => m.event === 'DOCUMENT_REUPLOAD').at(-1)!.payload.to).toBe(a.partnerEmail);
     });
 
     it('the documents check holds back Final review until all three are accepted; a Pastor may override with a listed reason', async () => {
@@ -558,6 +701,10 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
       expect(await prisma.auditLog.count({ where: { tenantId, action: 'COUNSELLING_DOCUMENTS_DELETED', entityId: other.id } })).toBe(1);
       const after = await as('pastor').get('/premarital/applications?storedFiles=closed').expect(200);
       expect(after.body.data.items.map((i: { id: string }) => i.id)).not.toContain(other.id);
+      // A closed case: the couple can still look, but uploads are shut.
+      const closedView = await (await partner(other.id, 'APPLICANT')).get('/counselling/me').expect(200);
+      expect(closedView.body.data.application).toMatchObject({ closed: true, stages: [] });
+      expect(closedView.body.data.documents.uploadsOpen).toBe(false);
     });
 
     it('letters download rebuilt as sent; the old application can have its role set once', async () => {
@@ -569,7 +716,7 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
     });
   });
 
-  it('keeps tokens, codes, file details and test dates out of every log line and audit row', async () => {
+  it('keeps phone-number passwords, file details and test dates out of every log line and audit row', async () => {
     expect(secrets.length).toBeGreaterThan(5);
     const all = logs.join('\n');
     for (const s of secrets) expect(all).not.toContain(s);

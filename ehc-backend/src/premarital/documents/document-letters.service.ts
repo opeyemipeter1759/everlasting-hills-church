@@ -8,7 +8,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CaseAccess, notFound } from '../case-access';
 import { counsellingAudit } from '../counselling-audit';
 import { DocumentsConfigService, type DocumentsSettings } from './documents-config';
-import { letterVars } from './document-rules';
+import { lagosDay, letterVars } from './document-rules';
 import { blocksSchema, SEED_BODIES, type Block, type LetterVars } from './letter-blocks';
 import { LetterRenderer } from './letter-renderer';
 
@@ -107,6 +107,19 @@ export class DocumentLettersService implements OnModuleInit {
       consentTemplateId: consentT.id,
       medicalTemplateId: medicalT.id,
     };
+  }
+
+  /** The letters as last sent (same template versions and issue date), or as they would be sent today. */
+  async lastSent(app: LetterApp & { id: string }) {
+    const last = await this.prisma.counsellingDocumentDispatch.findFirst({
+      where: { tenantId: this.access.tenantId, applicationId: app.id, consentTemplateId: { not: null } },
+      orderBy: { sentAt: 'desc' },
+    });
+    return this.lettersFor(app, {
+      issueDay: last ? last.issueDate.toISOString().slice(0, 10) : lagosDay(new Date()),
+      consentTemplateId: last?.consentTemplateId,
+      medicalTemplateId: last?.medicalTemplateId,
+    });
   }
 
   private async templateOrActive(kind: CounsellingLetterKind, id?: string | null) {

@@ -74,12 +74,16 @@ export function buildCounsellingEmail(a: {
   appUrl: string;
 }): SendEmailPayload {
   const { subject, line } = COPY[a.event];
-  const contactUrl = `${a.appUrl.replace(/\/$/, '')}/contact`;
+  const site = a.appUrl.replace(/\/$/, '');
+  const contactUrl = `${site}/contact`;
+  const dashboard = { label: 'Open your dashboard', href: `${site}/login` };
   const text = [
     greetingText(a.firstName),
     '',
     line,
     ...(a.when ? ['', `When: ${a.when} (Lagos time)`] : []),
+    '',
+    `You can follow everything on your counselling dashboard: ${dashboard.href}`,
     '',
     `If you have any questions, call the church office on ${CHURCH_INFO.phone} or write to us at ${contactUrl}.`,
     '',
@@ -95,7 +99,7 @@ export function buildCounsellingEmail(a: {
     `<p>If you have any questions, call the church office on ${escapeHtml(CHURCH_INFO.phone)} or <a href="${contactUrl}" style="color:#87102C">write to us</a>.</p>`,
     `<p>With love,<br />The Pastoral Team, ${escapeHtml(CHURCH_INFO.name)}</p>`,
   ].join('');
-  const html = renderEmailLayout({ heading: escapeHtml(subject), bodyHtml });
+  const html = renderEmailLayout({ heading: escapeHtml(subject), bodyHtml, cta: dashboard });
   return {
     to: a.email,
     subject,

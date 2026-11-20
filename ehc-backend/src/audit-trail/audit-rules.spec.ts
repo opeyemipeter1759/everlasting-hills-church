@@ -47,11 +47,14 @@ describe('which requests the audit trail keeps', () => {
     expect(bodyIsPrivate(route)).toBe(false);
   });
 
-  it('keeps counselling document actions without their bodies, and skips the couple page (it keeps its own events)', () => {
+  it('keeps counselling document actions without their bodies, and skips the couple dashboard (it keeps its own events)', () => {
     expect(skipRoute('/premarital/documents/:requirementId/verify')).toBe(false);
     expect(bodyIsPrivate('/premarital/documents/view')).toBe(true);
     expect(bodyIsPrivate('/premarital/applications/:id/documents/delete-stored')).toBe(true);
-    expect(skipRoute('/public/premarital/documents/:kind/upload')).toBe(true);
+    expect(skipRoute('/premarital/applications/:id/sign-in')).toBe(false);
+    expect(bodyIsPrivate('/premarital/applications/:id/sign-in')).toBe(true);
+    expect(skipRoute('/counselling/me/documents/:kind/upload')).toBe(true);
+    expect(skipRoute('/counselling/me/documents/consent')).toBe(true);
   });
 });
 

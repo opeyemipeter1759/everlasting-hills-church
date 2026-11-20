@@ -11,6 +11,7 @@ import { AuthSupabaseService } from './auth-supabase.service';
 import { AuthProfileSummaryService } from './auth-profile-summary.service';
 import { OnlineAttendanceService } from '../../online-attendance/online-attendance.service';
 import { assertActiveMemberAccount, isMemberAccountInactive } from '../member-account-status';
+import { isCoupleAccount } from '../couple-account';
 
 @Injectable()
 export class AuthLoginService {
@@ -62,6 +63,10 @@ export class AuthLoginService {
     const needsPasswordChange = Boolean(
       (data.user.user_metadata as Record<string, unknown> | null | undefined)?.['needs_password_change'],
     );
+    // A couple dashboard sign-in (pre-marital counselling, no Profile). Set
+    // only by the service role, so the app can route it straight to the
+    // dashboard instead of the member area.
+    const account = isCoupleAccount(data.user.app_metadata) && !summary.role ? 'COUPLE' : 'CHURCH';
 
     return {
       access_token: data.session.access_token,
@@ -75,6 +80,7 @@ export class AuthLoginService {
         fullName,
         picture: summary.photoUrl,
         needsPasswordChange,
+        account,
       },
     };
   }

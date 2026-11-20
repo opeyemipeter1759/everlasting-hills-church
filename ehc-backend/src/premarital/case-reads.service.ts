@@ -36,13 +36,17 @@ export class CaseReadsService {
     private readonly documents: DocumentsConfigService,
   ) {}
 
-  /** What this person may do in the Marriage section; drives the menu. Never 404. */
+  /** What this person may do in the Marriage section, and whether they have an application of their own; drives the menu. Never 404. */
   async whoAmI(actor: AuthUser) {
     const tier = staffTierOf(actor);
-    const counsellor = await this.access.isCounsellor(actor);
+    const [counsellor, own] = await Promise.all([
+      this.access.isCounsellor(actor),
+      this.prisma.counsellingParticipant.count({ where: { tenantId: this.access.tenantId, authUserId: actor.userId } }),
+    ]);
     return {
       tier,
       counsellor,
+      couple: own > 0,
       can: {
         triage: can(tier, 'triage'),
         assign: can(tier, 'assign'),

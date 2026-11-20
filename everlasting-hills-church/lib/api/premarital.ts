@@ -10,6 +10,8 @@ export type Attendance = "UNMARKED" | "BOTH_PRESENT" | "ONE_PRESENT" | "ABSENT";
 export interface MarriageAccess {
   tier: StaffTier | null;
   counsellor: boolean;
+  /** This person has a pre-marital application of their own (the Pre-marital menu item). */
+  couple: boolean;
   can: { triage: boolean; assign: boolean; curriculum: boolean; settings: boolean; wedding: boolean };
 }
 

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { AllowCoupleAccount } from './decorators/couple-account.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthUser } from './types/auth-user';
 import { AuthSessionService } from './services/auth-session.service';
@@ -17,6 +18,7 @@ import { AuthMeService } from './services/auth-me.service';
 
 /** Actions for an already-authenticated session: change password, logout, "who am I". */
 @ApiTags('auth')
+@AllowCoupleAccount()
 @Controller('auth')
 export class AuthAccountController {
   constructor(

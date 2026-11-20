@@ -76,8 +76,9 @@ export const publicApplicationSchema = z
     applicantPhone: phone('your'),
     partnerFirstName: name("your partner's first name"),
     partnerLastName: name("your partner's last name"),
-    partnerEmail: z.preprocess(blankToNull, email("your partner's").nullish()),
-    partnerPhone: z.preprocess(blankToNull, phone("your partner's").nullish()),
+    /** Required: each partner gets their own dashboard sign-in (email, with the phone number as the first password). */
+    partnerEmail: email("your partner's"),
+    partnerPhone: phone("your partner's"),
     partnerConsentToContact: z.literal(true, {
       error: 'Confirm your partner is happy for us to contact them',
     }),
@@ -105,11 +106,18 @@ export const publicApplicationSchema = z
     }),
   })
   .superRefine((v, ctx) => {
-    if (!v.partnerEmail && !v.partnerPhone) {
+    if (v.partnerEmail === v.applicantEmail) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['partnerEmail'],
+        message: "Use your partner's own email address. Each of you signs in separately.",
+      });
+    }
+    if (v.partnerPhone.replace(/\D/g, '') === v.applicantPhone.replace(/\D/g, '')) {
       ctx.addIssue({
         code: 'custom',
         path: ['partnerPhone'],
-        message: 'Give a phone number or email address for your partner',
+        message: "Use your partner's own phone number.",
       });
     }
   });

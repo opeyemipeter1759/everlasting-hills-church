@@ -2,7 +2,7 @@
 import { createHmac } from "crypto";
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
-import { addProxyHeaders, passCoupleCookie, trustedClientIp } from "./proxy-extras";
+import { addProxyHeaders, trustedClientIp } from "./proxy-extras";
 
 const SECRET = "a-test-secret-that-is-long-enough-to-use";
 const req = (path: string, headers: Record<string, string> = {}) => new NextRequest(`https://www.everlastinghills.church${path}`, { headers });
@@ -26,23 +26,9 @@ describe("the API proxy's extras", () => {
     expect(none.get("x-ehc-client-ip")).toBeNull();
   });
 
-  it("forwards the documents cookie only to the documents routes", () => {
-    const docs = new Headers();
-    addProxyHeaders(req("/api/backend/public/premarital/documents/code", { cookie: "ehc_pmc_docs=v1.abc.def; ehc_access=secret" }), docs, undefined);
-    expect(docs.get("cookie")).toBe("ehc_pmc_docs=v1.abc.def");
-    const other = new Headers();
-    addProxyHeaders(req("/api/backend/premarital/overview", { cookie: "ehc_pmc_docs=v1.abc.def" }), other, undefined);
-    expect(other.get("cookie")).toBeNull();
-  });
-
-  it("lets only the documents cookie back, and only on the documents routes", () => {
-    const upstream = new Response("{}", { headers: [["set-cookie", "ehc_pmc_docs=v1.x.y; Path=/api/backend/public/premarital/documents; HttpOnly"], ["set-cookie", "other=1"]] });
-    const out = new Headers();
-    passCoupleCookie(req("/api/backend/public/premarital/documents/access"), upstream, out);
-    expect(out.getSetCookie()).toEqual(["ehc_pmc_docs=v1.x.y; Path=/api/backend/public/premarital/documents; HttpOnly"]);
-    expect(out.get("referrer-policy")).toBe("no-referrer");
-    const elsewhere = new Headers();
-    passCoupleCookie(req("/api/backend/sermons"), upstream, elsewhere);
-    expect(elsewhere.getSetCookie()).toEqual([]);
+  it("never forwards the browser's cookies to the API", () => {
+    const h = new Headers();
+    addProxyHeaders(req("/api/backend/counselling/me", { cookie: "ehc_access=secret; other=1" }), h, undefined);
+    expect(h.get("cookie")).toBeNull();
   });
 });

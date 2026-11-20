@@ -1,8 +1,4 @@
-import type {
-  CounsellingApplicantRole,
-  CounsellingRequirementKind,
-  CounsellingTokenScope,
-} from '@prisma/client';
+import type { CounsellingApplicantRole, CounsellingParticipantSide, CounsellingRequirementKind } from '@prisma/client';
 import type { CaseTier } from '../case-access';
 import { lagosToday } from '../lagos-time';
 import type { LetterVars } from './letter-blocks';
@@ -44,11 +40,14 @@ export function maySeeRow(tier: CaseTier, kind: CounsellingRequirementKind): boo
   return tier !== 'COUNSELLOR' || kind === 'PARENTAL_CONSENT';
 }
 
-/** Which slots a link may see and fill. */
-export function kindsFor(scope: CounsellingTokenScope): CounsellingRequirementKind[] {
-  if (scope === 'GROOM') return ['PARENTAL_CONSENT', 'MEDICAL_CERT_GROOM'];
-  if (scope === 'BRIDE') return ['PARENTAL_CONSENT', 'MEDICAL_CERT_BRIDE'];
-  return [...REQUIREMENT_KINDS];
+/**
+ * What a partner may upload on the couple dashboard: the consent letter (either
+ * of them), and their own medical certificate only, because the storage
+ * consent must come from the person the certificate belongs to.
+ */
+export function mayUpload(role: CounsellingApplicantRole | null, kind: CounsellingRequirementKind): boolean {
+  if (kind === 'PARENTAL_CONSENT') return true;
+  return role !== null && kind === (role === 'GROOM' ? 'MEDICAL_CERT_GROOM' : 'MEDICAL_CERT_BRIDE');
 }
 
 type Names = {
@@ -67,9 +66,10 @@ export function coupleOf(a: Names): { groom: { first: string; full: string }; br
   return a.applicantRole === 'GROOM' ? { groom: applicant, bride: partner } : { groom: partner, bride: applicant };
 }
 
-/** The scope a link has for the person it goes to. */
-export function scopeFor(role: CounsellingApplicantRole, who: 'applicant' | 'partner'): CounsellingTokenScope {
-  const groom = (role === 'GROOM') === (who === 'applicant');
+/** Groom or bride, for one side of the application. Null while the applicant's role is not set. */
+export function roleOf(applicantRole: CounsellingApplicantRole | null, side: CounsellingParticipantSide): CounsellingApplicantRole | null {
+  if (!applicantRole) return null;
+  const groom = (applicantRole === 'GROOM') === (side === 'APPLICANT');
   return groom ? 'GROOM' : 'BRIDE';
 }
 

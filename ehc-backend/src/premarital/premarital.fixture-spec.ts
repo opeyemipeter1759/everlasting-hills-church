@@ -8,7 +8,7 @@ export const validApplication = () => ({
   applicantPhone: '0803 123 4567',
   partnerFirstName: 'Ada',
   partnerLastName: 'Eze',
-  partnerEmail: '',
+  partnerEmail: 'ada@example.com',
   partnerPhone: '+234 809 765 4321',
   partnerConsentToContact: true,
   membership: 'ONE_MEMBER',

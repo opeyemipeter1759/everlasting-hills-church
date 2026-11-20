@@ -4,7 +4,7 @@ import sharp from 'sharp';
 import { PDFDocument } from 'pdf-lib';
 import { DEFAULT_DOCUMENTS_CONFIG, readDocumentsConfig, valuesOf } from './documents-config';
 import { DocumentCrypto } from './document-crypto';
-import { coupleOf, kindsFor, letterRef, letterVars, longDate, mayOpen, mayReview, maySeeRow, validFrom } from './document-rules';
+import { coupleOf, letterRef, letterVars, longDate, mayOpen, mayReview, maySeeRow, mayUpload, roleOf, validFrom } from './document-rules';
 import { SAMPLE_VARS } from './document-letters.service';
 import { blocksSchema, fill, placeholderProblems, SEED_BODIES, textsOf } from './letter-blocks';
 import { LetterRenderer, SAFE } from './letter-renderer';
@@ -119,16 +119,24 @@ describe('document rules', () => {
     expect(mayReview('MINISTRY', 'PARENTAL_CONSENT')).toBe(true);
   });
 
-  it('gives each link only its own slots', () => {
-    expect(kindsFor('GROOM')).toEqual(['PARENTAL_CONSENT', 'MEDICAL_CERT_GROOM']);
-    expect(kindsFor('BRIDE')).toEqual(['PARENTAL_CONSENT', 'MEDICAL_CERT_BRIDE']);
-    expect(kindsFor('ALL')).toHaveLength(3);
+  it('lets each partner upload the consent letter and only their own medical certificate', () => {
+    expect(roleOf('BRIDE', 'APPLICANT')).toBe('BRIDE');
+    expect(roleOf('BRIDE', 'PARTNER')).toBe('GROOM');
+    expect(roleOf('GROOM', 'PARTNER')).toBe('BRIDE');
+    expect(roleOf(null, 'APPLICANT')).toBeNull();
+    expect(mayUpload('GROOM', 'PARENTAL_CONSENT')).toBe(true);
+    expect(mayUpload('GROOM', 'MEDICAL_CERT_GROOM')).toBe(true);
+    expect(mayUpload('GROOM', 'MEDICAL_CERT_BRIDE')).toBe(false);
+    expect(mayUpload('BRIDE', 'MEDICAL_CERT_GROOM')).toBe(false);
+    expect(mayUpload(null, 'MEDICAL_CERT_BRIDE')).toBe(false);
   });
 
   it('falls back to the default for any saved setting that is missing or invalid', () => {
-    const c = readDocumentsConfig({ documents: { maxUploadMb: { value: 5, state: 'APPROVED' }, documentPageOtp: { value: 'yes', state: 'APPROVED' } } });
+    const c = readDocumentsConfig({ documents: { maxUploadMb: { value: 5, state: 'APPROVED' }, screeningValidityDays: { value: 'soon', state: 'APPROVED' }, documentPageOtp: { value: true, state: 'APPROVED' } } });
     expect(c.maxUploadMb).toEqual({ value: 5, state: 'APPROVED' });
-    expect(c.documentPageOtp).toEqual(DEFAULT_DOCUMENTS_CONFIG.documentPageOtp);
+    expect(c.screeningValidityDays).toEqual(DEFAULT_DOCUMENTS_CONFIG.screeningValidityDays);
+    // Settings from the old link page are ignored.
+    expect(c).not.toHaveProperty('documentPageOtp');
     expect(Object.keys(DEFAULT_DOCUMENTS_CONFIG)).not.toEqual(expect.arrayContaining(['deleteMedicalFilesAfterVerification']));
     expect(Object.keys(DEFAULT_DOCUMENTS_CONFIG).join(' ')).not.toMatch(/grace|retentionDays|delete/i);
     expect(DEFAULT_DOCUMENTS_CONFIG.documentRetentionPolicy).toEqual({ value: '', state: 'PENDING_PASTORAL_APPROVAL' });
@@ -208,10 +216,11 @@ describe('upload checks', () => {
 describe('no automatic deletion', () => {
   it('has no scheduled job or timer that touches counselling documents', () => {
     const dir = __dirname;
-    for (const f of readdirSync(dir).filter((n) => n.endsWith('.ts') && !n.endsWith('.spec.ts'))) {
-      const src = readFileSync(join(dir, f), 'utf8');
-      expect(src).not.toMatch(/@Cron|@Interval|setInterval\(|ScheduleModule/);
-    }
+    for (const d of [dir, join(dir, '..', 'couple')])
+      for (const f of readdirSync(d).filter((n) => n.endsWith('.ts') && !n.endsWith('.spec.ts'))) {
+        const src = readFileSync(join(d, f), 'utf8');
+        expect(src).not.toMatch(/@Cron|@Interval|setInterval\(|ScheduleModule/);
+      }
     const runner = readFileSync(join(dir, '..', '..', 'scheduling', 'jobs-runner.service.ts'), 'utf8');
     expect(runner).not.toMatch(/document/i);
     const script = readFileSync(join(dir, '..', '..', '..', 'scripts', 'cloud-scheduler-jobs.sh'), 'utf8');

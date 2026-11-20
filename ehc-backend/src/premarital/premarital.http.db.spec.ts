@@ -23,6 +23,7 @@ import { CaseAccess } from './case-access';
 import { CaseActionsService } from './case-actions.service';
 import { CaseReadsService } from './case-reads.service';
 import { CounsellingNotifier } from './counselling-notifier';
+import { CoupleAccountsService } from './couple/couple-accounts.service';
 import { DocumentDispatchService } from './documents/document-dispatch.service';
 import { DocumentsConfigService } from './documents/documents-config';
 import { ModulesService } from './modules.service';
@@ -90,12 +91,14 @@ maybe('Pre-marital counselling over HTTP, against Postgres', () => {
   // The documents email replaced the received email; its own tests are in
   // documents/documents.http.db.spec.ts. Here it stands in and is recorded.
   const dispatch = {
-    prepare: jest.fn(async () => []),
-    send: jest.fn(async (a: { id: string }) => {
+    prepare: jest.fn(async () => undefined),
+    welcome: jest.fn(async (a: { id: string }) => {
       sent.push({ event: 'RECEIVED', applicationId: a.id });
       return 'SENT';
     }),
   };
+  // Dashboard sign-ins have their own tests (documents/documents.http.db.spec.ts).
+  const accounts = { provision: jest.fn(async () => []) };
   let app: INestApplication;
   const people: Record<
     | 'pastor'
@@ -222,6 +225,7 @@ maybe('Pre-marital counselling over HTTP, against Postgres', () => {
         SessionsService,
         DocumentsConfigService,
         { provide: DocumentDispatchService, useValue: dispatch },
+        { provide: CoupleAccountsService, useValue: accounts },
         { provide: CounsellingNotifier, useValue: notifier },
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: config },
@@ -279,7 +283,7 @@ maybe('Pre-marital counselling over HTTP, against Postgres', () => {
       expect(row).toMatchObject({
         status: 'SUBMITTED',
         applicantEmail: 'tunde@example.com',
-        partnerEmail: null,
+        partnerEmail: 'ada@example.com',
         partnerConsentToContact: true,
       });
       expect(

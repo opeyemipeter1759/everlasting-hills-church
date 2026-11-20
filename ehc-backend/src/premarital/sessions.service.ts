@@ -323,6 +323,8 @@ export class SessionsService {
             tenantId: true,
             applicantFirstName: true,
             applicantEmail: true,
+            partnerFirstName: true,
+            partnerEmail: true,
           },
         },
       },

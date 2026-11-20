@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/axios";
 import { api } from "@/lib/api/request";
-import type { ReuploadReason, RequirementKind, RequirementStatus } from "@/lib/api/premarital-documents";
+import type { ReuploadReason, RequirementKind, RequirementStatus } from "@/lib/api/couple";
 
 /** The marriage team's side of counselling documents. Files open in a new tab, decrypted by the API, never cached. */
 export interface RequirementRow {
@@ -27,10 +27,11 @@ export interface CaseDocuments {
   applicantRole: "GROOM" | "BRIDE" | null;
   validFrom: string;
   requirements: RequirementRow[];
-  links: { scope: "ALL" | "GROOM" | "BRIDE"; createdAt: string; expiresAt: string; lastUsedAt: string | null; state: "ACTIVE" | "EXPIRED" | "REVOKED" }[];
+  /** Each partner's dashboard sign-in. kind null: not made yet (the office can resend sign-in details). */
+  accounts: { side: "APPLICANT" | "PARTNER"; role: "GROOM" | "BRIDE" | null; firstName: string; kind: "MEMBER" | "COUPLE" | null; signInSentAt: string | null }[];
   dispatches: { id: string; status: "SENT" | "FAILED" | "SKIPPED"; sentAt: string; automatic: boolean }[];
   storedFiles: number;
-  can: { setRole: boolean; send: boolean; reissueLink: boolean; downloadLetters: boolean; deleteStored: boolean };
+  can: { setRole: boolean; send: boolean; resendSignIn: boolean; downloadLetters: boolean; deleteStored: boolean };
 }
 
 export type LetterKind = "PARENTAL_CONSENT" | "MEDICAL_SCREENING";
@@ -53,8 +54,6 @@ export interface DocumentsConfig {
   recommendedLabs: Entry<{ name: string; address: string; phone: string }[]>;
   certReturnInstructions: Entry<string>;
   consentReturnInstructions: Entry<string>;
-  documentLinkValidDays: Entry<number>;
-  documentPageOtp: Entry<boolean>;
   maxUploadMb: Entry<number>;
   sendDocumentsToPartner: Entry<boolean>;
   documentsRequiredBefore: Entry<string>;

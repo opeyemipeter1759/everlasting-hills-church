@@ -1,5 +1,8 @@
-import { BookHeart, CalendarClock, ClipboardList, LayoutGrid, Settings2 } from "lucide-react";
-import type { NavGroup } from "./config";
+import { BookHeart, CalendarClock, ClipboardList, HeartHandshake, LayoutGrid, Settings2 } from "lucide-react";
+import type { NavGroup, NavItem } from "./config";
+
+/** A member's own pre-marital application (Member section), shown only to someone who has one. */
+export const COUPLE_NAV_ITEM: NavItem = { label: "Pre-marital", href: "/dashboard/pre-marital", icon: HeartHandshake, minRole: "MEMBER", requiresAccess: "couple" };
 
 /**
  * Marriage: pre-marital counselling. Shown to the pastors, Super Admins and

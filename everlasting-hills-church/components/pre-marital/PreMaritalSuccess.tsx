@@ -14,6 +14,10 @@ export function PreMaritalSuccess({ names, referenceCode }: { names: string; ref
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-gray-600">
         This does not book a session yet. We will reach out to arrange one with you.
       </p>
+      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-gray-600">
+        We are emailing you both how to sign in to your own counselling dashboard, where you can follow your application, see your
+        sessions and upload your documents.
+      </p>
       <p className="mt-5 text-sm text-gray-600">
         Your reference: <span className="font-mono text-base font-bold text-gray-900">{referenceCode}</span>
       </p>

@@ -143,6 +143,7 @@ const AppSidebar: React.FC = () => {
             if (item.requiresAccess === 'firstTimerApprovals' && !approvalsAccess?.canDecide && !grantedHrefs.has(item.href)) return false;
             if (item.requiresAccess === 'marriage' && !marriage?.tier && !marriage?.counsellor) return false;
             if (item.requiresAccess === 'marriageStaff' && !marriage?.tier) return false;
+            if (item.requiresAccess === 'couple' && !marriage?.couple) return false;
             // Audio Production members were admitted above; everyone else needs
             // PASTOR+ or a named grant for the page (the item's minRole is
             // lowered to MEMBER only so the team can pass the role check).

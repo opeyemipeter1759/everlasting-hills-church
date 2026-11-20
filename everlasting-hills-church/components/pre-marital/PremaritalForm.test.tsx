@@ -15,6 +15,7 @@ function fillValid() {
   type("pmc-applicantPhone", "0803 123 4567");
   type("pmc-partnerFirstName", "Ada");
   type("pmc-partnerLastName", "Eze");
+  type("pmc-partnerEmail", "ada@example.com");
   type("pmc-partnerPhone", "0809 765 4321");
   fireEvent.click(screen.getByLabelText(/knows I am applying/));
   fireEvent.click(screen.getByLabelText("One of us is a member"));
@@ -33,7 +34,8 @@ describe("the pre-marital counselling form", () => {
     await act(async () => send());
     expect(post).not.toHaveBeenCalled();
     expect(screen.getByText("Enter your first name")).toBeTruthy();
-    expect(screen.getByText("Give a phone number or email address for your partner")).toBeTruthy();
+    expect(screen.getByText("Enter your partner's email address")).toBeTruthy();
+    expect(screen.getByText("Enter your partner's phone number")).toBeTruthy();
     expect(screen.getByText("Confirm your partner is happy for us to contact them")).toBeTruthy();
     expect(screen.getByText("Please accept the privacy policy")).toBeTruthy();
   });
@@ -45,7 +47,7 @@ describe("the pre-marital counselling form", () => {
     await act(async () => send());
     const [url, body] = post.mock.calls[0];
     expect(url).toBe("/public/premarital/applications");
-    expect(body).toMatchObject({ applicantRole: "GROOM", applicantFirstName: "Tunde", partnerEmail: null, membership: "ONE_MEMBER", preferredContact: "WHATSAPP", website: "" });
+    expect(body).toMatchObject({ applicantRole: "GROOM", applicantFirstName: "Tunde", partnerEmail: "ada@example.com", membership: "ONE_MEMBER", preferredContact: "WHATSAPP", website: "" });
     expect(screen.getByText("Thank you, Tunde and Ada")).toBeTruthy();
     expect(screen.getByText("PMC-7K4QH2")).toBeTruthy();
     expect(screen.getByText(/does not book a session/)).toBeTruthy();
@@ -86,11 +88,10 @@ describe("the pre-marital counselling form", () => {
     await user.tab();
     expect(document.activeElement?.id).toBe("pmc-applicantFirstName");
     await user.keyboard("Tunde");
-    for (const [text] of [["Adeyemi"], ["tunde@example.com"], ["0803 123 4567"], ["Ada"], ["Eze"], ["0809 765 4321"]]) {
+    for (const [text] of [["Adeyemi"], ["tunde@example.com"], ["0803 123 4567"], ["Ada"], ["Eze"], ["ada@example.com"], ["0809 765 4321"]]) {
       await user.tab();
       await user.keyboard(text);
     }
-    await user.tab(); // partner email: leave blank
     await user.tab();
     await user.keyboard(" "); // partner consent
     await user.tab();
@@ -106,6 +107,17 @@ describe("the pre-marital counselling form", () => {
     await user.keyboard("{Enter}");
     expect(post).toHaveBeenCalledTimes(1);
     expect(post.mock.calls[0][1]).toMatchObject({ applicantRole: "GROOM", applicantFirstName: "Tunde", partnerConsentToContact: true, privacyAcknowledged: true });
+  });
+
+  it("asks for the partner's own email and phone, since each of them signs in separately", async () => {
+    form();
+    fillValid();
+    type("pmc-partnerEmail", "TUNDE@example.com");
+    type("pmc-partnerPhone", "08031234567");
+    await act(async () => send());
+    expect(post).not.toHaveBeenCalled();
+    expect(screen.getByText("Use your partner's own email address. Each of you signs in separately.")).toBeTruthy();
+    expect(screen.getByText("Use your partner's own phone number.")).toBeTruthy();
   });
 
   it("asks who is applying, then names the other person by it", () => {

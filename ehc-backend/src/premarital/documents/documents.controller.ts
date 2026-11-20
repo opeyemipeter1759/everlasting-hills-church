@@ -83,15 +83,15 @@ export class PremaritalDocumentsController {
   }
 
   @Post('applications/:id/documents/send')
-  @ApiOperation({ summary: 'Send or resend the letters with a new link' })
+  @ApiOperation({ summary: 'Send or resend the letters, with how to sign in to the dashboard' })
   send(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.admin.send(user, id);
   }
 
-  @Post('applications/:id/documents/link')
-  @ApiOperation({ summary: 'Revoke the link and email a new one' })
-  reissue(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.admin.reissueLink(user, id);
+  @Post('applications/:id/sign-in')
+  @ApiOperation({ summary: "Make any missing dashboard sign-in and email both partners how to sign in" })
+  resendSignIn(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.admin.resendSignIn(user, id);
   }
 
   @Post('applications/:id/documents/delete-stored')

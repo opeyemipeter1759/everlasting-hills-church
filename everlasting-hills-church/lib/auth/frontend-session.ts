@@ -164,6 +164,8 @@ export const ROUTE_ROLE_RULES: ReadonlyArray<readonly [string, UserRole]> = [
   ["/dashboard/growth-outreach", "MEMBER"],
   ["/dashboard", "MEMBER"],
   ["/me", "MEMBER"],
+  // Signing in is enough: couple dashboard accounts have no role and are let through to it by name (couple-routing).
+  ["/couple-dashboard", "MEMBER"],
   ["/admin", "SUPER_ADMIN"],
 ];
 

@@ -32,10 +32,10 @@ export function ApplicantFields(props: Props) {
         <Field id="pmc-applicantLastName" label="Your last name" required error={err("applicantLastName")}>
           <input type="text" autoComplete="family-name" {...input("applicantLastName")} />
         </Field>
-        <Field id="pmc-applicantEmail" label="Email address" required error={err("applicantEmail")}>
+        <Field id="pmc-applicantEmail" label="Email address" required error={err("applicantEmail")} hint="You will sign in to your counselling dashboard with this">
           <input type="email" inputMode="email" autoComplete="email" {...input("applicantEmail")} />
         </Field>
-        <Field id="pmc-applicantPhone" label="Phone number" required error={err("applicantPhone")} hint="Ideally the number on WhatsApp">
+        <Field id="pmc-applicantPhone" label="Phone number" required error={err("applicantPhone")} hint="Ideally on WhatsApp. It is also your first password">
           <input type="tel" inputMode="tel" autoComplete="tel" placeholder="0803 123 4567" {...input("applicantPhone")} />
         </Field>
       </div>
@@ -43,7 +43,7 @@ export function ApplicantFields(props: Props) {
   );
 }
 
-/** The person they plan to marry: a name, one way to reach them, and their agreement to be contacted. */
+/** The person they plan to marry: name, their own email and phone (their dashboard sign-in), and their agreement to be contacted. */
 export function PartnerFields(props: Props) {
   const { err, input } = fieldHelpers(props);
   return (
@@ -56,13 +56,16 @@ export function PartnerFields(props: Props) {
         <Field id="pmc-partnerLastName" label="Last name" required error={err("partnerLastName")}>
           <input type="text" autoComplete="off" {...input("partnerLastName")} />
         </Field>
-        <Field id="pmc-partnerPhone" label="Phone number" error={err("partnerPhone")} hint="A phone number or an email, whichever they prefer">
-          <input type="tel" inputMode="tel" autoComplete="off" {...input("partnerPhone")} />
-        </Field>
-        <Field id="pmc-partnerEmail" label="Email address" error={err("partnerEmail")}>
+        <Field id="pmc-partnerEmail" label="Email address" required error={err("partnerEmail")} hint="Their own email. They sign in to their own dashboard with it">
           <input type="email" inputMode="email" autoComplete="off" {...input("partnerEmail")} />
         </Field>
+        <Field id="pmc-partnerPhone" label="Phone number" required error={err("partnerPhone")} hint="Their own number. It is also their first password">
+          <input type="tel" inputMode="tel" autoComplete="off" {...input("partnerPhone")} />
+        </Field>
       </div>
+      <p className="text-sm leading-relaxed text-gray-600">
+        You will each get your own counselling dashboard, to follow the application and your sessions and to upload your documents. We will email you both how to sign in.
+      </p>
       <Tick id="pmc-partnerConsentToContact" error={err("partnerConsentToContact")} registration={props.register("partnerConsentToContact")}>
         {props.role === "GROOM" ? "She knows" : props.role === "BRIDE" ? "He knows" : "My partner knows"} I am applying and is happy for the pastoral team to contact them.
       </Tick>

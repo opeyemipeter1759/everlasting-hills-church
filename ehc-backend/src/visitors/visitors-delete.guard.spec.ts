@@ -15,7 +15,7 @@ import { VisitorsController } from './visitors.controller';
  * only the API, which connects as a role that bypasses RLS, writes here.
  */
 function context(roles: Role[]): ExecutionContext {
-  const user: Partial<AuthUser> = { role: roles[0], effectiveRoles: roles, unitLeadOf: [], hodOf: [] };
+  const user: Partial<AuthUser> = { role: roles[0], effectiveRoles: roles, unitLeadOf: [], hodOf: [], profileId: 'profile-1' };
   return {
     getHandler: () => VisitorsController.prototype.delete,
     getClass: () => VisitorsController,

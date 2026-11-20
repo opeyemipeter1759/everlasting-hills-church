@@ -75,6 +75,7 @@ const phoneRules = (s: z.ZodString) =>
   s.max(30, "That phone number is too long").regex(/^[\d\s\-+()]+$/, "Use digits, spaces, + or brackets only")
     .refine((v) => v.replace(/\D/g, "").length >= 7, "That phone number is too short");
 const emailRules = (s: z.ZodString) => s.max(254, "That email address is too long").email("Enter a valid email address");
+const digitsOf = (v: string) => v.replace(/\D/g, "");
 
 export const formSchema = z
   .object({
@@ -85,8 +86,8 @@ export const formSchema = z
     applicantPhone: phoneRules(z.string().trim().min(1, "Enter your phone number")),
     partnerFirstName: name("your partner's first name"),
     partnerLastName: name("your partner's last name"),
-    partnerEmail: z.string().trim().refine((v) => !v || z.string().email().safeParse(v).success, "Enter a valid email address"),
-    partnerPhone: z.string().trim().refine((v) => !v || phoneRules(z.string()).safeParse(v).success, "Check your partner's phone number"),
+    partnerEmail: emailRules(z.string().trim().min(1, "Enter your partner's email address")),
+    partnerPhone: phoneRules(z.string().trim().min(1, "Enter your partner's phone number")),
     partnerConsentToContact: z.literal(true, { error: "Confirm your partner is happy for us to contact them" }),
     membership: z.enum(["BOTH_MEMBERS", "ONE_MEMBER", "NEITHER"], { error: "Tell us whether you are members of Everlasting Hills" }),
     weddingDate: z.string().refine((d) => !d || d >= lagosToday(), "The wedding date cannot be in the past"),
@@ -96,14 +97,17 @@ export const formSchema = z
     website: z.string(),
   })
   .superRefine((v, ctx) => {
-    if (!v.partnerEmail.trim() && !v.partnerPhone.trim()) {
-      ctx.addIssue({ code: "custom", path: ["partnerPhone"], message: "Give a phone number or email address for your partner" });
+    if (v.partnerEmail && v.partnerEmail.toLowerCase() === v.applicantEmail.toLowerCase()) {
+      ctx.addIssue({ code: "custom", path: ["partnerEmail"], message: "Use your partner's own email address. Each of you signs in separately." });
+    }
+    if (v.partnerPhone && digitsOf(v.partnerPhone) === digitsOf(v.applicantPhone)) {
+      ctx.addIssue({ code: "custom", path: ["partnerPhone"], message: "Use your partner's own phone number." });
     }
   });
 
 export type FieldProblems = Partial<Record<keyof PremaritalFormValues, string>>;
 
-/** The first problem with each answer. The partner-contact rule is checked even when other answers are missing. */
+/** The first problem with each answer. */
 export function problemsOf(values: PremaritalFormValues): FieldProblems {
   const out: FieldProblems = {};
   const r = formSchema.safeParse(values);
@@ -112,9 +116,6 @@ export function problemsOf(values: PremaritalFormValues): FieldProblems {
       const field = issue.path[0] as keyof PremaritalFormValues;
       if (field && !out[field]) out[field] = issue.message;
     }
-  }
-  if (!values.partnerEmail.trim() && !values.partnerPhone.trim() && !out.partnerPhone) {
-    out.partnerPhone = "Give a phone number or email address for your partner";
   }
   return out;
 }
@@ -132,8 +133,8 @@ export function toPayload(v: PremaritalFormValues, submissionKey: string) {
     applicantPhone: v.applicantPhone.trim(),
     partnerFirstName: v.partnerFirstName.trim(),
     partnerLastName: v.partnerLastName.trim(),
-    partnerEmail: t(v.partnerEmail),
-    partnerPhone: t(v.partnerPhone),
+    partnerEmail: v.partnerEmail.trim(),
+    partnerPhone: v.partnerPhone.trim(),
     partnerConsentToContact: v.partnerConsentToContact,
     membership: v.membership,
     weddingDate: v.weddingDate || null,
