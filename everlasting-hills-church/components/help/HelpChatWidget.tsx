@@ -309,10 +309,10 @@ export default function HelpChatWidget() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open HillsBot"
-          className="fixed bottom-5 right-4 z-50 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#87102C] px-4 text-sm font-semibold text-white shadow-lg hover:bg-[#9c1636] sm:right-6"
+          className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 inline-flex h-11 w-11 items-center justify-center gap-2 rounded-full bg-[#87102C] text-sm font-semibold text-white shadow-lg hover:bg-[#9c1636] sm:bottom-5 sm:right-6 sm:h-auto sm:min-h-12 sm:w-auto sm:px-4"
         >
           <MessageCircleQuestion size={18} aria-hidden="true" />
-          Ask HillsBot
+          <span className="hidden sm:inline">Ask HillsBot</span>
         </button>
       )}
     </>
