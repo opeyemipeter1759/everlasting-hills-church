@@ -19,10 +19,10 @@ function fillValid() {
   fireEvent.click(screen.getByLabelText(/knows I am applying/));
   fireEvent.click(screen.getByLabelText("One of us is a member"));
   fireEvent.click(screen.getByLabelText("WhatsApp"));
-  fireEvent.click(screen.getByLabelText(/I have read how my information/));
+  fireEvent.click(screen.getByLabelText(/I agree to the church/));
 }
 const send = () => fireEvent.click(screen.getByRole("button", { name: /send my application/i }));
-const form = () => render(<PremaritalForm privacyNotice={"Only the pastors can see it.\n\nAsk us to delete it any time."} retention={null} />);
+const form = () => render(<PremaritalForm />);
 
 beforeEach(() => post.mockReset());
 afterEach(cleanup);
@@ -35,7 +35,7 @@ describe("the pre-marital counselling form", () => {
     expect(screen.getByText("Enter your first name")).toBeTruthy();
     expect(screen.getByText("Give a phone number or email address for your partner")).toBeTruthy();
     expect(screen.getByText("Confirm your partner is happy for us to contact them")).toBeTruthy();
-    expect(screen.getByText("Please read and accept the privacy notice")).toBeTruthy();
+    expect(screen.getByText("Please accept the privacy policy")).toBeTruthy();
   });
 
   it("saves first, then thanks them by name with the reference, and says it is not an appointment", async () => {
@@ -101,6 +101,7 @@ describe("the pre-marital counselling form", () => {
     await user.tab(); // intro
     await user.tab();
     await user.keyboard(" "); // privacy
+    await user.tab(); // the Privacy Policy link
     await user.tab();
     await user.keyboard("{Enter}");
     expect(post).toHaveBeenCalledTimes(1);

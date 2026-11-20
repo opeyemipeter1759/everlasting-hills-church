@@ -92,7 +92,7 @@ export const formSchema = z
     weddingDate: z.string().refine((d) => !d || d >= lagosToday(), "The wedding date cannot be in the past"),
     preferredContact: z.enum(["WHATSAPP", "PHONE_CALL", "EMAIL"], { error: "Choose how we should contact you" }),
     intro: z.string().trim().max(500, "Keep this under 500 characters"),
-    privacyAcknowledged: z.literal(true, { error: "Please read and accept the privacy notice" }),
+    privacyAcknowledged: z.literal(true, { error: "Please accept the privacy policy" }),
     website: z.string(),
   })
   .superRefine((v, ctx) => {

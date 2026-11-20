@@ -63,6 +63,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { label: "Home Cell", href: "/connect/home-cell" },
       { label: "Prayer Watch", href: "/prayer-watch" },
       { label: "Talk to a Pastor", href: "/talk-to-a-pastor" },
+      { label: "Pre-Marital Counselling", href: "/pre-marital-counselling" },
       { label: "Give", href: "/give" },
       { label: "Project Pledge", href: "/pledge" },
       { label: "Contact", href: "/contact" },
