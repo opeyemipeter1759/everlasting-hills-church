@@ -9,7 +9,7 @@ export const VISIBILITY_KEYS = ['profile', 'career', 'testimony', 'journey', 'bi
 export type VisibilityKey = (typeof VISIBILITY_KEYS)[number];
 export type Visibility = Record<VisibilityKey, 'MEMBERS' | 'PRIVATE'>;
 
-/** Everything shown to the church family unless the member says otherwise, except their phone number and email. */
+/** Everything shown to the church family unless the member says otherwise, except their phone number. */
 export const DEFAULT_VISIBILITY: Visibility = {
   profile: 'MEMBERS',
   career: 'MEMBERS',
@@ -18,7 +18,7 @@ export const DEFAULT_VISIBILITY: Visibility = {
   birthday: 'MEMBERS',
   socials: 'MEMBERS',
   phone: 'PRIVATE',
-  email: 'PRIVATE',
+  email: 'MEMBERS',
 };
 
 export const OPEN_TO = ['PRAYER_PARTNER', 'MENTOR', 'MENTEE', 'FELLOWSHIP', 'NETWORKING', 'VOLUNTEERING'] as const;

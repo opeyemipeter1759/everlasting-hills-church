@@ -11266,7 +11266,7 @@ export interface components {
             /** @enum {string} */
             career?: "MEMBERS" | "PRIVATE";
             /**
-             * @description Email address: PRIVATE unless the member opens it
+             * @description Email address: shown to the church family unless the member makes it PRIVATE
              * @enum {string}
              */
             email?: "MEMBERS" | "PRIVATE";

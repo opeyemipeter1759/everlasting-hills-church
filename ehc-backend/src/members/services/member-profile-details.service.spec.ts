@@ -47,10 +47,10 @@ describe('A member’s spiritual and career profile', () => {
     expect(seen.journey).toMatchObject({ bornAgainYear: 2008 });
     expect(seen.career).toBeNull();
     expect(seen.testimony).toBeNull();
-    // Contact details stay private unless the member opens them.
+    // The phone stays private unless the member opens it; the email shows unless they hide it.
     expect(seen.phone).toBeNull();
-    expect(seen.email).toBeNull();
-    expect(prisma.member.findUnique).not.toHaveBeenCalled();
+    expect(seen.email).toBe('ada@example.com');
+    expect(prisma.member.findUnique).toHaveBeenCalledWith({ where: { id: 'ada' }, select: { phone: true, email: true } });
   });
 
   it('shows the member themselves, and pastors, everything', async () => {
@@ -62,11 +62,13 @@ describe('A member’s spiritual and career profile', () => {
     expect(seen.email).toBe('ada@example.com');
   });
 
-  it('shares the email only when the member opens it, and keeps the phone private on its own', async () => {
-    const { svc } = setup({ ...stored, visibility: { ...(stored as { visibility?: object }).visibility, email: 'MEMBERS' } });
+  it('hides the email from other members when the member sets it to Only me, but not from pastors', async () => {
+    const { svc, prisma } = setup({ ...stored, visibility: { ...stored.visibility, email: 'PRIVATE' } });
     const seen = await svc.forViewer('ada', false);
-    expect(seen.email).toBe('ada@example.com');
+    expect(seen.email).toBeNull();
     expect(seen.phone).toBeNull();
+    expect(prisma.member.findUnique).not.toHaveBeenCalled();
+    expect((await svc.forViewer('ada', true)).email).toBe('ada@example.com');
   });
 
   it('leaves a private profile restricted', async () => {
