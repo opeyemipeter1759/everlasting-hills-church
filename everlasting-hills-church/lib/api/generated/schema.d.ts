@@ -2509,23 +2509,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/counselling/me/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Whether the caller has a pre-marital application (for the menu) */
-        get: operations["CoupleController_status"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/departments": {
         parameters: {
             query?: never;
@@ -18687,37 +18670,6 @@ export interface operations {
             path: {
                 kind: string;
             };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    CoupleController_status: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody?: never;

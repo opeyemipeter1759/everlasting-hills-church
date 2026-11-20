@@ -15660,53 +15660,6 @@
         ]
       }
     },
-    "/counselling/me/status": {
-      "get": {
-        "operationId": "CoupleController_status",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Whether the caller has a pre-marital application (for the menu)",
-        "tags": [
-          "premarital-couple"
-        ]
-      }
-    },
     "/departments": {
       "get": {
         "operationId": "DepartmentsController_list",
