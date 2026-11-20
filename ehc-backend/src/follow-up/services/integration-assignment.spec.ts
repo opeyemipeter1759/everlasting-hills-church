@@ -179,8 +179,10 @@ describe('Logging a contact', () => {
 });
 
 describe('A person, as the drawer reads them', () => {
-  function person(agreed: string, moves: { toStatus: string; decidedAt: Date }[]) {
+  function person(agreed: string, moves: { toStatus: string; decidedAt: Date }[], stage: string | null = null) {
     const prisma = {
+      // Their first-timer form, when they filled one; the pipeline then says where they stand.
+      visitor: { findFirst: jest.fn().mockResolvedValue(stage ? { id: 'v1' } : null) },
       member: {
         findFirst: jest.fn().mockResolvedValue({
           id: 'm1', firstName: 'Tunde', lastName: 'Bello', photoUrl: null, status: 'ACTIVE', phone: null, email: null,
@@ -196,7 +198,8 @@ describe('A person, as the drawer reads them', () => {
       approvedFor: jest.fn().mockResolvedValue(new Map([['m1', { status: agreed }]])),
       pendingFor: jest.fn().mockResolvedValue(new Map()),
     };
-    return new FollowUpPersonService(prisma as never, statuses as never, config);
+    const pipeline = { one: jest.fn().mockResolvedValue(stage ? { status: stage } : null) };
+    return new FollowUpPersonService(prisma as never, statuses as never, pipeline as never, config);
   }
 
   it('says when they were integrated or opted out, oldest first, for the thread to mark', async () => {
@@ -208,5 +211,15 @@ describe('A person, as the drawer reads them', () => {
   it('shows nobody assigned once they have opted out', async () => {
     const p = await person('OPTED_OUT', [{ toStatus: 'OPTED_OUT', decidedAt: new Date('2026-09-25T10:00:00Z') }]).get('MEMBER', 'm1');
     expect(p).toMatchObject({ status: 'OPTED_OUT', assignedTo: null, integrationAssignedTo: null });
+  });
+
+  it('reads where a first-timer stands from the pipeline, so a return visit shows as it does on the list', async () => {
+    const p = await person('FIRST_TIMER', [], 'SECOND_TIMER').get('MEMBER', 'm1');
+    expect(p.status).toBe('SECOND_TIMER');
+  });
+
+  it('keeps an opted-out account opted out whatever the pipeline says', async () => {
+    const p = await person('OPTED_OUT', [], 'THIRD_TIMER').get('MEMBER', 'm1');
+    expect(p.status).toBe('OPTED_OUT');
   });
 });

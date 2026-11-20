@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ApprovalsController } from './approvals/approvals.controller';
 import { ApprovalsService } from './approvals/approvals.service';
+import { IntegrationAtFourVisitsJob } from './approvals/integration-at-four-visits.job';
 import { RoutingRulesController } from './routing/routing-rules.controller';
 import { RoutingRulesService } from './routing/routing-rules.service';
 import { FollowUpEventsRegistrar } from './events/follow-up-events.registrar';
@@ -17,7 +18,7 @@ import { FollowUpAuthService } from './services/follow-up-auth.service';
 @Module({
   imports: [PrismaModule],
   controllers: [ApprovalsController, RoutingRulesController],
-  providers: [ApprovalsService, RoutingRulesService, FollowUpEventsRegistrar, FollowUpAuthService],
+  providers: [ApprovalsService, IntegrationAtFourVisitsJob, RoutingRulesService, FollowUpEventsRegistrar, FollowUpAuthService],
   exports: [ApprovalsService],
 })
 export class FollowUpWorkflowModule {}
