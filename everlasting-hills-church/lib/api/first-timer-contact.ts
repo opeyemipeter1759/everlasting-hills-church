@@ -32,7 +32,22 @@ export function useRemoveFirstTimerContact() {
   });
 }
 
+/** Marriage Ministry: the same shape, backed by MarriageMinistryAssignment. */
+export function useAssignMarriageMinistry() {
+  const invalidate = useInvalidateRoles();
+  return useMutation({ mutationFn: (profileId: string) => api.post(`/users/${profileId}/marriage-ministry`), onSuccess: invalidate });
+}
+
+export function useRemoveMarriageMinistry() {
+  const invalidate = useInvalidateRoles();
+  return useMutation({ mutationFn: (profileId: string) => api.delete(`/users/${profileId}/marriage-ministry`), onSuccess: invalidate });
+}
+
 type Holder = { profileId: string; member: { firstName: string; lastName: string; photoUrl: string | null } | null };
+
+export function marriageMinistryHolders(byRole: object | undefined): Holder[] {
+  return ((byRole as Record<string, Holder[] | undefined> | undefined)?.MARRIAGE_MINISTRY ?? []) as Holder[];
+}
 
 /** The people who hold First-Timer Contact, from the roles-by-person list (empty until the API lists the role). */
 export function firstTimerContactHolders(byRole: object | undefined): Holder[] {

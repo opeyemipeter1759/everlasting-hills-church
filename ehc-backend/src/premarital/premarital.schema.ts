@@ -1,0 +1,250 @@
+import { z } from 'zod';
+import { lagosToday } from './lagos-time';
+
+/**
+ * Pre-marital counselling input, as the API checks it. The public form runs the
+ * same rules (everlasting-hills-church/lib/pre-marital/schema.ts); keep them in
+ * step. PATCH shapes have no defaults, so a field that is left out is never reset.
+ */
+
+export const STATUSES = [
+  'SUBMITTED',
+  'UNDER_REVIEW',
+  'ADDITIONAL_INFORMATION_REQUIRED',
+  'ACCEPTED_FOR_COUNSELLING',
+  'IN_COUNSELLING',
+  'FINAL_REVIEW',
+  'COMPLETED',
+  'CLOSED',
+] as const;
+export const MEMBERSHIP = ['BOTH_MEMBERS', 'ONE_MEMBER', 'NEITHER'] as const;
+export const CONTACT_METHODS = ['WHATSAPP', 'PHONE_CALL', 'EMAIL'] as const;
+export const ATTENDANCE = [
+  'UNMARKED',
+  'BOTH_PRESENT',
+  'ONE_PRESENT',
+  'ABSENT',
+] as const;
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+const blankToNull = (v: unknown) =>
+  typeof v === 'string' && v.trim() === '' ? null : v;
+
+const name = (what: string) =>
+  z
+    .string({ error: `Enter ${what}` })
+    .trim()
+    .min(1, `Enter ${what}`)
+    .max(60, 'Keep the name under 60 characters');
+const phone = (whose: string) =>
+  z
+    .string({ error: `Enter ${whose} phone number` })
+    .trim()
+    .min(1, `Enter ${whose} phone number`)
+    .max(30, 'That phone number is too long')
+    .regex(/^[\d\s\-+()]+$/, 'Use digits, spaces, + or brackets only')
+    .refine(
+      (v) => v.replace(/\D/g, '').length >= 7,
+      'That phone number is too short',
+    );
+const email = (whose: string) =>
+  z
+    .string({ error: `Enter ${whose} email address` })
+    .trim()
+    .toLowerCase()
+    .min(1, `Enter ${whose} email address`)
+    .max(254, 'That email address is too long')
+    .email('Enter a valid email address');
+const day = (message: string) =>
+  z
+    .string()
+    .regex(DAY, message)
+    .refine((d) => !Number.isNaN(Date.parse(`${d}T00:00:00Z`)), message);
+
+export const publicApplicationSchema = z
+  .object({
+    submissionKey: z.string().uuid('Reload the page and try again'),
+    /** Honeypot: hidden from people, filled in by bots. */
+    website: z.string().max(500).optional(),
+    applicantFirstName: name('your first name'),
+    applicantLastName: name('your last name'),
+    applicantEmail: email('your'),
+    applicantPhone: phone('your'),
+    partnerFirstName: name("your partner's first name"),
+    partnerLastName: name("your partner's last name"),
+    partnerEmail: z.preprocess(blankToNull, email("your partner's").nullish()),
+    partnerPhone: z.preprocess(blankToNull, phone("your partner's").nullish()),
+    partnerConsentToContact: z.literal(true, {
+      error: 'Confirm your partner is happy for us to contact them',
+    }),
+    membership: z.enum(MEMBERSHIP, {
+      error: 'Tell us whether you are members of Everlasting Hills',
+    }),
+    weddingDate: z.preprocess(
+      blankToNull,
+      day('Pick a date')
+        .refine(
+          (d) => d >= lagosToday(),
+          'The wedding date cannot be in the past',
+        )
+        .nullish(),
+    ),
+    preferredContact: z.enum(CONTACT_METHODS, {
+      error: 'Choose how we should contact you',
+    }),
+    intro: z.preprocess(
+      blankToNull,
+      z.string().trim().max(500, 'Keep this under 500 characters').nullish(),
+    ),
+    privacyAcknowledged: z.literal(true, {
+      error: 'Please read and accept the privacy notice',
+    }),
+  })
+  .superRefine((v, ctx) => {
+    if (!v.partnerEmail && !v.partnerPhone) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['partnerPhone'],
+        message: 'Give a phone number or email address for your partner',
+      });
+    }
+  });
+export type PublicApplicationInput = z.infer<typeof publicApplicationSchema>;
+
+export const listQuerySchema = z.object({
+  status: z.enum(STATUSES).optional(),
+  counsellor: z.string().min(1).max(64).optional(),
+  from: day('Use a date like 2026-11-20').optional(),
+  to: day('Use a date like 2026-11-20').optional(),
+  cursor: z.string().min(1).max(64).optional(),
+  take: z.coerce.number().int().min(1).max(100).default(25),
+});
+
+export const transitionSchema = z.object({
+  to: z.enum(STATUSES, { error: 'Pick a status' }),
+  reason: z
+    .string()
+    .trim()
+    .max(300, 'Keep the reason under 300 characters')
+    .nullish(),
+});
+
+export const requestInfoSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .max(300, 'Keep the reason under 300 characters')
+    .nullish(),
+});
+
+/** Admin logistics. A key that is left out is left alone. */
+export const adminPatchSchema = z.object({
+  adminNote: z
+    .string()
+    .trim()
+    .max(500, 'Keep the note under 500 characters')
+    .nullable()
+    .optional(),
+  memberId: z.string().min(1).max(64).nullable().optional(),
+});
+
+export const assignSchema = z.object({
+  counsellorProfileId: z.string().min(1, 'Pick a counsellor').max(64),
+  isLead: z.boolean().optional(),
+});
+
+export const safeguardingSchema = z.object({ raised: z.boolean() });
+
+export const weddingApprovalSchema = z.object({
+  note: z
+    .string()
+    .trim()
+    .max(300, 'Keep the note under 300 characters')
+    .nullish(),
+});
+
+const sessionWhere = {
+  format: z.enum(['PHYSICAL', 'ONLINE'], {
+    error: 'Choose in person or online',
+  }),
+  location: z.preprocess(blankToNull, z.string().trim().max(200).nullish()),
+  meetingLink: z.preprocess(
+    blankToNull,
+    z.string().trim().url('Paste the full meeting link').max(500).nullish(),
+  ),
+};
+
+export const sessionCreateSchema = z
+  .object({
+    date: day('Pick a date'),
+    time: z.string().regex(TIME, 'Pick a time'),
+    durationMinutes: z.number().int().min(15).max(240).optional(),
+    ...sessionWhere,
+    moduleId: z.string().min(1).max(64).nullish(),
+    counsellorProfileId: z.string().min(1).max(64).optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.format === 'PHYSICAL' && !v.location)
+      ctx.addIssue({
+        code: 'custom',
+        path: ['location'],
+        message: 'Say where you will meet',
+      });
+    if (v.format === 'ONLINE' && !v.meetingLink)
+      ctx.addIssue({
+        code: 'custom',
+        path: ['meetingLink'],
+        message: 'Add the meeting link',
+      });
+  });
+
+/** Edits that keep the time. A key that is left out is left alone. */
+export const sessionPatchSchema = z.object({
+  durationMinutes: z.number().int().min(15).max(240).optional(),
+  format: sessionWhere.format.optional(),
+  location: sessionWhere.location.optional(),
+  meetingLink: sessionWhere.meetingLink.optional(),
+  moduleId: z.string().min(1).max(64).nullable().optional(),
+});
+
+export const rescheduleSchema = z.object({
+  date: day('Pick a date'),
+  time: z.string().regex(TIME, 'Pick a time'),
+});
+export const attendanceSchema = z.object({
+  attendance: z.enum(ATTENDANCE, { error: 'Pick who attended' }),
+});
+export const sessionsQuerySchema = z.object({
+  from: day('Use a date like 2026-11-20').optional(),
+  to: day('Use a date like 2026-11-20').optional(),
+});
+
+const moduleFields = {
+  title: z.string().trim().min(3, 'Give the module a title').max(120),
+  description: z.string().trim().max(2000).nullable(),
+  scriptureRefs: z.array(z.string().trim().min(1).max(120)).max(20),
+  objectives: z.array(z.string().trim().min(1).max(300)).max(20),
+  resources: z
+    .array(
+      z.object({
+        label: z.string().trim().min(1).max(120),
+        url: z.string().trim().url().max(500),
+      }),
+    )
+    .max(20),
+  active: z.boolean(),
+};
+export const moduleCreateSchema = z.object({
+  ...moduleFields,
+  description: moduleFields.description.optional(),
+  scriptureRefs: moduleFields.scriptureRefs.optional(),
+  objectives: moduleFields.objectives.optional(),
+  resources: moduleFields.resources.optional(),
+  active: moduleFields.active.optional(),
+});
+/** A key that is left out is left alone. */
+export const modulePatchSchema = z.object(moduleFields).partial();
+export const reorderSchema = z.object({
+  ids: z.array(z.string().min(1).max(64)).min(1).max(200),
+});

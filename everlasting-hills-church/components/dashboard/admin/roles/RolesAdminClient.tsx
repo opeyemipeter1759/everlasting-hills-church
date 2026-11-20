@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Shield, Crown, ShieldCheck, Building2, Network, Tally5, Wallet, Users, User, RefreshCw, HeartHandshake,
+  Shield, Crown, ShieldCheck, Building2, Network, Tally5, Wallet, Users, User, RefreshCw, HeartHandshake, Gem,
 } from "lucide-react";
 import { useUserRoles, type RoleEntry } from "@/lib/api";
 import { useAssignableRoles, type PersonRole } from "@/lib/api/people";
@@ -10,7 +10,7 @@ import GlobalRolesSection from "./GlobalRolesSection";
 import UnitLeadsSection from "./UnitLeadsSection";
 
 
-const GRANTABLE: PersonRole[] = ["SUPER_ADMIN", "PASTOR", "ADMIN_HEAD", "HEAD_USHER", "FINANCE_HEAD", "FIRST_TIMER_CONTACT"];
+const GRANTABLE: PersonRole[] = ["SUPER_ADMIN", "PASTOR", "ADMIN_HEAD", "HEAD_USHER", "FINANCE_HEAD", "FIRST_TIMER_CONTACT", "MARRIAGE_MINISTRY"];
 
 const ROLE_ICON: Record<string, React.ElementType> = {
   SUPER_ADMIN: ShieldCheck,
@@ -21,6 +21,7 @@ const ROLE_ICON: Record<string, React.ElementType> = {
   HEAD_USHER: Tally5,
   FINANCE_HEAD: Wallet,
   FIRST_TIMER_CONTACT: HeartHandshake,
+  MARRIAGE_MINISTRY: Gem,
   UNIT_LEAD: Users,
   MEMBER: User,
   VISITOR: User,

@@ -156,6 +156,7 @@ model ListenProgress {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Member {
   id                            String                     @id
+  CounsellingApplications       CounsellingApplication[]
   tenantId                      String
   profileId                     String                     @unique
   firstName                     String
@@ -777,49 +778,261 @@ model WelfareRequest {
   @@index([memberId])
 }
 
-enum PreMaritalApplicationStatus {
-  NEW
-  IN_REVIEW
+/// Statuses of a pre-marital counselling case. Allowed moves live in
+/// src/premarital/status-machine.ts; every move writes a CounsellingStatusEvent.
+enum CounsellingStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ADDITIONAL_INFORMATION_REQUIRED
+  ACCEPTED_FOR_COUNSELLING
+  IN_COUNSELLING
+  FINAL_REVIEW
+  COMPLETED
   CLOSED
 }
 
-/// A couple's application for pre-marital counselling, from the public form.
-/// Applying is not a booking: the pastoral team reviews it and contacts the
-/// couple about next steps. Only pastors read and update these (and anyone a
-/// Super Admin gives the page to on the Permissions screen).
-model PreMaritalApplication {
-  id                 String                      @id
-  tenantId           String
+enum CounsellingMembership {
+  BOTH_MEMBERS
+  ONE_MEMBER
+  NEITHER
+}
+
+enum CounsellingContactMethod {
+  WHATSAPP
+  PHONE_CALL
+  EMAIL
+}
+
+enum CounsellingSessionFormat {
+  PHYSICAL
+  ONLINE
+}
+
+enum CounsellingSessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+enum CounsellingAttendance {
+  UNMARKED
+  BOTH_PRESENT
+  ONE_PRESENT
+  ABSENT
+}
+
+enum CounsellingModuleState {
+  PROPOSED
+  APPROVED
+}
+
+/// One couple's pre-marital counselling case, from the public form. Applicants
+/// may not be members; memberId is linked by an admin only. Access goes through
+/// src/premarital/case-access.ts. Partial unique index (migration SQL): one open
+/// case per submissionHash per tenant.
+model CounsellingApplication {
+  id                      String                       @id
+  tenantId                String
   /// Short code the couple can quote, e.g. PMC-7K4QH2.
-  referenceCode      String                      @unique
-  /// Made by the form when it opens and sent again on a retry, so a double
-  /// click or a retried request saves one application, never two.
-  submissionKey      String
-  groomFirstName     String
-  groomLastName      String
-  groomPhone         String
-  groomEmail         String
-  groomIsMember      Boolean
-  brideFirstName     String
-  brideLastName      String
-  bridePhone         String
-  brideEmail         String
-  brideIsMember      Boolean
-  /// The date they hope to marry, if they have one.
-  weddingDate        DateTime?                   @db.Date
-  /// How long they have known each other: one of the form's options.
-  relationshipLength String?
-  /// Anything else they want the pastors to know.
-  message            String?
-  status             PreMaritalApplicationStatus @default(NEW)
-  statusUpdatedAt    DateTime?
-  /// Profile.id of whoever last changed the status.
-  statusUpdatedById  String?
-  submittedAt        DateTime                    @default(now())
-  Tenant             Tenant                      @relation(fields: [tenantId], references: [id])
+  referenceCode           String                       @unique
+  /// Made by the form when it opens and sent again on a retry.
+  submissionKey           String
+  /// sha256 of the normalised applicant and partner contact details.
+  submissionHash          String
+  applicantFirstName      String
+  applicantLastName       String
+  applicantEmail          String
+  applicantPhone          String
+  partnerFirstName        String
+  partnerLastName         String
+  partnerEmail            String?
+  partnerPhone            String?
+  partnerConsentToContact Boolean
+  membership              CounsellingMembership
+  weddingDate             DateTime?                    @db.Date
+  preferredContact        CounsellingContactMethod
+  intro                   String?                      @db.VarChar(500)
+  /// Null only for applications carried over from the earlier form (before
+  /// 2026-11-20), which showed no privacy notice.
+  privacyAcknowledgedAt   DateTime?                    @db.Timestamptz(3)
+  status                  CounsellingStatus            @default(SUBMITTED)
+  memberId                String?
+  /// For a later couple portal: the applicant's own sign-in.
+  applicantUserId         String?
+  /// Logistics only. Never disclosures.
+  adminNote               String?                      @db.VarChar(500)
+  safeguardingFlaggedAt   DateTime?                    @db.Timestamptz(3)
+  safeguardingFlaggedById String?
+  archivedAt              DateTime?                    @db.Timestamptz(3)
+  archivedById            String?
+  submittedAt             DateTime                     @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime                     @default(now()) @updatedAt @db.Timestamptz(3)
+  Tenant                  Tenant                       @relation(fields: [tenantId], references: [id])
+  Member                  Member?                      @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  ApplicantUser           Profile?                     @relation("CounsellingApplicationApplicant", fields: [applicantUserId], references: [id], onDelete: SetNull)
+  Assignments             CounsellingAssignment[]
+  Sessions                CounsellingSession[]
+  Progress                CounsellingProgress[]
+  StatusEvents            CounsellingStatusEvent[]
+  WeddingApproval         WeddingApproval?
+  Notifications           CounsellingNotificationLog[]
 
   @@unique([tenantId, submissionKey])
-  @@index([tenantId, status, submittedAt])
+}
+
+/// Who counsels a case. An active row is what lets a counsellor see the case.
+/// Partial unique index (migration SQL): one active lead per application.
+model CounsellingAssignment {
+  id                  String                 @id
+  tenantId            String
+  applicationId       String
+  counsellorProfileId String
+  isLead              Boolean                @default(false)
+  active              Boolean                @default(true)
+  assignedById        String
+  assignedAt          DateTime               @default(now()) @db.Timestamptz(3)
+  endedAt             DateTime?              @db.Timestamptz(3)
+  Tenant              Tenant                 @relation(fields: [tenantId], references: [id])
+  Application         CounsellingApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  Counsellor          Profile                @relation("CounsellingAssignmentCounsellor", fields: [counsellorProfileId], references: [id])
+}
+
+/// A curriculum module. Seeded as PROPOSED; a Pastor approves.
+model CounsellingModule {
+  id            String                 @id
+  tenantId      String
+  title         String
+  description   String?
+  scriptureRefs String[]               @default([])
+  objectives    String[]               @default([])
+  /// [{ label, url }]
+  resources     Json                   @default("[]")
+  sortOrder     Int
+  active        Boolean                @default(true)
+  approvalState CounsellingModuleState @default(PROPOSED)
+  approvedById  String?
+  approvedAt    DateTime?              @db.Timestamptz(3)
+  createdAt     DateTime               @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime               @default(now()) @updatedAt @db.Timestamptz(3)
+  Tenant        Tenant                 @relation(fields: [tenantId], references: [id])
+  Sessions      CounsellingSession[]
+  Progress      CounsellingProgress[]
+
+  @@index([tenantId, active, sortOrder])
+}
+
+/// A scheduled session. scheduledAt is UTC; shown in Africa/Lagos.
+model CounsellingSession {
+  id                  String                   @id
+  tenantId            String
+  applicationId       String
+  counsellorProfileId String
+  moduleId            String?
+  scheduledAt         DateTime                 @db.Timestamptz(3)
+  durationMinutes     Int                      @default(60)
+  format              CounsellingSessionFormat
+  location            String?
+  meetingLink         String?
+  status              CounsellingSessionStatus @default(SCHEDULED)
+  attendance          CounsellingAttendance    @default(UNMARKED)
+  rescheduledFromId   String?
+  /// Set when the 24-hour reminder is claimed, so the job never sends twice.
+  reminderSentAt      DateTime?                @db.Timestamptz(3)
+  createdById         String
+  createdAt           DateTime                 @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime                 @default(now()) @updatedAt @db.Timestamptz(3)
+  Tenant              Tenant                   @relation(fields: [tenantId], references: [id])
+  Application         CounsellingApplication   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  Counsellor          Profile                  @relation("CounsellingSessionCounsellor", fields: [counsellorProfileId], references: [id])
+  Module              CounsellingModule?       @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  RescheduledFrom     CounsellingSession?      @relation("CounsellingSessionReschedule", fields: [rescheduledFromId], references: [id])
+  RescheduledTo       CounsellingSession[]     @relation("CounsellingSessionReschedule")
+
+  @@index([applicationId, scheduledAt])
+  @@index([tenantId, counsellorProfileId, scheduledAt])
+}
+
+model CounsellingProgress {
+  id            String                 @id
+  tenantId      String
+  applicationId String
+  moduleId      String
+  completedAt   DateTime               @default(now()) @db.Timestamptz(3)
+  markedById    String
+  Tenant        Tenant                 @relation(fields: [tenantId], references: [id])
+  Application   CounsellingApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  Module        CounsellingModule      @relation(fields: [moduleId], references: [id])
+
+  @@unique([applicationId, moduleId])
+}
+
+/// Status history. Append only (a trigger refuses UPDATE and DELETE).
+model CounsellingStatusEvent {
+  id             String                 @id
+  tenantId       String
+  applicationId  String
+  fromStatus     CounsellingStatus?
+  toStatus       CounsellingStatus
+  actorProfileId String?
+  reason         String?                @db.VarChar(300)
+  createdAt      DateTime               @default(now()) @db.Timestamptz(3)
+  Tenant         Tenant                 @relation(fields: [tenantId], references: [id])
+  Application    CounsellingApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, createdAt])
+}
+
+/// A Pastor's separate decision. Completing counselling never creates one.
+model WeddingApproval {
+  id            String                 @id
+  tenantId      String
+  applicationId String                 @unique
+  approvedById  String
+  approvedAt    DateTime               @default(now()) @db.Timestamptz(3)
+  note          String?                @db.VarChar(300)
+  Tenant        Tenant                 @relation(fields: [tenantId], references: [id])
+  Application   CounsellingApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+/// Same shape as FirstTimerContactAssignment. Derives the MARRIAGE_MINISTRY role.
+model MarriageMinistryAssignment {
+  id           String    @id
+  tenantId     String
+  userId       String
+  assignedById String?
+  assignedAt   DateTime  @default(now()) @db.Timestamptz(3)
+  endedAt      DateTime? @db.Timestamptz(3)
+  Tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  User         Profile   @relation(fields: [userId], references: [id])
+
+  @@index([tenantId])
+}
+
+/// One row per counselling email, so the shared daily email cap can count them.
+model CounsellingNotificationLog {
+  id            String                 @id
+  tenantId      String
+  applicationId String
+  event         String
+  status        String
+  sentAt        DateTime               @default(now()) @db.Timestamptz(3)
+  Tenant        Tenant                 @relation(fields: [tenantId], references: [id])
+  Application   CounsellingApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, sentAt])
+}
+
+/// Counselling policy values (eligibility, duration, fees, counsellors,
+/// retention, privacy wording), each PENDING_PASTORAL_APPROVAL until a Pastor
+/// approves it. One JSON row per tenant, validated by src/premarital/policy.ts.
+model CounsellingSettings {
+  id        String   @id
+  tenantId  String   @unique
+  content   Json
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(3)
+  updatedBy String?
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 /// Public "Ask a Question" submissions — same shape and semantics as PrayerRequest
@@ -849,56 +1062,60 @@ enum QuestionStatus {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Profile {
-  id                            String                     @id
-  userId                        String                     @unique
+  id                            String                       @id
+  CounsellingAssignments        CounsellingAssignment[]      @relation("CounsellingAssignmentCounsellor")
+  CounsellingSessionsLed        CounsellingSession[]         @relation("CounsellingSessionCounsellor")
+  CounsellingApplicationsOwned  CounsellingApplication[]     @relation("CounsellingApplicationApplicant")
+  MarriageMinistryOf            MarriageMinistryAssignment[]
+  userId                        String                       @unique
   /// DEPRECATED: no longer the source of truth for authorization. Effective roles
   /// are derived from RoleGrant + assignments (UnitLeadAssignment, DepartmentHead,
   /// HeadUsherAssignment). Kept as a frozen pre-migration snapshot; do not read it.
-  legacyRole                    Role                       @default(MEMBER)
+  legacyRole                    Role                         @default(MEMBER)
   tenantId                      String
-  createdAt                     DateTime                   @default(now())
+  createdAt                     DateTime                     @default(now())
   Member                        Member?
   Notification                  Notification[]
   RoleAssignment                RoleAssignment[]
   CommunityPost                 CommunityPost[]
-  DepartmentHeadOf              DepartmentHead[]           @relation("DepartmentHeadUser")
-  DepartmentHeadAssigned        DepartmentHead[]           @relation("DepartmentHeadAssignedBy")
-  DepartmentHodOf               DepartmentHod[]            @relation("DepartmentHodUser")
-  DepartmentHodAssigned         DepartmentHod[]            @relation("DepartmentHodAssignedBy")
-  ReadingPlanCreated            ReadingPlan[]              @relation("ReadingPlanCreatedBy")
-  MemberArticlesAuthored        MemberArticle[]            @relation("MemberArticleAuthor")
-  MemberArticlesReviewed        MemberArticle[]            @relation("MemberArticleReviewer")
-  MemberArticleLikes            MemberArticleLike[]        @relation("MemberArticleLiker")
+  DepartmentHeadOf              DepartmentHead[]             @relation("DepartmentHeadUser")
+  DepartmentHeadAssigned        DepartmentHead[]             @relation("DepartmentHeadAssignedBy")
+  DepartmentHodOf               DepartmentHod[]              @relation("DepartmentHodUser")
+  DepartmentHodAssigned         DepartmentHod[]              @relation("DepartmentHodAssignedBy")
+  ReadingPlanCreated            ReadingPlan[]                @relation("ReadingPlanCreatedBy")
+  MemberArticlesAuthored        MemberArticle[]              @relation("MemberArticleAuthor")
+  MemberArticlesReviewed        MemberArticle[]              @relation("MemberArticleReviewer")
+  MemberArticleLikes            MemberArticleLike[]          @relation("MemberArticleLiker")
   MemberPlanSubscription        MemberPlanSubscription[]
-  RoleGrantOf                   RoleGrant[]                @relation("RoleGrantUser")
-  RoleGrantGranted              RoleGrant[]                @relation("RoleGrantGrantedBy")
-  UnitLeadOf                    UnitLeadAssignment[]       @relation("UnitLeadUser")
-  UnitLeadAssigned              UnitLeadAssignment[]       @relation("UnitLeadAssignedBy")
-  HeadUsherOf                   HeadUsherAssignment[]      @relation("HeadUsherUser")
-  HeadUsherAssigned             HeadUsherAssignment[]      @relation("HeadUsherAssignedBy")
-  FinanceHeadOf                 FinanceHeadAssignment[]    @relation("FinanceHeadUser")
-  FinanceHeadAssigned           FinanceHeadAssignment[]    @relation("FinanceHeadAssignedBy")
+  RoleGrantOf                   RoleGrant[]                  @relation("RoleGrantUser")
+  RoleGrantGranted              RoleGrant[]                  @relation("RoleGrantGrantedBy")
+  UnitLeadOf                    UnitLeadAssignment[]         @relation("UnitLeadUser")
+  UnitLeadAssigned              UnitLeadAssignment[]         @relation("UnitLeadAssignedBy")
+  HeadUsherOf                   HeadUsherAssignment[]        @relation("HeadUsherUser")
+  HeadUsherAssigned             HeadUsherAssignment[]        @relation("HeadUsherAssignedBy")
+  FinanceHeadOf                 FinanceHeadAssignment[]      @relation("FinanceHeadUser")
+  FinanceHeadAssigned           FinanceHeadAssignment[]      @relation("FinanceHeadAssignedBy")
   FinanceEntryRecorded          FinanceEntry[]
   ServiceOfferingRecorded       ServiceOffering[]
-  SalvationContacted            SalvationDecision[]        @relation("SalvationContactedBy")
-  FollowUpAdded                 FollowUpEntry[]            @relation("FollowUpAddedBy")
-  FollowUpSentToPastor          FollowUpEntry[]            @relation("FollowUpSentToPastorBy")
-  ServiceFollowUpReportCompiled ServiceFollowUpReport[]    @relation("ServiceFollowUpReportCompiledBy")
-  ReportSubmitted               Report[]                   @relation("ReportSubmittedBy")
-  ReportReviewed                Report[]                   @relation("ReportReviewedBy")
+  SalvationContacted            SalvationDecision[]          @relation("SalvationContactedBy")
+  FollowUpAdded                 FollowUpEntry[]              @relation("FollowUpAddedBy")
+  FollowUpSentToPastor          FollowUpEntry[]              @relation("FollowUpSentToPastorBy")
+  ServiceFollowUpReportCompiled ServiceFollowUpReport[]      @relation("ServiceFollowUpReportCompiledBy")
+  ReportSubmitted               Report[]                     @relation("ReportSubmittedBy")
+  ReportReviewed                Report[]                     @relation("ReportReviewedBy")
   ReportComment                 ReportComment[]
   UnitTaskCreated               UnitTask[]
   UnitExpenseCreated            UnitExpense[]
   UnitTaskCommentAuthor         UnitTaskComment[]
-  UnitTaskReportAuthored        UnitTaskReport[]           @relation("UnitTaskReportAuthor")
-  UnitTaskReportReviewed        UnitTaskReport[]           @relation("UnitTaskReportReviewer")
-  CalendarFeedToken             CalendarFeedToken[]        @relation("CalendarFeedTokenUser")
-  PushSubscription              PushSubscription[]         @relation("PushSubscriptionUser")
-  NotificationPreference        NotificationPreference?    @relation("NotificationPreferenceUser")
-  GoogleCalendarConnection      GoogleCalendarConnection[] @relation("GoogleCalendarConnectionUser")
-  PastorHost                    PastorHost[]               @relation("PastorHostProfile")
-  PastorDelegations             PastorDelegate[]           @relation("PastorDelegateProfile")
-  PastoralBookings              PastoralBooking[]          @relation("PastoralBookingMember")
+  UnitTaskReportAuthored        UnitTaskReport[]             @relation("UnitTaskReportAuthor")
+  UnitTaskReportReviewed        UnitTaskReport[]             @relation("UnitTaskReportReviewer")
+  CalendarFeedToken             CalendarFeedToken[]          @relation("CalendarFeedTokenUser")
+  PushSubscription              PushSubscription[]           @relation("PushSubscriptionUser")
+  NotificationPreference        NotificationPreference?      @relation("NotificationPreferenceUser")
+  GoogleCalendarConnection      GoogleCalendarConnection[]   @relation("GoogleCalendarConnectionUser")
+  PastorHost                    PastorHost[]                 @relation("PastorHostProfile")
+  PastorDelegations             PastorDelegate[]             @relation("PastorDelegateProfile")
+  PastoralBookings              PastoralBooking[]            @relation("PastoralBookingMember")
 }
 
 /// Explicit global granted role (PASTOR, ADMIN, SUPER_ADMIN). History-preserving:
@@ -1460,124 +1677,133 @@ model ServiceHeadcount {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Tenant {
-  id                       String                     @id
-  name                     String
-  slug                     String                     @unique
-  createdAt                DateTime                   @default(now())
-  ReadingPlan              ReadingPlan[]
-  MemberPlanSubscription   MemberPlanSubscription[]
-  MemberArticle            MemberArticle[]
-  MemberArticleLike        MemberArticleLike[]
-  Announcement             Announcement[]
-  Book                     Book[]
-  BookCollection           BookCollection[]
-  BookComment              BookComment[]
-  EmailTemplate            EmailTemplate[]
-  EmailSend                EmailSend[]
-  EmailSettings            EmailSettings?
-  Course                   Course[]
-  CommunityPost            CommunityPost[]
-  AttendanceRecord         AttendanceRecord[]
-  AuditLog                 AuditLog[]
-  CareAssignment           CareAssignment[]
-  FollowUpEntry            FollowUpEntry[]
-  FollowUpStatusChange     FollowUpStatusChange[]
-  FollowUpContactLog       FollowUpContactLog[]
-  CmsPage                  Page[]
-  ContentVersion           ContentVersion[]
-  MediaAsset               MediaAsset[]
-  SiteConfig               SiteConfig?
-  ContactMessage           ContactMessage[]
-  DiscussionQuestion       DiscussionQuestion[]
-  DiscussionResponse       DiscussionResponse[]
-  EmailSubscriber          EmailSubscriber[]
-  EngagementScore          EngagementScore[]
-  Event                    Event[]
-  EventSchedule            EventSchedule[]
-  EventSection             EventSection[]
-  EventRsvp                EventRsvp[]
-  FollowUpTask             FollowUpTask[]
-  FormSubmission           FormSubmission[]
-  GivingRecord             GivingRecord[]
-  Household                Household[]
-  InventoryItem            InventoryItem[]
-  InventoryHistory         InventoryHistory[]
-  KnownDevice              KnownDevice[]
-  ListenProgress           ListenProgress[]
-  Member                   Member[]
-  Notification             Notification[]
-  OnlineCheckIn            OnlineCheckIn[]
-  PastorNote               PastorNote[]
-  PastoralAlert            PastoralAlert[]
-  PaystackWebhookLog       PaystackWebhookLog[]
-  PrayerRequest            PrayerRequest[]
-  WelfareRequest           WelfareRequest[]
-  PreMaritalApplication    PreMaritalApplication[]
-  RoleAssignment           RoleAssignment[]
-  Sermon                   Sermon[]
-  SermonBookmark           SermonBookmark[]
-  SermonComment            SermonComment[]
-  SermonDirectMessage      SermonDirectMessage[]
-  BirthdayGreeting         BirthdayGreeting[]
-  SermonEpisode            SermonEpisode[]
-  SermonNote               SermonNote[]
-  SermonReaction           SermonReaction[]
-  Service                  Service[]
-  ServiceHeadcount         ServiceHeadcount[]
-  Department               Department[]
-  DepartmentHead           DepartmentHead[]
-  DepartmentHod            DepartmentHod[]
-  RoleGrant                RoleGrant[]
-  UnitLeadAssignment       UnitLeadAssignment[]
-  HeadUsherAssignment      HeadUsherAssignment[]
-  FinanceHeadAssignment    FinanceHeadAssignment[]
-  FinanceEntry             FinanceEntry[]
-  ServiceOffering          ServiceOffering[]
-  PrayerWatch              PrayerWatch[]
-  PrayerSlot               PrayerSlot[]
-  PrayerSignup             PrayerSignup[]
-  SiteSettings             SiteSettings[]
-  Testimonial              Testimonial[]
-  Unit                     Unit[]
-  Visitor                  Visitor[]
-  Report                   Report[]
-  ReportComment            ReportComment[]
-  HomeCell                 HomeCell[]
-  CourseCategory           CourseCategory[]
-  Question                 Question[]
-  UnitPosition             UnitPosition[]
-  UnitTask                 UnitTask[]
-  UnitExpense              UnitExpense[]
-  UnitTaskComment          UnitTaskComment[]
-  UnitTaskReport           UnitTaskReport[]
-  UnitMessage              UnitMessage[]
-  CalendarFeedToken        CalendarFeedToken[]
-  PushSubscription         PushSubscription[]
-  NotificationPreference   NotificationPreference[]
-  RecurringGathering       RecurringGathering[]
-  ServiceAssignment        ServiceAssignment[]
-  FollowUpConnection       FollowUpConnection[]
-  ServiceFollowUpReport    ServiceFollowUpReport[]
-  GoogleCalendarConnection GoogleCalendarConnection[]
-  NavPermission            NavPermission[]
-  NavPermissionGrant       NavPermissionGrant[]
-  followUpNotes            FollowUpNote[]
-  followUpNoteReactions    FollowUpNoteReaction[]
-  followUpNoteReads        FollowUpNoteRead[]
-  sermonDigests            SermonDigest[]
-  SalvationDecision        SalvationDecision[]
-  PastorHost               PastorHost[]
-  PastorSessionType        PastorSessionType[]
-  PastorAvailabilityRule   PastorAvailabilityRule[]
-  PastorAvailabilityBlock  PastorAvailabilityBlock[]
-  PastorDelegate           PastorDelegate[]
-  PastoralBooking          PastoralBooking[]
-  PrayerWatchReport        PrayerWatchReport[]
-  ReadinessChecklistItem   ReadinessChecklistItem[]
-  ServiceReadiness         ServiceReadiness[]
-  ServiceInspection        ServiceInspection[]
-  ReadinessUpdate          ReadinessUpdate[]
-  ReadinessTask            ReadinessTask[]
+  id                         String                       @id
+  name                       String
+  slug                       String                       @unique
+  createdAt                  DateTime                     @default(now())
+  ReadingPlan                ReadingPlan[]
+  MemberPlanSubscription     MemberPlanSubscription[]
+  MemberArticle              MemberArticle[]
+  MemberArticleLike          MemberArticleLike[]
+  Announcement               Announcement[]
+  Book                       Book[]
+  BookCollection             BookCollection[]
+  BookComment                BookComment[]
+  EmailTemplate              EmailTemplate[]
+  EmailSend                  EmailSend[]
+  EmailSettings              EmailSettings?
+  Course                     Course[]
+  CommunityPost              CommunityPost[]
+  AttendanceRecord           AttendanceRecord[]
+  AuditLog                   AuditLog[]
+  CareAssignment             CareAssignment[]
+  FollowUpEntry              FollowUpEntry[]
+  FollowUpStatusChange       FollowUpStatusChange[]
+  FollowUpContactLog         FollowUpContactLog[]
+  CmsPage                    Page[]
+  ContentVersion             ContentVersion[]
+  MediaAsset                 MediaAsset[]
+  SiteConfig                 SiteConfig?
+  ContactMessage             ContactMessage[]
+  DiscussionQuestion         DiscussionQuestion[]
+  DiscussionResponse         DiscussionResponse[]
+  EmailSubscriber            EmailSubscriber[]
+  EngagementScore            EngagementScore[]
+  Event                      Event[]
+  EventSchedule              EventSchedule[]
+  EventSection               EventSection[]
+  EventRsvp                  EventRsvp[]
+  FollowUpTask               FollowUpTask[]
+  FormSubmission             FormSubmission[]
+  GivingRecord               GivingRecord[]
+  Household                  Household[]
+  InventoryItem              InventoryItem[]
+  InventoryHistory           InventoryHistory[]
+  KnownDevice                KnownDevice[]
+  ListenProgress             ListenProgress[]
+  Member                     Member[]
+  Notification               Notification[]
+  OnlineCheckIn              OnlineCheckIn[]
+  PastorNote                 PastorNote[]
+  PastoralAlert              PastoralAlert[]
+  PaystackWebhookLog         PaystackWebhookLog[]
+  PrayerRequest              PrayerRequest[]
+  WelfareRequest             WelfareRequest[]
+  CounsellingApplication     CounsellingApplication[]
+  CounsellingAssignment      CounsellingAssignment[]
+  CounsellingModule          CounsellingModule[]
+  CounsellingSession         CounsellingSession[]
+  CounsellingProgress        CounsellingProgress[]
+  CounsellingStatusEvent     CounsellingStatusEvent[]
+  WeddingApproval            WeddingApproval[]
+  MarriageMinistryAssignment MarriageMinistryAssignment[]
+  CounsellingNotificationLog CounsellingNotificationLog[]
+  CounsellingSettings        CounsellingSettings?
+  RoleAssignment             RoleAssignment[]
+  Sermon                     Sermon[]
+  SermonBookmark             SermonBookmark[]
+  SermonComment              SermonComment[]
+  SermonDirectMessage        SermonDirectMessage[]
+  BirthdayGreeting           BirthdayGreeting[]
+  SermonEpisode              SermonEpisode[]
+  SermonNote                 SermonNote[]
+  SermonReaction             SermonReaction[]
+  Service                    Service[]
+  ServiceHeadcount           ServiceHeadcount[]
+  Department                 Department[]
+  DepartmentHead             DepartmentHead[]
+  DepartmentHod              DepartmentHod[]
+  RoleGrant                  RoleGrant[]
+  UnitLeadAssignment         UnitLeadAssignment[]
+  HeadUsherAssignment        HeadUsherAssignment[]
+  FinanceHeadAssignment      FinanceHeadAssignment[]
+  FinanceEntry               FinanceEntry[]
+  ServiceOffering            ServiceOffering[]
+  PrayerWatch                PrayerWatch[]
+  PrayerSlot                 PrayerSlot[]
+  PrayerSignup               PrayerSignup[]
+  SiteSettings               SiteSettings[]
+  Testimonial                Testimonial[]
+  Unit                       Unit[]
+  Visitor                    Visitor[]
+  Report                     Report[]
+  ReportComment              ReportComment[]
+  HomeCell                   HomeCell[]
+  CourseCategory             CourseCategory[]
+  Question                   Question[]
+  UnitPosition               UnitPosition[]
+  UnitTask                   UnitTask[]
+  UnitExpense                UnitExpense[]
+  UnitTaskComment            UnitTaskComment[]
+  UnitTaskReport             UnitTaskReport[]
+  UnitMessage                UnitMessage[]
+  CalendarFeedToken          CalendarFeedToken[]
+  PushSubscription           PushSubscription[]
+  NotificationPreference     NotificationPreference[]
+  RecurringGathering         RecurringGathering[]
+  ServiceAssignment          ServiceAssignment[]
+  FollowUpConnection         FollowUpConnection[]
+  ServiceFollowUpReport      ServiceFollowUpReport[]
+  GoogleCalendarConnection   GoogleCalendarConnection[]
+  NavPermission              NavPermission[]
+  NavPermissionGrant         NavPermissionGrant[]
+  followUpNotes              FollowUpNote[]
+  followUpNoteReactions      FollowUpNoteReaction[]
+  followUpNoteReads          FollowUpNoteRead[]
+  sermonDigests              SermonDigest[]
+  SalvationDecision          SalvationDecision[]
+  PastorHost                 PastorHost[]
+  PastorSessionType          PastorSessionType[]
+  PastorAvailabilityRule     PastorAvailabilityRule[]
+  PastorAvailabilityBlock    PastorAvailabilityBlock[]
+  PastorDelegate             PastorDelegate[]
+  PastoralBooking            PastoralBooking[]
+  PrayerWatchReport          PrayerWatchReport[]
+  ReadinessChecklistItem     ReadinessChecklistItem[]
+  ServiceReadiness           ServiceReadiness[]
+  ServiceInspection          ServiceInspection[]
+  ReadinessUpdate            ReadinessUpdate[]
+  ReadinessTask              ReadinessTask[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -2977,6 +3203,8 @@ enum Role {
   UNIT_LEAD
   /// Lateral: sends first-timers their opening message. Granted by FirstTimerContactAssignment.
   FIRST_TIMER_CONTACT
+  /// Lateral: runs the marriage ministry (triage, sessions, curriculum). Granted by MarriageMinistryAssignment.
+  MARRIAGE_MINISTRY
   MEMBER
   VISITOR
 }

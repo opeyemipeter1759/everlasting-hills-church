@@ -1,120 +1,134 @@
 import { z } from "zod";
 
 /**
- * The pre-marital counselling application. The API checks the same rules
- * (ehc-backend/src/pre-marital/pre-marital.schema.ts); keep the two in step.
- * Only what the pastors need to review it and reach the couple is asked.
+ * Pre-marital counselling: the public form's rules (the API checks the same in
+ * ehc-backend/src/premarital/premarital.schema.ts; keep them in step), and the
+ * words the dashboard uses for statuses.
  */
 
-export const RELATIONSHIP_OPTIONS = [
-  { value: "UNDER_6_MONTHS", label: "Less than 6 months" },
-  { value: "6_TO_12_MONTHS", label: "6 to 12 months" },
-  { value: "1_TO_2_YEARS", label: "1 to 2 years" },
-  { value: "OVER_2_YEARS", label: "More than 2 years" },
-] as const;
+export type CaseStatus =
+  | "SUBMITTED" | "UNDER_REVIEW" | "ADDITIONAL_INFORMATION_REQUIRED" | "ACCEPTED_FOR_COUNSELLING"
+  | "IN_COUNSELLING" | "FINAL_REVIEW" | "COMPLETED" | "CLOSED";
 
-export const STATUS_OPTIONS = [
-  { value: "NEW", label: "New" },
-  { value: "IN_REVIEW", label: "In review" },
-  { value: "CLOSED", label: "Closed" },
-] as const;
-
-export type ApplicationStatus = (typeof STATUS_OPTIONS)[number]["value"];
-
-export const relationshipLabel = (v: string | null) => RELATIONSHIP_OPTIONS.find((o) => o.value === v)?.label ?? null;
-export const statusLabel = (v: ApplicationStatus) => STATUS_OPTIONS.find((o) => o.value === v)?.label ?? v;
-
-export type Who = "groom" | "bride";
-
-export interface PreMaritalFormValues {
-  groomFirstName: string;
-  groomLastName: string;
-  groomPhone: string;
-  groomEmail: string;
-  groomIsMember: "" | "YES" | "NO";
-  brideFirstName: string;
-  brideLastName: string;
-  bridePhone: string;
-  brideEmail: string;
-  brideIsMember: "" | "YES" | "NO";
-  weddingDate: string;
-  relationshipLength: string;
-  message: string;
-  consent: boolean;
-}
-
-export const FORM_DEFAULTS: PreMaritalFormValues = {
-  groomFirstName: "", groomLastName: "", groomPhone: "", groomEmail: "", groomIsMember: "",
-  brideFirstName: "", brideLastName: "", bridePhone: "", brideEmail: "", brideIsMember: "",
-  weddingDate: "", relationshipLength: "", message: "", consent: false,
+export const STATUS_LABEL: Record<CaseStatus, string> = {
+  SUBMITTED: "New",
+  UNDER_REVIEW: "Under review",
+  ADDITIONAL_INFORMATION_REQUIRED: "Waiting for information",
+  ACCEPTED_FOR_COUNSELLING: "Accepted",
+  IN_COUNSELLING: "In counselling",
+  FINAL_REVIEW: "Final review",
+  COMPLETED: "Completed",
+  CLOSED: "Closed",
 };
 
-/** Today in Lagos, YYYY-MM-DD. */
+export const MEMBERSHIP_OPTIONS = [
+  { value: "BOTH_MEMBERS", label: "We are both members" },
+  { value: "ONE_MEMBER", label: "One of us is a member" },
+  { value: "NEITHER", label: "Neither of us is a member yet" },
+] as const;
+
+export const CONTACT_OPTIONS = [
+  { value: "WHATSAPP", label: "WhatsApp" },
+  { value: "PHONE_CALL", label: "Phone call" },
+  { value: "EMAIL", label: "Email" },
+] as const;
+
+export interface PremaritalFormValues {
+  applicantFirstName: string;
+  applicantLastName: string;
+  applicantEmail: string;
+  applicantPhone: string;
+  partnerFirstName: string;
+  partnerLastName: string;
+  partnerEmail: string;
+  partnerPhone: string;
+  partnerConsentToContact: boolean;
+  membership: string;
+  weddingDate: string;
+  preferredContact: string;
+  intro: string;
+  privacyAcknowledged: boolean;
+  /** Honeypot: hidden from people. */
+  website: string;
+}
+
+export const FORM_DEFAULTS: PremaritalFormValues = {
+  applicantFirstName: "", applicantLastName: "", applicantEmail: "", applicantPhone: "",
+  partnerFirstName: "", partnerLastName: "", partnerEmail: "", partnerPhone: "", partnerConsentToContact: false,
+  membership: "", weddingDate: "", preferredContact: "", intro: "", privacyAcknowledged: false, website: "",
+};
+
 export function lagosToday(now = new Date()): string {
   return new Date(now.getTime() + 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
-const name = (what: string) => z.string().trim().min(1, `Enter the ${what}`).max(60, "Keep the name under 60 characters");
-const phone = (whose: string) =>
-  z
-    .string()
-    .trim()
-    .min(1, `Enter the ${whose} phone number`)
-    .max(30, "That phone number is too long")
-    .regex(/^[\d\s\-+()]+$/, "Use digits, spaces, + or brackets only")
+const name = (what: string) => z.string().trim().min(1, `Enter ${what}`).max(60, "Keep the name under 60 characters");
+const phoneRules = (s: z.ZodString) =>
+  s.max(30, "That phone number is too long").regex(/^[\d\s\-+()]+$/, "Use digits, spaces, + or brackets only")
     .refine((v) => v.replace(/\D/g, "").length >= 7, "That phone number is too short");
-const email = (whose: string) =>
-  z.string().trim().min(1, `Enter the ${whose} email address`).max(254, "That email address is too long").email("Enter a valid email address");
-const member = (who: Who) => z.enum(["YES", "NO"], { error: `Say whether the ${who} is a member of Everlasting Hills` });
+const emailRules = (s: z.ZodString) => s.max(254, "That email address is too long").email("Enter a valid email address");
 
-export const formSchema = z.object({
-  groomFirstName: name("groom's first name"),
-  groomLastName: name("groom's last name"),
-  groomPhone: phone("groom's"),
-  groomEmail: email("groom's"),
-  groomIsMember: member("groom"),
-  brideFirstName: name("bride's first name"),
-  brideLastName: name("bride's last name"),
-  bridePhone: phone("bride's"),
-  brideEmail: email("bride's"),
-  brideIsMember: member("bride"),
-  weddingDate: z.string().refine((d) => !d || d >= lagosToday(), "The wedding date cannot be in the past"),
-  relationshipLength: z.string(),
-  message: z.string().trim().max(1000, "Keep this under 1,000 characters"),
-  consent: z.literal(true, { error: "Both of you need to agree to apply" }),
-});
+export const formSchema = z
+  .object({
+    applicantFirstName: name("your first name"),
+    applicantLastName: name("your last name"),
+    applicantEmail: emailRules(z.string().trim().min(1, "Enter your email address")),
+    applicantPhone: phoneRules(z.string().trim().min(1, "Enter your phone number")),
+    partnerFirstName: name("your partner's first name"),
+    partnerLastName: name("your partner's last name"),
+    partnerEmail: z.string().trim().refine((v) => !v || z.string().email().safeParse(v).success, "Enter a valid email address"),
+    partnerPhone: z.string().trim().refine((v) => !v || phoneRules(z.string()).safeParse(v).success, "Check your partner's phone number"),
+    partnerConsentToContact: z.literal(true, { error: "Confirm your partner is happy for us to contact them" }),
+    membership: z.enum(["BOTH_MEMBERS", "ONE_MEMBER", "NEITHER"], { error: "Tell us whether you are members of Everlasting Hills" }),
+    weddingDate: z.string().refine((d) => !d || d >= lagosToday(), "The wedding date cannot be in the past"),
+    preferredContact: z.enum(["WHATSAPP", "PHONE_CALL", "EMAIL"], { error: "Choose how we should contact you" }),
+    intro: z.string().trim().max(500, "Keep this under 500 characters"),
+    privacyAcknowledged: z.literal(true, { error: "Please read and accept the privacy notice" }),
+    website: z.string(),
+  })
+  .superRefine((v, ctx) => {
+    if (!v.partnerEmail.trim() && !v.partnerPhone.trim()) {
+      ctx.addIssue({ code: "custom", path: ["partnerPhone"], message: "Give a phone number or email address for your partner" });
+    }
+  });
 
-export type FieldProblems = Partial<Record<keyof PreMaritalFormValues, string>>;
+export type FieldProblems = Partial<Record<keyof PremaritalFormValues, string>>;
 
-/** The first problem with each field, or none. */
-export function problemsOf(values: PreMaritalFormValues): FieldProblems {
-  const r = formSchema.safeParse(values);
-  if (r.success) return {};
+/** The first problem with each answer. The partner-contact rule is checked even when other answers are missing. */
+export function problemsOf(values: PremaritalFormValues): FieldProblems {
   const out: FieldProblems = {};
-  for (const issue of r.error.issues) {
-    const field = issue.path[0] as keyof PreMaritalFormValues;
-    if (field && !out[field]) out[field] = issue.message;
+  const r = formSchema.safeParse(values);
+  if (!r.success) {
+    for (const issue of r.error.issues) {
+      const field = issue.path[0] as keyof PremaritalFormValues;
+      if (field && !out[field]) out[field] = issue.message;
+    }
+  }
+  if (!values.partnerEmail.trim() && !values.partnerPhone.trim() && !out.partnerPhone) {
+    out.partnerPhone = "Give a phone number or email address for your partner";
   }
   return out;
 }
 
-/** What the API takes: trimmed, yes/no as booleans, blanks left out. */
-export function toPayload(v: PreMaritalFormValues, submissionKey: string) {
+/** What the API takes: trimmed, blanks left out. */
+export function toPayload(v: PremaritalFormValues, submissionKey: string) {
+  const t = (s: string) => s.trim() || null;
   return {
     submissionKey,
-    groomFirstName: v.groomFirstName.trim(),
-    groomLastName: v.groomLastName.trim(),
-    groomPhone: v.groomPhone.trim(),
-    groomEmail: v.groomEmail.trim(),
-    groomIsMember: v.groomIsMember === "YES",
-    brideFirstName: v.brideFirstName.trim(),
-    brideLastName: v.brideLastName.trim(),
-    bridePhone: v.bridePhone.trim(),
-    brideEmail: v.brideEmail.trim(),
-    brideIsMember: v.brideIsMember === "YES",
+    website: v.website,
+    applicantFirstName: v.applicantFirstName.trim(),
+    applicantLastName: v.applicantLastName.trim(),
+    applicantEmail: v.applicantEmail.trim(),
+    applicantPhone: v.applicantPhone.trim(),
+    partnerFirstName: v.partnerFirstName.trim(),
+    partnerLastName: v.partnerLastName.trim(),
+    partnerEmail: t(v.partnerEmail),
+    partnerPhone: t(v.partnerPhone),
+    partnerConsentToContact: v.partnerConsentToContact,
+    membership: v.membership,
     weddingDate: v.weddingDate || null,
-    relationshipLength: v.relationshipLength || null,
-    message: v.message.trim() || null,
-    consent: v.consent,
+    preferredContact: v.preferredContact,
+    intro: t(v.intro),
+    privacyAcknowledged: v.privacyAcknowledged,
   };
 }

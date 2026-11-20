@@ -6,6 +6,9 @@ import type { Env } from '../config/env.validation';
 import { NotificationEvents, type SendEmailPayload } from './notification-events';
 import { PrismaService } from '../prisma/prisma.service';
 
+/** The address for a log line, unless the mail asked for it to stay private. */
+export const recipientForLog = (p: SendEmailPayload) => (p.redactRecipient ? '[private recipient]' : p.to);
+
 /**
  * Email dispatcher. Runs out-of-band via @OnEvent — callers fire-and-forget.
  *
@@ -44,7 +47,7 @@ export class NotificationsService {
       await this.deliver(payload);
     } catch (err) {
       this.logger.error(
-        `[${payload.tag}] email failed → ${payload.to}: ${(err as Error).message}`,
+        `[${payload.tag}] email failed → ${recipientForLog(payload)}: ${(err as Error).message}`,
       );
     }
   }
@@ -60,7 +63,7 @@ export class NotificationsService {
   async deliver(payload: SendEmailPayload): Promise<void> {
     if (!this.resend) {
       this.logger.warn(
-        `[${payload.tag}] dropped email to ${payload.to} — Resend not configured`,
+        `[${payload.tag}] dropped email to ${recipientForLog(payload)}: Resend not configured`,
       );
       return;
     }
@@ -75,7 +78,7 @@ export class NotificationsService {
       });
       if (!activeMember) {
         this.logger.debug(
-          `[${payload.tag}] suppressed member email to non-active recipient ${payload.to}`,
+          `[${payload.tag}] suppressed member email to non-active recipient ${recipientForLog(payload)}`,
         );
         return;
       }
@@ -96,9 +99,9 @@ export class NotificationsService {
     });
     if (error) {
       throw new Error(
-        `Resend rejected [${payload.tag}] → ${payload.to}: ${error.name ?? 'error'} — ${error.message ?? JSON.stringify(error)}`,
+        `Resend rejected [${payload.tag}] → ${recipientForLog(payload)}: ${error.name ?? 'error'}: ${error.message ?? JSON.stringify(error)}`,
       );
     }
-    this.logger.debug(`[${payload.tag}] email sent → ${payload.to} (id: ${data?.id ?? 'n/a'})`);
+    this.logger.debug(`[${payload.tag}] email sent → ${recipientForLog(payload)} (id: ${data?.id ?? 'n/a'})`);
   }
 }

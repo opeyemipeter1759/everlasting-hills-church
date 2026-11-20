@@ -80,6 +80,11 @@ export async function deletePersonRecords(
     await tx.communityPost.deleteMany({ where: { profileId } });
     await tx.notification.deleteMany({ where: { profileId } });
     await tx.roleAssignment.deleteMany({ where: { profileId } });
+    // Pre-marital counselling: their counsellor assignments and the sessions they
+    // led go with them (both RESTRICT); the cases themselves stay with the church.
+    await tx.counsellingSession.deleteMany({ where: { counsellorProfileId: profileId } });
+    await tx.counsellingAssignment.deleteMany({ where: { counsellorProfileId: profileId } });
+    await tx.marriageMinistryAssignment.deleteMany({ where: { userId: profileId } });
     await tx.profile.delete({ where: { id: profileId } });
   }
 }

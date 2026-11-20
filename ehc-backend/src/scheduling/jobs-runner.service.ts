@@ -13,6 +13,7 @@ import { PrayerWatchReportsService } from '../prayer-watch/prayer-watch-reports.
 import { ServiceCalendarService } from '../service-readiness/service-calendar.service';
 import { ServiceReadinessRemindersService } from '../service-readiness/service-readiness-reminders.service';
 import { OutboxService } from '../outbox/outbox.service';
+import { SessionsService as PremaritalSessionsService } from '../premarital/sessions.service';
 
 /** Names match the @Cron({ name }) options so logs and Cloud Scheduler agree. */
 export const JOB_NAMES = [
@@ -38,6 +39,7 @@ export const JOB_NAMES = [
   'service-calendar',
   'service-readiness-reminders',
   'outbox-sweep',
+  'premarital-session-reminders',
 ] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
@@ -75,6 +77,7 @@ export class JobsRunnerService {
     private readonly serviceCalendar: ServiceCalendarService,
     private readonly readinessReminders: ServiceReadinessRemindersService,
     private readonly outbox: OutboxService,
+    private readonly premaritalSessions: PremaritalSessionsService,
   ) {}
 
   isJob(name: string): name is JobName {
@@ -146,6 +149,8 @@ export class JobsRunnerService {
         return this.readinessReminders.run().then(() => undefined);
       case 'outbox-sweep':
         return this.outbox.sweep().then(() => undefined);
+      case 'premarital-session-reminders':
+        return this.premaritalSessions.sendReminders().then(() => undefined);
     }
   }
 }

@@ -28,6 +28,9 @@ export const ROLE_LEVELS: Record<Role, number> = {
   // First-timer contact: sends first-timers their opening message. Lateral,
   // same tier as Head Usher, so a unit lead never clears its routes by level.
   FIRST_TIMER_CONTACT: 3,
+  // Marriage ministry: triages pre-marital counselling, schedules sessions,
+  // keeps the curriculum. Lateral, same tier as Head Usher.
+  MARRIAGE_MINISTRY: 3,
   // HOD: appointed by an Admin Head (or Pastor/Super Admin) under a department.
   // Own capability is appointing Unit Leads within that department's units.
   HOD: 4,
@@ -51,6 +54,7 @@ export function canActOnRole(actorRole: Role | null | undefined, targetRole: Rol
     actorRole === Role.HEAD_USHER ||
     actorRole === Role.FINANCE_HEAD ||
     actorRole === Role.FIRST_TIMER_CONTACT ||
+    actorRole === Role.MARRIAGE_MINISTRY ||
     actorRole === Role.UNIT_LEAD
   ) {
     return false;
@@ -71,6 +75,7 @@ export function assignableRoles(actorRole: Role | null | undefined): Role[] {
     actorRole === Role.HEAD_USHER ||
     actorRole === Role.FINANCE_HEAD ||
     actorRole === Role.FIRST_TIMER_CONTACT ||
+    actorRole === Role.MARRIAGE_MINISTRY ||
     actorRole === Role.UNIT_LEAD
   ) {
     return [];

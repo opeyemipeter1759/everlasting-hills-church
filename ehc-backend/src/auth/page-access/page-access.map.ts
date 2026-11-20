@@ -127,7 +127,6 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
   { href: '/dashboard/cms', role: Role.PASTOR, paths: ['/cms', '/uploads/image'] },
   { href: '/dashboard/pastor/follow-ups', role: Role.PASTOR, paths: ['/follow-up'] },
   { href: '/dashboard/pastor/reports', role: Role.PASTOR, paths: ['/status-reports', '/emails', '/uploads/document'] },
-  { href: '/dashboard/pastor/pre-marital-counselling', role: Role.PASTOR, paths: ['/pre-marital-counselling/applications'] },
   { href: '/dashboard/pastor/sermons/analytics', role: Role.PASTOR, paths: ['/sermons/analytics'] },
 
   // ── Super admin ───────────────────────────────────────────────────────────

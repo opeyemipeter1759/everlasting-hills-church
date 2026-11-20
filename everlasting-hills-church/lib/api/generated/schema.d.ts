@@ -7150,7 +7150,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/pre-marital-counselling": {
+    "/premarital/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the caller may do in the Marriage section (for the menu) */
+        get: operations["PremaritalController_access"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cases the caller may see, newest first, a page at a time */
+        get: operations["PremaritalController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/applications/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One case in full, with what the caller may do (recorded in the audit trail) */
+        get: operations["PremaritalController_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/applications/{id}/admin": {
         parameters: {
             query?: never;
             header?: never;
@@ -7159,49 +7210,187 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Apply for pre-marital counselling (public); sending the same submissionKey again returns the same application */
-        post: operations["PreMaritalController_submit"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Logistics note and member link (pastors, Super Admin, marriage ministry) */
+        patch: operations["PremaritalController_updateAdmin"];
         trace?: never;
     };
-    "/pre-marital-counselling/applications": {
+    "/premarital/applications/{id}/archive": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Pre-marital counselling applications, newest first, with counts by status (pastors) */
-        get: operations["PreMaritalController_list"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Archive a case (soft delete) (pastors, Super Admin) */
+        post: operations["PremaritalController_archive"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/pre-marital-counselling/applications/{id}": {
+    "/premarital/applications/{id}/assignments": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** One pre-marital counselling application in full (pastors) */
-        get: operations["PreMaritalController_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Assign a counsellor, or make one the lead (pastors, Super Admin) */
+        post: operations["PremaritalController_assign"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/pre-marital-counselling/applications/{id}/status": {
+    "/premarital/applications/{id}/progress/{moduleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Mark a curriculum module done for a case */
+        put: operations["PremaritalSessionsController_done"];
+        post?: never;
+        /** Mark a curriculum module not done */
+        delete: operations["PremaritalSessionsController_undone"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/applications/{id}/request-info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask the couple for more information (pastors, Super Admin, marriage ministry) */
+        post: operations["PremaritalController_requestInfo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/applications/{id}/safeguarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Raise or clear a safeguarding concern; raised cases are for pastors only (pastors) */
+        post: operations["PremaritalController_safeguarding"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/applications/{id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Book a session (staff, or the case counsellor for themselves) */
+        post: operations["PremaritalSessionsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/applications/{id}/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Move a case to its next status (pastors, Super Admin, marriage ministry) */
+        post: operations["PremaritalController_transition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/applications/{id}/wedding-approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve the wedding: a separate pastoral decision (pastors) */
+        post: operations["PremaritalController_approveWedding"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/assignments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** End a counsellor assignment (pastors, Super Admin) */
+        delete: operations["PremaritalController_unassign"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/modules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The curriculum: every module for staff, the active ones for a counsellor */
+        get: operations["PremaritalSessionsController_listModules"];
+        put?: never;
+        /** Add a curriculum module (staff) */
+        post: operations["PremaritalSessionsController_createModule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/modules/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -7214,8 +7403,162 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Change a pre-marital counselling application's status: New, In review or Closed (pastors) */
-        patch: operations["PreMaritalController_updateStatus"];
+        /** Edit a module or switch it on or off; editing an approved module sends it back for approval (staff) */
+        patch: operations["PremaritalSessionsController_updateModule"];
+        trace?: never;
+    };
+    "/premarital/modules/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve a curriculum module (pastors) */
+        post: operations["PremaritalSessionsController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/modules/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reorder the curriculum (staff) */
+        put: operations["PremaritalSessionsController_reorder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Counts only: total, new, awaiting review, in counselling, upcoming sessions, needs attention, completed */
+        get: operations["PremaritalController_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sessions between two Lagos dates: all for staff, their own for a counsellor */
+        get: operations["PremaritalSessionsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change where a session is, its length or its module */
+        patch: operations["PremaritalSessionsController_update"];
+        trace?: never;
+    };
+    "/premarital/sessions/{id}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Mark who attended a session */
+        put: operations["PremaritalSessionsController_attendance"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/sessions/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel a session */
+        post: operations["PremaritalSessionsController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/sessions/{id}/reschedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Move a session to a new time */
+        post: operations["PremaritalSessionsController_reschedule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/premarital/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Counselling policy values and whether each is approved (staff) */
+        get: operations["PremaritalController_settings"];
+        /** Save counselling policy values (pastors) */
+        put: operations["PremaritalController_saveSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/public/articles": {
@@ -7417,6 +7760,40 @@ export interface paths {
         put?: never;
         /** Confirm the email address; the request then reaches the pastor */
         post: operations["OneOnOnePublicController_confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/premarital/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply for pre-marital counselling; a repeat of the same application gets the same answer; answers with a reference only */
+        post: operations["PublicPremaritalController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/premarital/page": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The public page's approved policy text, privacy notice and active curriculum (no personal data) */
+        get: operations["PublicPremaritalController_page"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9329,6 +9706,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/{profileId}/marriage-ministry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign Marriage Ministry: global, unscoped, additive */
+        post: operations["UsersGrantsController_assignMarriageMinistry"];
+        /** End an active Marriage Ministry assignment */
+        delete: operations["UsersGrantsController_removeMarriageMinistry"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/{profileId}/resend-login": {
         parameters: {
             query?: never;
@@ -9718,7 +10113,7 @@ export interface components {
              * @description Required when mode is ROLE
              * @enum {string}
              */
-            role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MEMBER" | "VISITOR";
+            role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MARRIAGE_MINISTRY" | "MEMBER" | "VISITOR";
             /** @description Required when mode is UNIT */
             unitId?: string;
         };
@@ -9866,7 +10261,7 @@ export interface components {
             /** @description Display-only names matching targetProfileIds, in the same order (snapshot at send time). */
             targetProfileNames?: string[];
             /** @description Send to anyone holding any of these roles. Combined (union) with targetGenders/targetProfileIds. Empty = no role restriction. */
-            targetRoles?: ("SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MEMBER" | "VISITOR")[];
+            targetRoles?: ("SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MARRIAGE_MINISTRY" | "MEMBER" | "VISITOR")[];
             /** @example Special Sunday Service */
             title: string;
             /**
@@ -11426,7 +11821,7 @@ export interface components {
             targetProfileIds?: string[];
             targetProfileNames?: string[];
             /** @description Only applies on the next publish (a change here never re-triggers a fan-out). */
-            targetRoles?: ("SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MEMBER" | "VISITOR")[];
+            targetRoles?: ("SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MARRIAGE_MINISTRY" | "MEMBER" | "VISITOR")[];
             /** @example Special Sunday Service */
             title?: string;
             /**
@@ -25747,7 +26142,7 @@ export interface operations {
                 unit?: unknown;
                 gender?: "MALE" | "FEMALE";
                 status?: unknown;
-                role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MEMBER" | "VISITOR";
+                role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MARRIAGE_MINISTRY" | "MEMBER" | "VISITOR";
                 search?: unknown;
                 limit?: number;
                 page?: number;
@@ -29239,7 +29634,505 @@ export interface operations {
             };
         };
     };
-    PreMaritalController_submit: {
+    PremaritalController_access: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_list: {
+        parameters: {
+            query?: {
+                take?: unknown;
+                cursor?: unknown;
+                to?: unknown;
+                from?: unknown;
+                counsellor?: unknown;
+                status?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_updateAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalSessionsController_done: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                moduleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalSessionsController_undone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                moduleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_requestInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_safeguarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalSessionsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_transition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_approveWedding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_unassign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalSessionsController_listModules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalSessionsController_createModule: {
         parameters: {
             query?: never;
             header?: never;
@@ -29270,10 +30163,139 @@ export interface operations {
             };
         };
     };
-    PreMaritalController_list: {
+    PremaritalSessionsController_updateModule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalSessionsController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalSessionsController_reorder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalSessionsController_list: {
         parameters: {
             query?: {
-                status?: "NEW" | "IN_REVIEW" | "CLOSED";
+                to?: unknown;
+                from?: unknown;
             };
             header?: never;
             path?: never;
@@ -29303,7 +30325,7 @@ export interface operations {
             };
         };
     };
-    PreMaritalController_get: {
+    PremaritalSessionsController_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -29336,13 +30358,141 @@ export interface operations {
             };
         };
     };
-    PreMaritalController_updateStatus: {
+    PremaritalSessionsController_attendance: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 id: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalSessionsController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalSessionsController_reschedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PremaritalController_saveSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -29789,6 +30939,68 @@ export interface operations {
         requestBody?: never;
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PublicPremaritalController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PublicPremaritalController_page: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -34257,7 +35469,7 @@ export interface operations {
         parameters: {
             query?: {
                 search?: string;
-                role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MEMBER" | "VISITOR";
+                role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MARRIAGE_MINISTRY" | "MEMBER" | "VISITOR";
             };
             header?: never;
             path?: never;
@@ -34592,6 +35804,72 @@ export interface operations {
         };
     };
     UsersGrantsController_removeHeadUsher: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UsersGrantsController_assignMarriageMinistry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UsersGrantsController_removeMarriageMinistry: {
         parameters: {
             query?: never;
             header?: never;

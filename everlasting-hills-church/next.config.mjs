@@ -61,6 +61,7 @@ const nextConfig = {
       },
       // Keep old bookmarks/search results working after the beliefs → cultures rename.
       { source: "/beliefs", destination: "/cultures", permanent: true },
+      { source: "/marriage/pre-marital-counselling", destination: "/pre-marital-counselling", permanent: false },
     ];
   },
 

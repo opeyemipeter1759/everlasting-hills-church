@@ -21,6 +21,7 @@ function makeService(rows: {
   deptHods?: string[];
   usher?: boolean;
   contact?: boolean;
+  marriage?: boolean;
 }) {
   const prisma = {
     roleGrant: { findMany: jest.fn().mockResolvedValue((rows.grants ?? []).map((role) => ({ role }))) },
@@ -39,6 +40,9 @@ function makeService(rows: {
     financeHeadAssignment: { findFirst: jest.fn().mockResolvedValue(null) },
     firstTimerContactAssignment: {
       findFirst: jest.fn().mockResolvedValue(rows.contact ? { id: 'c1' } : null),
+    },
+    marriageMinistryAssignment: {
+      findFirst: jest.fn().mockResolvedValue(rows.marriage ? { id: 'm1' } : null),
     },
   };
   return new EffectiveRolesService(prisma as never);
@@ -93,5 +97,12 @@ describe('EffectiveRolesService', () => {
 
     expect(eff.roles).toEqual(expect.arrayContaining([Role.FIRST_TIMER_CONTACT, Role.MEMBER]));
     expect(eff.firstTimerContact).toBe(true);
+  });
+
+  it('makes a marriage ministry assignment a lateral role of its own', async () => {
+    const eff = await makeService({ marriage: true }).getEffectiveRoles('p8');
+
+    expect(eff.roles).toEqual(expect.arrayContaining([Role.MARRIAGE_MINISTRY, Role.MEMBER]));
+    expect(eff.marriageMinistry).toBe(true);
   });
 });

@@ -1,44 +1,49 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import PreMaritalApplication from "@/components/pre-marital/PreMaritalApplication";
+import PremaritalForm from "@/components/pre-marital/PremaritalForm";
+import { Hero, WhoCanApply, WhyItMatters } from "@/components/pre-marital/sections/Intro";
+import { CounsellingTeam, Curriculum, Faq, HowItWorks } from "@/components/pre-marital/sections/Journey";
+import { getPremaritalPage } from "@/lib/premarital-page";
 
 export const metadata: Metadata = {
   title: "Pre-Marital Counselling · Everlasting Hills Church",
   description:
-    "Planning to marry? Apply together for pre-marital counselling with the pastors of Everlasting Hills Church, and we will contact you about next steps.",
+    "Preparing for a marriage that flourishes. Apply for pre-marital counselling with Everlasting Hills Church, and the pastoral team will contact you about next steps.",
 };
 
-export default function PreMaritalCounsellingPage() {
+export const revalidate = 300;
+
+/** A server-rendered page; the application form is the only part that runs in the browser. */
+export default async function PreMaritalCounsellingPage() {
+  const { policy, modules } = await getPremaritalPage();
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-church-dark px-4 py-12 text-white selection:bg-church-maroon sm:px-5">
-      <div className="pointer-events-none fixed inset-0 z-0">
-        <Image
-          src="/images/church_congregation_3_1779193624434.png"
-          alt=""
-          aria-hidden="true"
-          fill
-          sizes="100vw"
-          priority
-          className="scale-105 object-cover opacity-30"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/50 to-church-dark" />
-      </div>
+    <main className="min-h-screen overflow-x-hidden bg-church-dark px-4 pb-24 text-white selection:bg-church-maroon sm:px-6">
+      <div className="mx-auto w-full max-w-4xl">
+        <Hero />
+        <WhyItMatters />
+        <WhoCanApply policy={policy} />
+        <Curriculum modules={modules} />
+        <HowItWorks />
+        <CounsellingTeam counsellors={policy.counsellors} />
+        <Faq />
 
-      <div className="relative z-10 mx-auto w-full max-w-2xl">
-        <header className="mb-8 mt-20 text-center">
-          <h1 className="text-3xl font-bold text-white sm:text-4xl">Pre-Marital Counselling</h1>
-          <p className="mx-auto mt-3 max-w-xl leading-relaxed text-white/80">
-            Getting married is one of the biggest steps you will take together. Our pastors walk with couples through
-            pre-marital counselling, so you can build your marriage on God&apos;s word and talk honestly about the
-            things that matter before the big day.
+        <section id="apply" aria-labelledby="apply-heading" className="mt-20 scroll-mt-24">
+          <h2 id="apply-heading" className="font-display text-2xl font-bold text-white sm:text-3xl">Apply for counselling</h2>
+          <p className="mt-2 max-w-2xl text-white/75">
+            One of you can apply for both. The pastoral team will review your application and contact you about next steps. Applying does not book
+            a session yet.
           </p>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/65">
-            Fill this in together. The pastoral team will review your application and contact you both about next
-            steps. Applying does not book a session yet.
-          </p>
-        </header>
+          <div className="mt-6">
+            <PremaritalForm privacyNotice={policy.privacyNotice} retention={policy.retention} />
+          </div>
+        </section>
 
-        <PreMaritalApplication />
+        <section aria-label="Encouragement" className="mt-20 rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-center sm:p-10">
+          <p className="font-display text-2xl text-white">&ldquo;Unless the Lord builds the house, the builders labour in vain.&rdquo;</p>
+          <p className="mt-2 text-sm text-[#FFB3C1]">Psalm 127:1</p>
+          <p className="mx-auto mt-4 max-w-xl text-white/75">
+            However far along you are, we would love to walk with you as you prepare. We are praying for you both.
+          </p>
+        </section>
       </div>
     </main>
   );

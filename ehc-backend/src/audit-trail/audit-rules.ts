@@ -44,11 +44,12 @@ const SKIP: RegExp[] = [
   /^\/prayer-watch\/signup$/,
   /^\/forms\/(contact|prayer-request|question|register|salvation|serve-team|testimony|welfare-request)$/,
   /^\/evangelism\/form$/,
-  /^\/pre-marital-counselling$/,
 ];
 
 /** Kept as an action, without what was written: private messages, pastoral notes, reflections. */
 const PRIVATE_BODY: RegExp[] = [
+  // Pre-marital counselling keeps its own audit events, with no field values.
+  /^\/premarital\//,
   /^\/units\/:unitId\/messages/,
   /^\/follow-up\/notes\//,
   /^\/evangelism\/notes\//,

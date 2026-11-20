@@ -135,6 +135,34 @@ export class UsersRoleGrantsService {
     return { assigned: Role.FIRST_TIMER_CONTACT };
   }
 
+  /** Assign Marriage Ministry: global and unscoped like the Guest Care Coordinator.
+   * Lets the holder triage pre-marital counselling, schedule sessions and keep the
+   * curriculum. Not wedding approval, not safeguarding. History-preserving. */
+  async assignMarriageMinistry(actor: AuthUser, profileId: string) {
+    await this.assertTargetInTenant(profileId);
+    this.auth.assertCanActOn(actor, Role.MARRIAGE_MINISTRY);
+    this.auth.assertCanActOn(actor, await this.auth.targetPrimaryRole(profileId));
+    const existing = await this.prisma.marriageMinistryAssignment.findFirst({ where: { userId: profileId, endedAt: null }, select: { id: true } });
+    if (!existing) {
+      await this.prisma.marriageMinistryAssignment.create({
+        data: { id: randomUUID(), tenantId: this.tenantId, userId: profileId, assignedById: actor.profileId ?? null },
+      });
+      await this.auth.writeAudit(actor, 'ASSIGN_MARRIAGE_MINISTRY', profileId, { role: Role.MARRIAGE_MINISTRY });
+      this.effectiveRoles.invalidate(profileId);
+    }
+    return { assigned: Role.MARRIAGE_MINISTRY };
+  }
+
+  async removeMarriageMinistry(actor: AuthUser, profileId: string) {
+    await this.assertTargetInTenant(profileId);
+    this.auth.assertCanActOn(actor, Role.MARRIAGE_MINISTRY);
+    this.auth.assertCanActOn(actor, await this.auth.targetPrimaryRole(profileId));
+    await this.prisma.marriageMinistryAssignment.updateMany({ where: { userId: profileId, endedAt: null }, data: { endedAt: new Date() } });
+    await this.auth.writeAudit(actor, 'REMOVE_MARRIAGE_MINISTRY', profileId, { role: Role.MARRIAGE_MINISTRY });
+    this.effectiveRoles.invalidate(profileId);
+    return { removed: Role.MARRIAGE_MINISTRY };
+  }
+
   async removeFirstTimerContact(actor: AuthUser, profileId: string) {
     await this.assertTargetInTenant(profileId);
     this.auth.assertCanActOn(actor, Role.FIRST_TIMER_CONTACT);

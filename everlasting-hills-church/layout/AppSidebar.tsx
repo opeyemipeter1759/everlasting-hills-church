@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { useCurrentUser, useNavDropdown } from '@/hooks';
 import { useMe, useMyUnits, useMyMemberships, useMyDepartmentUnits } from '@/lib/api';
 import { useApprovalsAccess } from '@/lib/api/approvals';
+import { useMarriageAccess } from '@/lib/api/premarital';
 import { canRoleAccessItem, toNavPermissionsMap, useMyNavGrantedHrefs, useNavPermissions } from '@/lib/nav-permissions';
 import { getInitials, truncateText } from '@/utils/stringUtils';
 import { SidebarSkeleton } from '@/components/ui/skeleton/SidebarSkeleton';
@@ -108,9 +109,8 @@ const AppSidebar: React.FC = () => {
   const { data: myMemberships } = useMyMemberships();
   const { data: myDepartmentUnits = [] } = useMyDepartmentUnits();
   const { data: approvalsAccess } = useApprovalsAccess(canAccessRole('UNIT_LEAD'));
-  // Admin-configurable per-item role overrides (Roles > Permissions page).
-  // Undefined/empty while loading just means every item falls back to its
-  // static minRole for now — the same behavior as before this existed.
+  const { data: marriage } = useMarriageAccess();
+  // Per-item role overrides (Roles > Permissions page); while loading, items fall back to their static minRole.
   const { data: navPermissionEntries } = useNavPermissions();
   const navPermissionsMap = useMemo(() => toNavPermissionsMap(navPermissionEntries ?? []), [navPermissionEntries]);
   // Named exceptions (Permissions page > Individual & Unit Exceptions): a person or a unit let in on
@@ -118,9 +118,7 @@ const AppSidebar: React.FC = () => {
   const { data: grantedHrefsData } = useMyNavGrantedHrefs();
   const grantedHrefs = useMemo(() => new Set(grantedHrefsData ?? []), [grantedHrefsData]);
 
-  // myUnits (leads/assists) and myMemberships (plain member) are two disjoint
-  // lists — a lead is deliberately excluded from myMemberships, so both must
-  // be checked or the unit's own lead would be the one person locked out.
+  // myUnits (leads/assists) and myMemberships (members) are disjoint; check both or the unit's own lead is locked out.
   const inAudioProduction =
     !!myUnits?.some((u) => isAudioProductionUnitName(u.name)) ||
     !!myMemberships?.some((u) => isAudioProductionUnitName(u.name));
@@ -143,6 +141,8 @@ const AppSidebar: React.FC = () => {
             if (item.requiresAccess === 'unitLead' && !myUnits?.length) return false;
             if (item.requiresAccess === 'unitMember' && !myMemberships?.length) return false;
             if (item.requiresAccess === 'firstTimerApprovals' && !approvalsAccess?.canDecide && !grantedHrefs.has(item.href)) return false;
+            if (item.requiresAccess === 'marriage' && !marriage?.tier && !marriage?.counsellor) return false;
+            if (item.requiresAccess === 'marriageStaff' && !marriage?.tier) return false;
             // Audio Production members were admitted above; everyone else needs
             // PASTOR+ or a named grant for the page (the item's minRole is
             // lowered to MEMBER only so the team can pass the role check).

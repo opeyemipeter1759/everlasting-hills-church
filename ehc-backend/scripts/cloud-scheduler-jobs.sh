@@ -47,6 +47,7 @@ JOBS=(
   "prayer-watch-report-reminders|*/15 * * * *|Prayer Watch: nudge a watch leader who hasn't reported their watch"
   "one-on-one-sweep|*/10 * * * *|One-on-One: release expired holds, lapse unanswered requests, nudge pastors, send reminders"
   "service-calendar|30 0 * * *|Service Readiness: create the coming week's Sunday and Wednesday services ahead of time"
+  "premarital-session-reminders|0 * * * *|Pre-marital counselling: email the couple about 24 hours before each session"
   "service-readiness-reminders|*/15 * * * *|Service Readiness: remind department heads before plans are due, tell the Administrator about missing plans"
 )
 

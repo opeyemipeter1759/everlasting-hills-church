@@ -54,6 +54,18 @@ export class UsersGrantsController {
     return this.grants.assignFirstTimerContact(actor, profileId);
   }
 
+  @Post(':profileId/marriage-ministry')
+  @ApiOperation({ summary: 'Assign Marriage Ministry: global, unscoped, additive' })
+  async assignMarriageMinistry(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
+    return this.grants.assignMarriageMinistry(actor, profileId);
+  }
+
+  @Delete(':profileId/marriage-ministry')
+  @ApiOperation({ summary: 'End an active Marriage Ministry assignment' })
+  async removeMarriageMinistry(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
+    return this.grants.removeMarriageMinistry(actor, profileId);
+  }
+
   @Delete(':profileId/first-timer-contact')
   @ApiOperation({ summary: 'End an active Guest Care Coordinator assignment' })
   async removeFirstTimerContact(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {

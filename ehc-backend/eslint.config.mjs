@@ -28,4 +28,11 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Counselling data never enters an AI pipeline.
+    files: ['src/premarital/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [{ group: ['**/ai/**', '**/ai', '@google/*'], message: 'Pre-marital counselling data must never reach an AI service.' }] }],
+    },
+  },
 );

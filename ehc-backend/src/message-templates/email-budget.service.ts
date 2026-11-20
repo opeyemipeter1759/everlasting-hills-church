@@ -3,9 +3,9 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
- * Resend sends at most 100 emails a day. Template emails may use 70 of them,
- * so 30 always stay for the mail the system itself must send (password resets,
- * sign-in alerts, the registration emails).
+ * Resend sends at most 100 emails a day. Template and counselling emails share
+ * 70 of them, so 30 always stay for the mail the system itself must send
+ * (password resets, sign-in alerts, the registration emails).
  */
 export const TEMPLATE_EMAIL_DAILY_LIMIT = 70;
 
@@ -47,10 +47,19 @@ export class DailyEmailBudget {
   constructor(private readonly prisma: PrismaService) {}
 
   async usedToday(tenantId: string, now = new Date()): Promise<number> {
+    return this.countToday(this.prisma, tenantId, now);
+  }
+
+  /** Today's template and counselling emails, sent or still being sent. */
+  private async countToday(db: Pick<PrismaService, 'messageLog' | 'counsellingNotificationLog'>, tenantId: string, now: Date): Promise<number> {
     const { start, end } = lagosDayRange(now);
-    return this.prisma.messageLog.count({
-      where: { tenantId, channel: 'email', status: { in: ['SENT', 'PENDING'] }, sentAt: { gte: start, lt: end } },
-    });
+    const sentAt = { gte: start, lt: end };
+    const status = { in: ['SENT', 'PENDING'] };
+    const [template, counselling] = await Promise.all([
+      db.messageLog.count({ where: { tenantId, channel: 'email', status, sentAt } }),
+      db.counsellingNotificationLog.count({ where: { tenantId, status, sentAt } }),
+    ]);
+    return template + counselling;
   }
 
   async remaining(tenantId: string, now = new Date()): Promise<number> {
@@ -63,12 +72,9 @@ export class DailyEmailBudget {
    * returns null, so the record shows who did not get it and why.
    */
   async claim(c: EmailClaim, now = new Date()): Promise<string | null> {
-    const { start, end } = lagosDayRange(now);
     return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`email-budget:${c.tenantId}`}))`;
-      const used = await tx.messageLog.count({
-        where: { tenantId: c.tenantId, channel: 'email', status: { in: ['SENT', 'PENDING'] }, sentAt: { gte: start, lt: end } },
-      });
+      const used = await this.countToday(tx, c.tenantId, now);
       const allowed = used < this.limit;
       const row = await tx.messageLog.create({
         data: {
@@ -83,6 +89,21 @@ export class DailyEmailBudget {
           error: allowed ? null : "Today's email allowance was used up",
           sentAt: now,
         },
+      });
+      return allowed ? row.id : null;
+    });
+  }
+
+  /**
+   * The same claim for a counselling email: a PENDING CounsellingNotificationLog
+   * row and its id, or a SKIPPED row and null when today's allowance is used up.
+   */
+  async claimCounselling(c: { tenantId: string; applicationId: string; event: string }, now = new Date()): Promise<string | null> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`email-budget:${c.tenantId}`}))`;
+      const allowed = (await this.countToday(tx, c.tenantId, now)) < this.limit;
+      const row = await tx.counsellingNotificationLog.create({
+        data: { id: randomUUID(), tenantId: c.tenantId, applicationId: c.applicationId, event: c.event, status: allowed ? 'PENDING' : 'SKIPPED', sentAt: now },
       });
       return allowed ? row.id : null;
     });

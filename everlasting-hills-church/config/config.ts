@@ -45,6 +45,7 @@ const LEVELS = {
   HEAD_USHER: 3,
   FINANCE_HEAD: 3,
   FIRST_TIMER_CONTACT: 3,
+  MARRIAGE_MINISTRY: 3,
   HOD: 4,
   ADMIN_HEAD: 6,
   ADMIN: 6,
@@ -56,7 +57,7 @@ const LEVELS = {
 export type UserRole = keyof typeof LEVELS;
 
 const CHURCH_WIDE_ROLES = new Set<UserRole>(["ADMIN", "ADMIN_HEAD", "PASTOR", "SUPER_ADMIN"]);
-const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER", "FIRST_TIMER_CONTACT"]);
+const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER", "FIRST_TIMER_CONTACT", "MARRIAGE_MINISTRY"]);
 
 export function hasMinRole(userRole: UserRole, minRole: UserRole): boolean {
   // Finance visibility does NOT follow the normal "any church-wide role passes a lateral gate"
@@ -82,6 +83,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   HEAD_USHER: "Head Usher",
   FINANCE_HEAD: "Finance Head",
   FIRST_TIMER_CONTACT: "Guest Care Coordinator",
+  MARRIAGE_MINISTRY: "Marriage Ministry",
   UNIT_LEAD: "Unit Lead",
   MEMBER: "Member",
   VISITOR: "Visitor",
@@ -96,6 +98,7 @@ export const ROLE_BADGE_CLASS: Record<UserRole, string> = {
   HEAD_USHER: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
   FINANCE_HEAD: "bg-green-500/20 text-green-300 border border-green-500/30",
   FIRST_TIMER_CONTACT: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+  MARRIAGE_MINISTRY: "bg-pink-500/20 text-pink-300 border border-pink-500/30",
   UNIT_LEAD: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
   MEMBER: "bg-white/10 text-white/70 border border-white/10",
   VISITOR: "bg-white/10 text-white/70 border border-white/10",
@@ -120,13 +123,10 @@ import {
   BookOpen,
   DollarSign,
   BarChart3,
-  PhoneForwarded,
-  Settings,
   Shield,
   Lock,
   Mail,
   TrendingUp,
-  Bell,
   FileText,
   Activity,
   Tally5,
@@ -134,7 +134,7 @@ import {
   School,
   Compass,
   Users2,
-  Wifi, CalendarClock, HeartHandshake,
+  Wifi, CalendarClock,
   BookMarked,
   Newspaper,
   UserCog,
@@ -146,6 +146,7 @@ import {
   Clock, Filter,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { MARRIAGE_NAV } from "./nav-marriage";
 
 export type NavItem = {
   label: string;
@@ -154,7 +155,7 @@ export type NavItem = {
   minRole: UserRole;
   maxRole?: UserRole;
   /** firstTimerApprovals: only people who decide first-timer approvals (admins, pastors, the team leads of units that take first-timers). */
-  requiresAccess?: "unitLead" | "unitMember" | "audioProduction" | "firstTimerApprovals";
+  requiresAccess?: "unitLead" | "unitMember" | "audioProduction" | "firstTimerApprovals" | "marriage" | "marriageStaff";
   dynamicUnits?: "lead" | "member";
 };
 
@@ -242,14 +243,13 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Prayer Requests",   href: "/dashboard/prayer-requests",           icon: Heart,          minRole: "ADMIN" },
       { label: "Sermons",           href: "/dashboard/pastor/sermons",            icon: BookOpen,       minRole: "MEMBER", requiresAccess: "audioProduction" },
-      { label: "Sermon Analytics",  href: "/dashboard/pastor/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR", requiresAccess: "audioProduction" },/* 
-      { label: "Alerts",            href: "/dashboard/alerts",             icon: Bell,           minRole: "PASTOR" },
-      { label: "Follow-ups",        href: "/dashboard/pastor/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
-      { label: "Giving",            href: "/dashboard/giving",             icon: DollarSign,     minRole: "PASTOR" },
-     */  { label: "Reports",           href: "/dashboard/pastor/reports",            icon: FileText,       minRole: "PASTOR" },
+      { label: "Sermon Analytics",  href: "/dashboard/pastor/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR", requiresAccess: "audioProduction" },
+      { label: "Reports",           href: "/dashboard/pastor/reports",            icon: FileText,       minRole: "PASTOR" },
       { label: "One-on-One",        href: "/dashboard/one-on-one/manage",         icon: CalendarHeart,  minRole: "PASTOR" },
-      { label: "Pre-Marital Counselling", href: "/dashboard/pastor/pre-marital-counselling", icon: HeartHandshake, minRole: "PASTOR" },
     ],
+  },
+  {
+    ...MARRIAGE_NAV,
   },
   {
     section: "System",

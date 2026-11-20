@@ -28,6 +28,7 @@ const ROLE_LEVELS = {
   HEAD_USHER: 3,
   FINANCE_HEAD: 3,
   FIRST_TIMER_CONTACT: 3,
+  MARRIAGE_MINISTRY: 3,
   HOD: 4,
   ADMIN_HEAD: 6,
   ADMIN: 6,
@@ -38,13 +39,8 @@ const ROLE_LEVELS = {
 /** Dashboard roles; the keys of ROLE_LEVELS are the role names. */
 export type UserRole = keyof typeof ROLE_LEVELS;
 
-const CHURCH_WIDE_ROLES = new Set<UserRole>([
-  "ADMIN",
-  "ADMIN_HEAD",
-  "PASTOR",
-  "SUPER_ADMIN",
-]);
-const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER", "FIRST_TIMER_CONTACT"]);
+const CHURCH_WIDE_ROLES = new Set<UserRole>(["ADMIN", "ADMIN_HEAD", "PASTOR", "SUPER_ADMIN"]);
+const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER", "FIRST_TIMER_CONTACT", "MARRIAGE_MINISTRY"]);
 
 export interface FrontendSessionUser {
   email: string | null;
@@ -74,6 +70,7 @@ export function normalizeRole(role: string | null | undefined): UserRole | null 
   if (cleaned === "head usher" || cleaned === "head_usher" || cleaned === "headusher") return "HEAD_USHER";
   if (cleaned === "finance head" || cleaned === "finance_head" || cleaned === "financehead") return "FINANCE_HEAD";
   if (cleaned === "guest care coordinator" || cleaned === "first-timer contact" || cleaned === "first_timer_contact") return "FIRST_TIMER_CONTACT";
+  if (cleaned === "marriage ministry" || cleaned === "marriage_ministry") return "MARRIAGE_MINISTRY";
   if (cleaned === "admin head" || cleaned === "admin_head" || cleaned === "adminhead") return "ADMIN_HEAD";
   if (cleaned === "admin") return "ADMIN";
   if (cleaned === "pastor") return "PASTOR";

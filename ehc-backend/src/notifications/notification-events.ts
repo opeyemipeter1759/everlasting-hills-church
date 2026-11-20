@@ -45,4 +45,6 @@ export interface SendEmailPayload {
   tag: string;
   /** Final delivery must confirm the recipient still has ACTIVE membership. */
   memberOnly?: boolean;
+  /** Keep the address out of the logs (e.g. pre-marital counselling mail). */
+  redactRecipient?: boolean;
 }
