@@ -9,10 +9,10 @@ export const CARD_SURFACE =
 
 function StatusLine({ status, n }: { status: PipelineStatus; n: number }) {
   return (
-    <li className="flex items-center gap-2.5">
+    <li className="flex items-center gap-1.5 sm:gap-2.5">
       <span aria-hidden="true" className={`h-2 w-2 flex-shrink-0 rounded-full ${STATUS_META[status].dot}`} />
-      <span className="w-8 text-right font-semibold tabular-nums text-[#111] dark:text-white">{n}</span>
-      <span className="text-gray-600 dark:text-white/65">{STATUS_META[status].label}</span>
+      <span className="w-6 text-right font-semibold tabular-nums sm:w-8 text-[#111] dark:text-white">{n}</span>
+      <span className="min-w-0 truncate text-gray-600 dark:text-white/65">{STATUS_META[status].label}</span>
     </li>
   );
 }
@@ -44,7 +44,7 @@ export function MonthCard({
       <p className="mt-1 text-sm font-bold text-[#111] dark:text-white">
         {heading} (<span className="tabular-nums">{summary.total}</span>)
       </p>
-      <ul className="mt-3 space-y-1.5 text-sm">
+      <ul className="mt-3 space-y-1.5 text-xs sm:text-sm">
         {TIMER_STATUSES.map((s) => (
           <StatusLine key={s} status={s} n={summary.counts[s]} />
         ))}
@@ -59,7 +59,7 @@ export function MonthCard({
 
   if (muted || !href) {
     return (
-      <div className={`${CARD_SURFACE} p-4 ${muted ? "opacity-50" : ""}`} aria-disabled={muted || undefined}>
+      <div className={`${CARD_SURFACE} h-full p-3 sm:p-4 ${muted ? "opacity-50" : ""}`} aria-disabled={muted || undefined}>
         {body}
       </div>
     );
@@ -67,7 +67,7 @@ export function MonthCard({
   return (
     <Link
       href={href}
-      className={`${CARD_SURFACE} block p-4 transition-colors hover:border-[#87102C]/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#87102C] dark:hover:border-white/25`}
+      className={`${CARD_SURFACE} block h-full p-3 transition-colors sm:p-4 hover:border-[#87102C]/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#87102C] dark:hover:border-white/25`}
     >
       {body}
     </Link>

@@ -2,8 +2,10 @@
 
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useFollowUpPerson, type MasterListRow } from "@/lib/api/follow-up-pipeline";
+import { useFollowUpPerson } from "@/lib/api/follow-up-pipeline";
 import { DrawerHeader } from "./DrawerHeader";
+import type { DrawerPerson } from "./MasterListNotes";
+import { CameAgainButton } from "./v2/visits/CameAgainButton";
 import { DrawerFacts } from "./DrawerFacts";
 import { ActivityThread } from "./ActivityThread";
 import { StatusPicker } from "./StatusPicker";
@@ -21,7 +23,7 @@ export function PersonDrawer({
   onClose,
   board = "FOLLOW_UP",
 }: {
-  person: MasterListRow | null;
+  person: DrawerPerson | null;
   onClose: () => void;
   /** Which team's board opened it: each shows and changes its own assignee. */
   board?: "FOLLOW_UP" | "INTEGRATION";
@@ -51,6 +53,10 @@ export function PersonDrawer({
   // The row already knows the name and status, so the drawer opens with them
   // filled in and the rest arrives a moment later — no empty panel.
   const shown = data && data.id === person.id ? data : null;
+  const status = shown?.status ?? person.status;
+  // A return visit moves a first timer on to second, then third; integrating stays a lead's approval.
+  const visitorId = person.visitorId ?? (person.kind === "VISITOR" ? person.id : undefined);
+  const canComeAgain = !!visitorId && (status === "FIRST_TIMER" || status === "SECOND_TIMER");
 
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label={person.name} className="fixed inset-0 z-50">
@@ -59,7 +65,7 @@ export function PersonDrawer({
       {/* 70vh wide: roomy enough for the conversation to read as one, and it
           scales with the screen rather than being pinned to a fixed size. */}
       <div className="fixed inset-y-0 right-0 flex w-full max-w-full flex-col bg-[#FAFAFB] shadow-2xl sm:min-w-[70vh] sm:w-[70vh] dark:bg-[#141416]">
-        <DrawerHeader person={person} onClose={onClose} />
+        <DrawerHeader person={person} status={status} onClose={onClose} />
 
         <div className="flex-1 space-y-4 overflow-y-auto no-scrollbar px-5 py-5">
           {/* What people came to change, in one card. */}
@@ -67,9 +73,14 @@ export function PersonDrawer({
             <div className="pb-3">
               <StatusPicker
                 person={person}
-                status={shown?.status ?? person.status}
+                status={status}
                 awaiting={shown?.statusAwaitingApproval ?? null}
               />
+              {canComeAgain && (
+                <div className="ml-24 mt-3">
+                  <CameAgainButton visitorId={visitorId} firstName={person.name.split(" ")[0]} firstVisitDate={person.firstVisitDate} />
+                </div>
+              )}
             </div>
             <div className="pt-3">
               {/* The row's assignedTo is already this board's; the full
@@ -80,7 +91,7 @@ export function PersonDrawer({
                 }
                 entryId={shown?.entryId ?? null}
                 // Nobody carries someone who has opted out.
-                canReassign={(shown?.status ?? person.status) !== "OPTED_OUT" && (onIntegration ? integration.canAssign : canRunUnit)}
+                canReassign={status !== "OPTED_OUT" && (onIntegration ? integration.canAssign : canRunUnit)}
                 board={board}
                 unitId={onIntegration ? (integration.unitId ?? undefined) : undefined}
               />

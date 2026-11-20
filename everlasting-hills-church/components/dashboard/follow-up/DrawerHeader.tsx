@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import type { MasterListRow } from "@/lib/api/follow-up-pipeline";
+import type { MasterListRow, MasterListStatus } from "@/lib/api/follow-up-pipeline";
 import { MasterStatusBadge } from "./MasterStatusBadge";
 import { Avatar } from "./message-bits";
 
@@ -10,7 +10,7 @@ import { Avatar } from "./message-bits";
  * where they stand, so the panel opens with the thing you clicked, plainly
  * stated, rather than a wall of grey fields.
  */
-export function DrawerHeader({ person, onClose }: { person: MasterListRow; onClose: () => void }) {
+export function DrawerHeader({ person, status, onClose }: { person: MasterListRow; status: MasterListStatus; onClose: () => void }) {
   return (
     <header className="relative overflow-hidden bg-gradient-to-br from-[#87102C] via-[#9B1435] to-[#6E0C24] px-6 pb-6 pt-5 text-white">
       <div
@@ -26,7 +26,7 @@ export function DrawerHeader({ person, onClose }: { person: MasterListRow; onClo
         <div className="min-w-0 flex-1 pt-0.5">
           <h2 className="truncate text-xl font-bold leading-tight">{person.name}</h2>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <MasterStatusBadge status={person.status} />
+            <MasterStatusBadge status={status} />
             {!person.hasAccount && (
               <span className="rounded-full bg-white/15 px-2 py-0.5 text-xs font-medium text-white ring-1 ring-inset ring-white/20">
                 No account yet

@@ -6,11 +6,14 @@ import { MessagesSquare } from "lucide-react";
 import { useFollowUpPerson, type MasterListRow } from "@/lib/api/follow-up-pipeline";
 import type { PipelineRow } from "@/lib/api/pipeline";
 
+/** A person in the drawer; first-timers also carry their form, so Came again works there. */
+export type DrawerPerson = MasterListRow & { visitorId?: string; firstVisitDate?: string };
+
 /**
  * A pipeline row as the team conversation drawer reads it. The conversation
  * lives on the account once one was made from the form, else on the form.
  */
-export function drawerPerson(row: PipelineRow): MasterListRow {
+export function drawerPerson(row: PipelineRow): DrawerPerson {
   return {
     id: row.memberId ?? row.visitorId,
     kind: row.memberId ? "MEMBER" : "VISITOR",
@@ -20,11 +23,13 @@ export function drawerPerson(row: PipelineRow): MasterListRow {
     status: row.status,
     hasAccount: !!row.memberId,
     attended: row.visits,
+    visitorId: row.visitorId,
+    firstVisitDate: row.firstVisitDate,
   };
 }
 
 /** Opens the team's conversation about one person, from a list row. */
-export function NotesButton({ row, onOpen }: { row: PipelineRow; onOpen: (person: MasterListRow) => void }) {
+export function NotesButton({ row, onOpen }: { row: PipelineRow; onOpen: (person: DrawerPerson) => void }) {
   return (
     <button
       type="button"

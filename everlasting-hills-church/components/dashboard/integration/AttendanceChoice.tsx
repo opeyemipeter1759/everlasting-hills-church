@@ -5,7 +5,7 @@ export type Attendance = "everyone" | "came" | "missed";
 const OPTIONS: { value: Attendance; label: string }[] = [
   { value: "everyone", label: "Everyone" },
   { value: "came", label: "Came" },
-  { value: "missed", label: "Missed it" },
+  { value: "missed", label: "Missed" },
 ];
 
 /** For the service picked: show everyone, only who came, or only who missed it. */

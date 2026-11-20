@@ -16,16 +16,16 @@ function Count({ status, n }: { status: PipelineStatus; n: number }) {
 /** The whole year: the same breakdown as the month cards, summed by the API across all twelve. */
 export function YearStrip({ year, total }: { year: number; total: MonthSummary }) {
   return (
-    <section className={`${CARD_SURFACE} p-5`} aria-label={`${year} total`}>
+    <section className={`${CARD_SURFACE} p-4 sm:p-5`} aria-label={`${year} total`}>
       <h2 className="text-base font-bold text-[#111] dark:text-white">
         {year} total (<span className="tabular-nums">{total.total}</span>)
       </h2>
-      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm sm:gap-x-6">
         {TIMER_STATUSES.map((s) => (
           <Count key={s} status={s} n={total.counts[s]} />
         ))}
       </div>
-      <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm sm:gap-x-6">
         {SETTLED_STATUSES.map((s) => (
           <Count key={s} status={s} n={total.counts[s]} />
         ))}
