@@ -88,6 +88,8 @@ function TagInput({
   );
 }
 
+const CONTACT_PARTS = [["phone", "My phone number"], ["email", "My email address"], ["birthday", "My birthday"], ["socials", "My social media links"]] as const;
+
 /** "Church family" or "Only me" for one part of the profile. */
 function Who({ value, onChange, name }: { value: "MEMBERS" | "PRIVATE"; onChange: (v: "MEMBERS" | "PRIVATE") => void; name: string }) {
   const open = value === "MEMBERS";
@@ -377,14 +379,7 @@ export default function ProfileStoryForm({ memberId }: { memberId?: string | nul
 
         <Block title="Connecting with you" hint="Your phone number stays private unless you share it. Your email shows to the church family unless you hide it.">
           <div className="space-y-2">
-            {(
-              [
-                ["phone", "My phone number"],
-                ["email", "My email address"],
-                ["birthday", "My birthday"],
-                ["socials", "My social media links"],
-              ] as const
-            ).map(([key, text]) => (
+            {CONTACT_PARTS.map(([key, text]) => (
               <div key={key} className="flex items-center justify-between gap-3 rounded-xl bg-[#FFF8F9] px-4 py-2.5 dark:bg-white/[0.04]">
                 <span className="text-sm font-semibold text-[#111] dark:text-white">{text}</span>
                 <Who name={text} value={vis(key)} onChange={(v) => setVis(key, v)} />

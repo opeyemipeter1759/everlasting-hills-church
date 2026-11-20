@@ -99,10 +99,7 @@ export default async function Footer() {
   const [cfg, settings] = await Promise.all([getSiteConfig(), getAllSiteSettings()]);
   const socialLinks = buildSocialLinks(settings.CONTACT);
   return (
-    <footer
-      className="relative overflow-visible"
-      style={{ background: "linear-gradient(160deg, #1a0208 0%, #2a0410 40%, #3d0916 100%)" }}
-    >
+    <footer className="relative overflow-visible" style={{ background: "linear-gradient(160deg, #1a0208 0%, #2a0410 40%, #3d0916 100%)" }}>
       <div className="h-px bg-gradient-to-r from-transparent via-[#87102C] to-transparent" />
 
       {/* Faint mountains */}
