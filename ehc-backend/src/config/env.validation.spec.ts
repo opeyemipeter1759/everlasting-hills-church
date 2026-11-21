@@ -28,3 +28,20 @@ describe('CMS environment secrets', () => {
     },
   );
 });
+
+describe('document uploads environment', () => {
+  it('defaults closed', () => {
+    expect(validateEnv(valid).DOCUMENT_UPLOADS_ENABLED).toBe(false);
+  });
+
+  it.each([
+    ['true', true],
+    ['false', false],
+  ])('parses %s explicitly', (value, expected) => {
+    expect(validateEnv({ ...valid, DOCUMENT_UPLOADS_ENABLED: value }).DOCUMENT_UPLOADS_ENABLED).toBe(expected);
+  });
+
+  it('rejects values other than true or false', () => {
+    expect(() => validateEnv({ ...valid, DOCUMENT_UPLOADS_ENABLED: 'yes' })).toThrow('DOCUMENT_UPLOADS_ENABLED');
+  });
+});

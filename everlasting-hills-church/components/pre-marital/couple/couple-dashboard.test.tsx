@@ -96,10 +96,10 @@ describe("the couple dashboard", () => {
     expect(await screen.findByText(/We have received it/)).toBeTruthy();
   });
 
-  it("says uploading opens shortly while storage is not set up, and offers no upload", async () => {
+  it("explains when uploads are closed and offers no upload controls", async () => {
     get.mockResolvedValue(overview({ uploadsOpen: false }));
     render(wrap(<CoupleDashboard />));
-    expect(await screen.findByText(/Uploading opens shortly/)).toBeTruthy();
+    expect(await screen.findByText(/Online uploads are not open yet/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Choose a file" })).toBeNull();
   });
 

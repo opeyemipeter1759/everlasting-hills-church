@@ -9,14 +9,20 @@ things it needs, plus the website's rate-limit secret:
 1. A **master encryption key** in Secret Manager (`counselling-documents-kek`).
 2. A **private storage bucket** for the encrypted files.
 3. A **signing secret** shared by the website and the API, so rate limits count per visitor (`client-ip-signing-secret`).
+4. A **default-off upload switch** (`DOCUMENT_UPLOADS_ENABLED`), enabled only after pastoral approval.
 
 There are no scheduled jobs. Nothing deletes documents automatically.
 
-Until these steps are done, the site stays safe but limited:
+Until the key, bucket and approval switch are configured, the site stays safe but limited:
 
 - the letters email still goes out;
-- the upload page and file viewing answer "not set up yet";
+- couples can sign in and prepare their documents, but cannot upload them;
+- staff file viewing remains unavailable without the master key;
 - rate limits stay shared.
+
+Even after storage is configured, couple uploads remain closed until
+`DOCUMENT_UPLOADS_ENABLED=true`. Existing stored files can still be reviewed
+by staff while this switch is false.
 
 Run one step at a time. Each step ends with a check. Do not continue past a check that fails.
 
@@ -218,19 +224,19 @@ This makes a new backend revision. The secrets are mounted from Secret Manager; 
 ```bash
 gcloud run services update "$BACKEND" --region="$REGION" \
   --update-secrets=COUNSELLING_DOC_KEK_V1=counselling-documents-kek:1,CLIENT_IP_SIGNING_SECRET=client-ip-signing-secret:1 \
-  --update-env-vars=COUNSELLING_DOC_KEK_CURRENT=1,COUNSELLING_DOCS_BUCKET="$BUCKET"
+  --update-env-vars=COUNSELLING_DOC_KEK_CURRENT=1,COUNSELLING_DOCS_BUCKET="$BUCKET",DOCUMENT_UPLOADS_ENABLED=false
 ```
 
 **Check 1.** The settings are there. Only names are printed:
 
 ```bash
 gcloud run services describe "$BACKEND" --region="$REGION" --format=json | \
-  python3 -c "import json,sys; e=json.load(sys.stdin)['spec']['template']['spec']['containers'][0]['env']; print([x['name'] for x in e if x['name'].startswith(('COUNSELLING_DOC','CLIENT_IP'))])"
+  python3 -c "import json,sys; e=json.load(sys.stdin)['spec']['template']['spec']['containers'][0]['env']; print([x['name'] for x in e if x['name'].startswith(('COUNSELLING_DOC','CLIENT_IP')) or x['name']=='DOCUMENT_UPLOADS_ENABLED'])"
 ```
 
-The four names are listed: `COUNSELLING_DOC_KEK_V1`, `CLIENT_IP_SIGNING_SECRET`, `COUNSELLING_DOC_KEK_CURRENT` and `COUNSELLING_DOCS_BUCKET`.
+The five names are listed: `COUNSELLING_DOC_KEK_V1`, `CLIENT_IP_SIGNING_SECRET`, `COUNSELLING_DOC_KEK_CURRENT`, `COUNSELLING_DOCS_BUCKET` and `DOCUMENT_UPLOADS_ENABLED`.
 
-**Check 2.** Sign in to a test couple dashboard (see Step 9). The yellow "Uploading opens shortly" note is gone and each document has a **Choose a file** button. If the note is still there, `COUNSELLING_DOC_KEK_V1` is missing from Check 1: run the `--update-secrets` part of this step again.
+**Check 2.** Sign in to a test couple dashboard (see Step 9). While `DOCUMENT_UPLOADS_ENABLED=false`, the yellow "Uploading opens shortly" note stays visible and upload controls are hidden. After the Pastor approves and the switch is enabled, the note disappears and each document has a **Choose a file** button.
 
 **Careful later:** a `gcloud run services update` that uses `--set-secrets` replaces every mounted secret. Use `--update-secrets` to add one, or the key mount disappears and uploads close again (this happened once on 2026-11-20).
 
@@ -257,6 +263,16 @@ It prints `['CLIENT_IP_SIGNING_SECRET']`.
 ---
 
 ## Step 9. Try it end to end
+
+Only after the Pastor approves opening online uploads, enable them:
+
+```bash
+gcloud run services update "$BACKEND" --region="$REGION" \
+  --update-env-vars=DOCUMENT_UPLOADS_ENABLED=true
+```
+
+This makes a new backend revision. If approval has not been given, leave the
+switch false and stop here; do not send couples upload links.
 
 1. Apply on https://www.everlastinghills.church/pre-marital-counselling with two email addresses you can read (one for each partner) and two different phone numbers.
 2. Open both emails. Each has that partner's own two letters attached and explains how to sign in.
@@ -297,11 +313,20 @@ The code supports versions 1 to 3. A fourth needs one line added to `ehc-backend
 
 ## Turning uploads off in an emergency
 
+To stop new couple uploads while leaving the key mounted for staff review:
+
+```bash
+gcloud run services update "$BACKEND" --region="$REGION" \
+  --update-env-vars=DOCUMENT_UPLOADS_ENABLED=false
+```
+
+To disable all document storage access as well, remove the mounted key:
+
 ```bash
 gcloud run services update "$BACKEND" --region="$REGION" --remove-secrets=COUNSELLING_DOC_KEK_V1
 ```
 
-Uploads and viewing then answer "not set up yet", and nothing is ever stored unencrypted. Re-run step 7 to turn them back on.
+Couple uploads then remain closed, and staff file viewing answers "not set up yet". Nothing is ever stored unencrypted. Re-run step 7 to restore the key, then enable uploads only after pastoral approval.
 
 ## The letterhead
 

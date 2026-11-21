@@ -154,6 +154,10 @@ export const envSchema = z.object({
   COUNSELLING_DOC_KEK_V2: z.string().min(1).optional(),
   COUNSELLING_DOC_KEK_V3: z.string().min(1).optional(),
   COUNSELLING_DOC_KEK_CURRENT: z.coerce.number().int().min(1).max(3).optional(),
+  DOCUMENT_UPLOADS_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
   /** The letterhead image behind the letters (PNG or JPEG), relative to the app folder or absolute. */
   LETTERHEAD_PATH: z.string().min(1).optional(),
   /**

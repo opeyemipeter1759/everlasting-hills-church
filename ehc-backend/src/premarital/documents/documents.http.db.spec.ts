@@ -124,6 +124,7 @@ maybe('Pre-marital documents and the couple dashboard over HTTP, against Postgre
     FRONTEND_URL: 'https://example.org',
     COUNSELLING_DOC_KEK_V1: Buffer.alloc(32, 9).toString('base64'),
     COUNSELLING_DOC_KEK_CURRENT: 1,
+    DOCUMENT_UPLOADS_ENABLED: true,
   };
   const config = { get: (k: string) => values[k] };
   const store = new MemoryStore();
@@ -553,6 +554,24 @@ maybe('Pre-marital documents and the couple dashboard over HTTP, against Postgre
       beforeAll(async () => {
         a = await apply();
         groom = await partner(a.id, 'APPLICANT');
+      });
+
+      it('keeps couple uploads closed until the switch is explicitly enabled', async () => {
+        const wasEnabled = values.DOCUMENT_UPLOADS_ENABLED;
+        values.DOCUMENT_UPLOADS_ENABLED = false;
+        const previousOperations = store.ops.length;
+        try {
+          const page = (await groom.get('/counselling/me').expect(200)).body.data;
+          expect(page.documents.uploadsOpen).toBe(false);
+          expect(page.documents.items.every((d: { canUpload: boolean }) => !d.canUpload)).toBe(true);
+          await groom.upload('PARENTAL_CONSENT_GROOM', await pdf()).expect(503);
+          await groom.post('/counselling/me/documents/consent', { kind: 'MEDICAL_CERT_GROOM' }).expect(503);
+          expect(store.ops).toHaveLength(previousOperations);
+          expect((await requirement(a.id, 'PARENTAL_CONSENT_GROOM')).status).toBe('PENDING');
+          expect((await requirement(a.id, 'MEDICAL_CERT_GROOM')).storageConsentAt).toBeNull();
+        } finally {
+          values.DOCUMENT_UPLOADS_ENABLED = wasEnabled;
+        }
       });
 
       it('refuses a renamed .exe, an oversized file and a PDF with JavaScript', async () => {

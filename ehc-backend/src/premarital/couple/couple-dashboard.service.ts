@@ -5,7 +5,9 @@ import {
   HttpStatus,
   Injectable,
   Logger,
+  ServiceUnavailableException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type {
   CounsellingApplicantRole,
   CounsellingApplication,
@@ -15,6 +17,7 @@ import type {
   CounsellingStatus,
 } from '@prisma/client';
 import { createHash, randomUUID } from 'crypto';
+import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CaseAccess, notFound } from '../case-access';
@@ -104,7 +107,21 @@ export class CoupleDashboardService {
     private readonly inspector: UploadInspector,
     private readonly config: DocumentsConfigService,
     private readonly letters: DocumentLettersService,
+    private readonly env: ConfigService<Env, true>,
   ) {}
+
+  private get uploadsEnabledByConfig(): boolean {
+    return this.env.get('DOCUMENT_UPLOADS_ENABLED', { infer: true }) ?? false;
+  }
+
+  private assertUploadsEnabled(): void {
+    if (!this.uploadsEnabledByConfig) {
+      throw new ServiceUnavailableException(
+        'Online document uploads are not open yet. Please bring your documents to the church office for now.',
+      );
+    }
+    if (!this.crypto.configured || !this.store.configured) throw new DocumentStorageNotReady();
+  }
 
   /** This person's latest application, or null. */
   async identify(actor: AuthUser): Promise<Me | null> {
@@ -138,6 +155,7 @@ export class CoupleDashboardService {
       this.config.values(),
     ]);
     const closed = app.status === 'CLOSED' || !!app.archivedAt;
+    const uploadsOpen = this.uploadsEnabledByConfig && this.crypto.configured && this.store.configured && !closed;
     const position = POSITION[app.status];
     const partnerSide: CounsellingParticipantSide = me.side === 'APPLICANT' ? 'PARTNER' : 'APPLICANT';
     return {
@@ -156,7 +174,7 @@ export class CoupleDashboardService {
       },
       counsellors: assignments.map((a) => ({ name: nameOf(a.Counsellor), lead: a.isLead })).filter((c) => c.name),
       documents: {
-        uploadsOpen: this.crypto.configured && this.store.configured && !closed,
+        uploadsOpen,
         maxUploadMb: settings.maxUploadMb,
         medicalConsentWording: settings.medicalConsentWording,
         neededBefore: NEEDED_BEFORE[settings.documentsRequiredBefore] ?? null,
@@ -169,7 +187,7 @@ export class CoupleDashboardService {
             label: KIND_LABEL[r.kind],
             status: r.status,
             reuploadReason: r.status === 'NEEDS_REUPLOAD' ? r.reuploadReason : null,
-            canUpload: !closed && OPEN.includes(r.status),
+            canUpload: uploadsOpen && OPEN.includes(r.status),
             needsConsent: isMedical(r.kind) && !r.storageConsentAt,
           })),
       },
@@ -177,6 +195,7 @@ export class CoupleDashboardService {
   }
 
   async consent(actor: AuthUser, kind: CounsellingRequirementKind) {
+    this.assertUploadsEnabled();
     if (!isMedical(kind)) throw new BadRequestException('Consent is only asked for medical certificates');
     const me = await this.me(actor);
     const req = await this.requirement(me, kind);
@@ -194,9 +213,9 @@ export class CoupleDashboardService {
     return { recorded: true };
   }
 
-  /** Whether this partner may upload this document now: storage set up, their own application, a slot they may fill. */
+  /** Whether this partner may upload this document now: uploads are enabled, it is their own application, and the slot is open. */
   async checkUpload(actor: AuthUser, kind: CounsellingRequirementKind): Promise<void> {
-    if (!this.crypto.configured || !this.store.configured) throw new DocumentStorageNotReady();
+    this.assertUploadsEnabled();
     await this.requirement(await this.me(actor), kind);
   }
 
@@ -207,7 +226,7 @@ export class CoupleDashboardService {
    */
   async upload(actor: AuthUser, kind: CounsellingRequirementKind, file: Buffer | undefined) {
     const me = await this.me(actor);
-    if (!this.crypto.configured || !this.store.configured) throw new DocumentStorageNotReady();
+    this.assertUploadsEnabled();
     const req = await this.requirement(me, kind);
     if (me.app.status === 'CLOSED' || me.app.archivedAt) throw new ConflictException('This application is closed.');
     if (!OPEN.includes(req.status))
