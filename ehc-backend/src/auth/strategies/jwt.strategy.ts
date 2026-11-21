@@ -8,6 +8,11 @@ import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../types/auth-user';
 import { EffectiveRolesService } from '../effective-roles.service';
 import { assertActiveMemberAccount } from '../member-account-status';
+import { TEMP_PASSWORD_EXPIRED, tempPasswordExpired } from '../couple-account';
+
+/** Supabase lists how a session was opened in amr; "password" is a password sign-in. */
+const signedInWithPassword = (payload: { [key: string]: unknown }) =>
+  Array.isArray(payload.amr) && payload.amr.some((a) => (a as { method?: unknown })?.method === 'password');
 
 interface SupabaseJwtPayload {
   sub: string;
@@ -66,6 +71,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     const email = String(payload.email ?? '');
+
+    // A session opened with an expired temporary password is refused
+    // everywhere, even if it was obtained straight from Supabase. A session
+    // from a "Forgot password" link (not a password sign-in) still works, so
+    // the person can choose a new password.
+    if (signedInWithPassword(payload) && tempPasswordExpired(payload.user_metadata)) {
+      throw new UnauthorizedException(TEMP_PASSWORD_EXPIRED);
+    }
 
     // Identity only (no role): profile + linked member, by Supabase user id.
     const profile = await this.prisma.profile.findUnique({

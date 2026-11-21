@@ -11,7 +11,7 @@ import { AuthSupabaseService } from './auth-supabase.service';
 import { AuthProfileSummaryService } from './auth-profile-summary.service';
 import { OnlineAttendanceService } from '../../online-attendance/online-attendance.service';
 import { assertActiveMemberAccount, isMemberAccountInactive } from '../member-account-status';
-import { isCoupleAccount } from '../couple-account';
+import { isCoupleAccount, TEMP_PASSWORD_EXPIRED, tempPasswordExpired } from '../couple-account';
 
 @Injectable()
 export class AuthLoginService {
@@ -37,6 +37,14 @@ export class AuthLoginService {
     if (error || !data.user || !data.session) {
       this.logger.warn(`Login failed for ${email}: ${error?.message ?? 'no session'}`);
       throw new UnauthorizedException('Invalid email or password');
+    }
+
+    // A temporary password (a couple account's phone number) works for a few
+    // days only. Renewing it is "Forgot password", or the office resending
+    // the sign-in details.
+    if (tempPasswordExpired(data.user.user_metadata)) {
+      this.logger.warn(`Login refused for ${data.user.id}: temporary password expired`);
+      throw new UnauthorizedException(TEMP_PASSWORD_EXPIRED);
     }
 
     const summary = await this.profileSummary.getProfileSummary(data.user.id);

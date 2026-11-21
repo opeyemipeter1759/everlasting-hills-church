@@ -76,7 +76,7 @@ export function DocumentCard({
       </div>
       {note && <p className="mt-1 text-sm text-[#7A6A6F] dark:text-white/60">{note}</p>}
       {doc.status === "NEEDS_REUPLOAD" && doc.reuploadReason && <p className="mt-2 text-sm text-red-800 dark:text-red-300">{REASON_WORDS[doc.reuploadReason]}</p>}
-      {doc.status === "VERIFIED" && doc.yours && <p className="mt-2 text-sm text-gray-600 dark:text-white/60">This document has been accepted. If it needs replacing, please contact the church office.</p>}
+      {doc.status === "VERIFIED" && <p className="mt-2 text-sm text-gray-600 dark:text-white/60">This document has been accepted. If it needs replacing, please contact the church office.</p>}
 
       {doc.canUpload && (
         <div className="mt-4 space-y-3">

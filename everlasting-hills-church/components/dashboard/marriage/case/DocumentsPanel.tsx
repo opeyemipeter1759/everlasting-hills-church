@@ -20,7 +20,8 @@ export function DocumentsPanel({ c }: { c: CaseDetail }) {
   const d = q.data;
   if (!d) return null;
   const lastSend = d.dispatches[0];
-  const letter = (which: "consent" | "medical") => downloadLetter(c.id, which).catch((e: ApiError) => showToast.error(e.message || "The letter could not be made."));
+  const letter = (which: "consent" | "medical", person: "groom" | "bride") =>
+    downloadLetter(c.id, which, person).catch((e: ApiError) => showToast.error(e.message || "The letter could not be made."));
 
   return (
     <section aria-labelledby="documents-heading" className={card}>
@@ -67,8 +68,10 @@ export function DocumentsPanel({ c }: { c: CaseDetail }) {
         )}
         {d.can.downloadLetters && (
           <>
-            <button type="button" className={secondary} onClick={() => letter("consent")}>Consent letter</button>
-            <button type="button" className={secondary} onClick={() => letter("medical")}>Medical letter</button>
+            <button type="button" className={secondary} onClick={() => letter("consent", "groom")}>{"Groom's consent letter"}</button>
+            <button type="button" className={secondary} onClick={() => letter("medical", "groom")}>{"Groom's medical letter"}</button>
+            <button type="button" className={secondary} onClick={() => letter("consent", "bride")}>{"Bride's consent letter"}</button>
+            <button type="button" className={secondary} onClick={() => letter("medical", "bride")}>{"Bride's medical letter"}</button>
           </>
         )}
         {d.can.deleteStored && (

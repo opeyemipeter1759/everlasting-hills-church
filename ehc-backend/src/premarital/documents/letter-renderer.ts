@@ -271,7 +271,8 @@ export class LetterRenderer {
 
     const signatureColumns = (columns: { heading: string; subheading: string; fields: string[] }[]) => {
       const gap = 24;
-      const colW = (SAFE.right - SAFE.left - gap) / 2;
+      // One block takes the left half's width plus a little, so the lines are a comfortable length to sign on.
+      const colW = columns.length === 1 ? Math.round((SAFE.right - SAFE.left) * 0.6) : (SAFE.right - SAFE.left - gap) / 2;
       const field = { label: 8.5, space: 18 };
       // Measure first, so the two blocks are never split across pages.
       const heights = columns.map((c) => {

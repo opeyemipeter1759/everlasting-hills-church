@@ -6,10 +6,11 @@ import { api } from "@/lib/api/request";
 
 /**
  * The couple dashboard (pre-marital counselling): each partner's own view of
- * their application. Both partners use the same routes; the API finds the
- * application by who is signed in. Nothing here ever downloads an uploaded file.
+ * their application and their own two documents. Both partners use the same
+ * routes; the API finds the application by who is signed in. Nothing here
+ * ever downloads an uploaded file.
  */
-export type RequirementKind = "PARENTAL_CONSENT" | "MEDICAL_CERT_GROOM" | "MEDICAL_CERT_BRIDE";
+export type RequirementKind = "PARENTAL_CONSENT_GROOM" | "MEDICAL_CERT_GROOM" | "PARENTAL_CONSENT_BRIDE" | "MEDICAL_CERT_BRIDE";
 export type RequirementStatus = "PENDING" | "UPLOADED" | "RECEIVED_IN_PERSON" | "VERIFIED" | "NEEDS_REUPLOAD";
 export type ReuploadReason = "UNREADABLE" | "INCOMPLETE" | "WRONG_DOCUMENT" | "OUTSIDE_VALIDITY_WINDOW" | "MISSING_SIGNATURE" | "OTHER";
 type Role = "GROOM" | "BRIDE" | null;
@@ -18,31 +19,9 @@ export interface CoupleDocument {
   kind: RequirementKind;
   label: string;
   status: RequirementStatus;
-  /** This partner may upload it: the consent letter, or their own certificate. */
-  yours: boolean;
   reuploadReason: ReuploadReason | null;
   canUpload: boolean;
   needsConsent: boolean;
-}
-export interface CoupleSession {
-  id: string;
-  scheduledAt: string;
-  durationMinutes: number;
-  format: "PHYSICAL" | "ONLINE";
-  location: string | null;
-  meetingLink: string | null;
-  status: "SCHEDULED" | "COMPLETED" | "CANCELLED";
-  topic: string | null;
-  counsellor: string | null;
-}
-export interface CoupleMaterial {
-  id: string;
-  title: string;
-  description: string | null;
-  scriptureRefs: string[];
-  objectives: string[];
-  resources: { label: string; url: string }[];
-  completed: boolean;
 }
 export interface CoupleOverview {
   application: {
@@ -57,8 +36,6 @@ export interface CoupleOverview {
     stages: { label: string; state: "DONE" | "CURRENT" | "UPCOMING" }[];
   };
   counsellors: { name: string; lead: boolean }[];
-  sessions: CoupleSession[];
-  materials: CoupleMaterial[];
   documents: {
     uploadsOpen: boolean;
     maxUploadMb: number;

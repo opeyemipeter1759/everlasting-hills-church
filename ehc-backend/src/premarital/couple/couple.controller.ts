@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import type { CounsellingRequirementKind } from '@prisma/client';
 import type { Request, Response } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
@@ -24,7 +25,7 @@ import { REQUIREMENT_KINDS } from '../documents/document-rules';
 import { DocumentsConfigService } from '../documents/documents-config';
 import { CoupleDashboardService } from './couple-dashboard.service';
 
-const kindSchema = z.enum(REQUIREMENT_KINDS as unknown as ['PARENTAL_CONSENT', 'MEDICAL_CERT_GROOM', 'MEDICAL_CERT_BRIDE'], {
+const kindSchema = z.enum(REQUIREMENT_KINDS as unknown as [CounsellingRequirementKind, ...CounsellingRequirementKind[]], {
   error: 'Not a document we ask for',
 });
 const letterSchema = z.enum(['consent', 'medical'], { error: 'Not a letter we send' });

@@ -35495,7 +35495,7 @@
             "access-token": []
           }
         ],
-        "summary": "The document checklist, link state and email log for a case",
+        "summary": "The document checklist, the partners' sign-ins and the email log for a case",
         "tags": [
           "premarital"
         ]
@@ -35557,7 +35557,7 @@
         ]
       }
     },
-    "/premarital/applications/{id}/documents/letters/{kind}": {
+    "/premarital/applications/{id}/documents/letters/{kind}/{person}": {
       "get": {
         "operationId": "PremaritalDocumentsController_letter",
         "parameters": [
@@ -35572,6 +35572,14 @@
           {
             "in": "path",
             "name": "kind",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "person",
             "required": true,
             "schema": {
               "type": "string"
@@ -35615,7 +35623,7 @@
             "access-token": []
           }
         ],
-        "summary": "Download a letter, rebuilt as it was sent",
+        "summary": "Download one partner's letter (consent or medical), rebuilt as it was sent",
         "tags": [
           "premarital"
         ]
@@ -35672,132 +35680,6 @@
           }
         ],
         "summary": "Send or resend the letters, with how to sign in to the dashboard",
-        "tags": [
-          "premarital"
-        ]
-      }
-    },
-    "/premarital/applications/{id}/progress/{moduleId}": {
-      "delete": {
-        "operationId": "PremaritalSessionsController_undone",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "moduleId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Mark a curriculum module not done",
-        "tags": [
-          "premarital"
-        ]
-      },
-      "put": {
-        "operationId": "PremaritalSessionsController_done",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "moduleId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Mark a curriculum module done for a case",
         "tags": [
           "premarital"
         ]
@@ -36558,62 +36440,6 @@
         ]
       }
     },
-    "/premarital/documents/{requirementId}/received-in-person": {
-      "post": {
-        "operationId": "PremaritalDocumentsController_received",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "requirementId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Mark a document as received at the church office",
-        "tags": [
-          "premarital"
-        ]
-      }
-    },
     "/premarital/documents/{requirementId}/reopen": {
       "post": {
         "operationId": "PremaritalDocumentsController_reopen",
@@ -36880,257 +36706,6 @@
           }
         ],
         "summary": "Open a file with a ticket, sent in the body so it never sits in a URL or log",
-        "tags": [
-          "premarital"
-        ]
-      }
-    },
-    "/premarital/modules": {
-      "get": {
-        "operationId": "PremaritalSessionsController_listModules",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "The curriculum: every module for staff, the active ones for a counsellor",
-        "tags": [
-          "premarital"
-        ]
-      },
-      "post": {
-        "operationId": "PremaritalSessionsController_createModule",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Add a curriculum module (staff)",
-        "tags": [
-          "premarital"
-        ]
-      }
-    },
-    "/premarital/modules/{id}": {
-      "patch": {
-        "operationId": "PremaritalSessionsController_updateModule",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Edit a module or switch it on or off; editing an approved module sends it back for approval (staff)",
-        "tags": [
-          "premarital"
-        ]
-      }
-    },
-    "/premarital/modules/{id}/approve": {
-      "post": {
-        "operationId": "PremaritalSessionsController_approve",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Approve a curriculum module (pastors)",
-        "tags": [
-          "premarital"
-        ]
-      }
-    },
-    "/premarital/modules/order": {
-      "put": {
-        "operationId": "PremaritalSessionsController_reorder",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Reorder the curriculum (staff)",
         "tags": [
           "premarital"
         ]
@@ -38336,7 +37911,7 @@
             "description": "Error response"
           }
         },
-        "summary": "The public page's approved policy text, privacy notice and active curriculum (no personal data)",
+        "summary": "The public page's approved policy text and privacy notice (no personal data)",
         "tags": [
           "premarital-public"
         ]

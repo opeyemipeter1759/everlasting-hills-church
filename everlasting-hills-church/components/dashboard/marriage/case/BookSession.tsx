@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Select } from "@/components/ui/select";
-import { useModules } from "@/lib/api/premarital";
 import { input, primary, selectBox, useRun } from "../ui";
 
 const FORMAT = [
@@ -14,11 +13,9 @@ const LENGTH = ["45", "60", "90", "120"].map((m) => ({ value: m, label: `${m} mi
 /** Book a session. Times are Lagos time; the couple gets an email with the date and time only. */
 export function BookSession({ caseId }: { caseId: string }) {
   const { run, pending } = useRun();
-  const modules = useModules();
-  const [f, setF] = useState({ date: "", time: "", format: "PHYSICAL", location: "", meetingLink: "", duration: "60", moduleId: "" });
+  const [f, setF] = useState({ date: "", time: "", format: "PHYSICAL", location: "", meetingLink: "", duration: "60" });
   const set = (k: keyof typeof f) => (v: string) => setF((o) => ({ ...o, [k]: v }));
   const where = f.format === "PHYSICAL" ? f.location.trim() : f.meetingLink.trim();
-  const moduleOptions = [{ value: "", label: "No particular module" }, ...(modules.data ?? []).filter((m) => m.active).map((m) => ({ value: m.id, label: m.title }))];
 
   async function book() {
     const body = {
@@ -28,7 +25,6 @@ export function BookSession({ caseId }: { caseId: string }) {
       durationMinutes: Number(f.duration),
       location: f.format === "PHYSICAL" ? f.location : null,
       meetingLink: f.format === "ONLINE" ? f.meetingLink : null,
-      moduleId: f.moduleId || null,
     };
     if (await run("post", `/premarital/applications/${caseId}/sessions`, body, "Session booked")) setF((o) => ({ ...o, date: "", time: "" }));
   }
@@ -46,9 +42,6 @@ export function BookSession({ caseId }: { caseId: string }) {
         ) : (
           <input value={f.meetingLink} onChange={(e) => set("meetingLink")(e.target.value)} maxLength={500} placeholder="Meeting link" aria-label="Meeting link" className={`${input} sm:col-span-2`} />
         )}
-        <div className="sm:col-span-2">
-          <Select value={f.moduleId} onChange={set("moduleId")} options={moduleOptions} aria-label="Module" className={selectBox} />
-        </div>
       </div>
       <button type="button" className={primary} disabled={!f.date || !f.time || !where || pending} onClick={book}>
         Book session

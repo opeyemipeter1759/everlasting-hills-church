@@ -13,8 +13,9 @@ import { escapeHtml, greetingHtml, greetingText, renderEmailLayout } from './lay
 type Base = { firstName: string; email: string; appUrl: string };
 
 /** How this person signs in (see CoupleAccountsService). FAILED means no account yet. */
-export type SignInMode = 'PHONE' | 'EXISTING' | 'MEMBER' | 'FORGOT' | 'FAILED';
-export type SignIn = { mode: SignInMode; phoneEnding: string };
+export type SignInMode = 'PHONE' | 'EXPIRED' | 'EXISTING' | 'MEMBER' | 'FORGOT' | 'FAILED';
+/** expires: PHONE only, the day the temporary password stops working ("28 November 2026"). */
+export type SignIn = { mode: SignInMode; phoneEnding: string; expires?: string | null };
 
 const site = (appUrl: string) => appUrl.replace(/\/$/, '');
 const loginUrl = (appUrl: string) => `${site(appUrl)}/login`;
@@ -26,8 +27,10 @@ export function signInLines(s: SignIn, email: string, appUrl: string): string[] 
     case 'PHONE':
       return [
         `${at} Your temporary password is your phone number, written as digits only with no spaces or + sign: the number ending in ${s.phoneEnding} that was given on the application.`,
-        'You will be asked to choose your own password straight away.',
+        `You will be asked to choose your own password straight away.${s.expires ? ` The temporary password stops working after ${s.expires}. After that, tap "Forgot password" on the sign-in page.` : ''}`,
       ];
+    case 'EXPIRED':
+      return [`${at} Your temporary password has expired, so tap "Forgot password" on the sign-in page and we will email you a link to choose your own.`];
     case 'FORGOT':
       return [`${at} The first time, tap "Forgot password" on the sign-in page and we will email you a link to choose your password.`];
     case 'EXISTING':
@@ -115,21 +118,24 @@ export function buildApplicantWelcomeEmail(a: Base & { signIn: SignIn; letters: 
     tag: a.letters ? 'counselling-documents' : 'counselling-received',
     paragraphs: [
       'Thank you for applying for pre-marital counselling with us. Your application is safely with the pastoral team, and someone will be in touch about next steps.',
-      'You and your partner each have your own counselling dashboard. There you can follow your application, see your sessions and materials, and upload your documents.',
+      'You and your partner each have your own counselling dashboard, where you can follow your application and upload your own documents. Everything is done on the website.',
     ],
     signIn: signInLines(a.signIn, a.email, a.appUrl),
-    after: a.letters
-      ? [
-          'We have attached two letters. The first is a parental consent and blessing letter, one letter for both families to sign. The second is the medical screening requirement for you both.',
-          'When they are ready, upload the signed letter and your medical certificate on your dashboard, or bring them to the church office. Please do not send medical results by email or WhatsApp.',
-        ]
-      : ['Your letters (the parental consent letter and the medical screening requirement) will be on your dashboard, and we will email them to you too.'],
+    after: a.letters ? LETTERS_ATTACHED : LETTERS_TO_FOLLOW,
     cta: dashboardCta(a.appUrl, a.signIn),
     attachments: a.letters ? letterFiles(a.letters.consentPdf, a.letters.medicalPdf) : undefined,
   });
 }
 
-/** To the partner, right after the application: what this is, and how to sign in to their own dashboard. */
+const LETTERS_ATTACHED = [
+  'We have attached your two letters, each with your name. The first is a parental consent and blessing letter: one of your parents, either your father or your mother, or a recognised guardian, signs it. The second is your medical screening requirement, with the tests to do.',
+  'When they are ready, upload the signed letter and your medical certificate on your dashboard. Please do not send medical results by email or WhatsApp.',
+];
+const LETTERS_TO_FOLLOW = [
+  'Your two letters (the parental consent letter and your medical screening requirement) will be on your dashboard to download, and we will email them to you too.',
+];
+
+/** To the partner, right after the application: what this is, how to sign in to their own dashboard, and their own letters. */
 export function buildPartnerWelcomeEmail(
   a: Base & { applicantFirstName: string; signIn: SignIn; letters: { consentPdf: Buffer; medicalPdf: Buffer } | null },
 ): SendEmailPayload {
@@ -139,28 +145,24 @@ export function buildPartnerWelcomeEmail(
     tag: 'counselling-partner-welcome',
     paragraphs: [
       `${a.applicantFirstName} has applied for pre-marital counselling for you both at ${CHURCH_INFO.name}. We are glad to be walking with you as you prepare for your marriage.`,
-      'You have your own counselling dashboard, where you can follow the application, see your sessions and materials, and upload your own medical certificate.',
+      'You have your own counselling dashboard, where you can follow the application and upload your own documents. Everything is done on the website.',
     ],
     signIn: signInLines(a.signIn, a.email, a.appUrl),
-    after: [
-      a.letters
-        ? 'We have attached the two letters for you both: the parental consent and blessing letter, and the medical screening requirement. Please do not send medical results by email or WhatsApp.'
-        : 'Your letters (the parental consent letter and the medical screening requirement) are on your dashboard to download. Please do not send medical results by email or WhatsApp.',
-    ],
+    after: a.letters ? LETTERS_ATTACHED : LETTERS_TO_FOLLOW,
     cta: dashboardCta(a.appUrl, a.signIn),
     attachments: a.letters ? letterFiles(a.letters.consentPdf, a.letters.medicalPdf) : undefined,
   });
 }
 
-/** The letters again (the office resent them), with a reminder of how to sign in. */
+/** This person's letters again (the office resent them), with a reminder of how to sign in. */
 export function buildDocumentsEmail(a: Base & { signIn: SignIn; consentPdf: Buffer; medicalPdf: Buffer }): SendEmailPayload {
   return build({
     ...a,
     subject: 'Your pre-marital counselling letters',
     tag: 'counselling-documents',
     paragraphs: [
-      'Here are your two letters again. The first is a parental consent and blessing letter, one letter for both families to sign. The second is the medical screening requirement.',
-      'When they are ready, upload them on your counselling dashboard, or bring them to the church office. Please do not send medical results by email or WhatsApp.',
+      'Here are your two letters again. The first is a parental consent and blessing letter for one of your parents, or a recognised guardian, to sign. The second is your medical screening requirement, with the tests to do.',
+      'When they are ready, upload them on your counselling dashboard. Please do not send medical results by email or WhatsApp.',
     ],
     signIn: signInLines(a.signIn, a.email, a.appUrl),
     cta: dashboardCta(a.appUrl, a.signIn),
@@ -174,7 +176,7 @@ export function buildSignInEmail(a: Base & { signIn: SignIn }): SendEmailPayload
     ...a,
     subject: 'Signing in to your counselling dashboard',
     tag: 'counselling-sign-in',
-    paragraphs: ['Here is how to sign in to your pre-marital counselling dashboard, where you can follow your application, your sessions and materials, and upload your documents.'],
+    paragraphs: ['Here is how to sign in to your pre-marital counselling dashboard, where you can follow your application and upload your documents.'],
     signIn: signInLines(a.signIn, a.email, a.appUrl),
     cta: dashboardCta(a.appUrl, a.signIn),
   });
@@ -188,7 +190,6 @@ export function buildDocumentReuploadEmail(a: Base): SendEmailPayload {
     tag: 'counselling-document-reupload',
     paragraphs: [
       'One of your counselling documents needs to be uploaded again. Sign in to your counselling dashboard to see which one and why.',
-      'You can also bring it to the church office if that is easier.',
     ],
     cta: { label: 'Open your dashboard', href: loginUrl(a.appUrl) },
   });

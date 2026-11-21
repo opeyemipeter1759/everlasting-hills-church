@@ -9,7 +9,7 @@ import {
 
 const base = { firstName: 'Tunde', email: 'tunde@example.com', appUrl: 'https://example.org/' };
 const letters = { consentPdf: Buffer.from('%PDF-a'), medicalPdf: Buffer.from('%PDF-b') };
-const phone = { mode: 'PHONE' as const, phoneEnding: '4567' };
+const phone = { mode: 'PHONE' as const, phoneEnding: '4567', expires: '28 November 2026' };
 
 const EM_DASH = String.fromCharCode(0x2014);
 
@@ -17,7 +17,7 @@ describe('pre-marital dashboard and documents emails', () => {
   const all = [
     buildApplicantWelcomeEmail({ ...base, signIn: phone, letters }),
     buildApplicantWelcomeEmail({ ...base, signIn: phone, letters: null }),
-    buildPartnerWelcomeEmail({ ...base, firstName: 'Ada', email: 'ada@example.com', applicantFirstName: 'Tunde', signIn: phone, letters: null }),
+    buildPartnerWelcomeEmail({ ...base, firstName: 'Ada', email: 'ada@example.com', applicantFirstName: 'Tunde', signIn: phone, letters }),
     buildDocumentsEmail({ ...base, signIn: { mode: 'EXISTING', phoneEnding: '4567' }, ...letters }),
     buildSignInEmail({ ...base, signIn: { mode: 'MEMBER', phoneEnding: '4567' } }),
     buildDocumentReuploadEmail(base),
@@ -39,6 +39,7 @@ describe('pre-marital dashboard and documents emails', () => {
     expect(welcome.text).toContain('phone number, written as digits only');
     expect(welcome.text).toContain('ending in 4567');
     expect(welcome.text).toContain('choose your own password straight away');
+    expect(welcome.text).toContain('stops working after 28 November 2026');
     expect(welcome.html).toContain('How to sign in');
   });
 
@@ -50,8 +51,9 @@ describe('pre-marital dashboard and documents emails', () => {
     expect(all[1].text).toContain('will be on your dashboard');
   });
 
-  it('give the partner their own welcome, naming the applicant by first name only', () => {
+  it('give the partner their own welcome and their own letters, naming the applicant by first name only', () => {
     const partner = all[2];
+    expect((partner.attachments as { filename: string }[]).map((f) => f.filename)).toEqual(['Parental-Consent.pdf', 'Medical-Screening-Requirement.pdf']);
     expect(partner.to).toBe('ada@example.com');
     expect(partner.text).toContain('Tunde has applied for pre-marital counselling for you both');
     expect(partner.text).toContain('ada@example.com');
@@ -65,6 +67,12 @@ describe('pre-marital dashboard and documents emails', () => {
     expect(at('MEMBER')).toContain('usual Everlasting Hills account');
     expect(at('FAILED')).toContain('still setting up your dashboard');
     expect(at('FAILED')).not.toContain('/login');
+    expect(at('EXPIRED')).toContain('temporary password has expired');
+  });
+
+  it('never asks anyone to bring documents in: everything is done on the website', () => {
+    for (const p of all) expect(p.text.toLowerCase()).not.toMatch(/bring (them|it|your documents)|in person/);
+    expect(all[0].text).toContain('either your father or your mother, or a recognised guardian');
   });
 
   it('the re-upload notice never says which document or why (that is only on the dashboard)', () => {

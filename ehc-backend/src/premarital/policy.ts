@@ -68,7 +68,7 @@ export class PolicyService {
   async forStaff(
     actor: AuthUser,
   ): Promise<{ policy: Policy; canEdit: boolean }> {
-    const tier = this.access.requireStaff(actor, 'curriculum');
+    const tier = this.access.requireStaff(actor, 'policy');
     return { policy: await this.get(), canEdit: tier === 'PASTOR' };
   }
 

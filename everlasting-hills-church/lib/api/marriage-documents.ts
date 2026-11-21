@@ -11,8 +11,6 @@ export interface RequirementRow {
   kind: RequirementKind;
   status: RequirementStatus;
   uploadedAt: string | null;
-  receivedInPersonAt: string | null;
-  receivedBy: string | null;
   verifiedAt: string | null;
   verifiedBy: string | null;
   testDate: string | null;
@@ -21,7 +19,7 @@ export interface RequirementRow {
   newUpload: boolean;
   hasFile: boolean;
   fileType: string | null;
-  can: { view: boolean; receive: boolean; verify: boolean; reupload: boolean; reopen: boolean };
+  can: { view: boolean; verify: boolean; reupload: boolean; reopen: boolean };
 }
 export interface CaseDocuments {
   applicantRole: "GROOM" | "BRIDE" | null;
@@ -55,7 +53,7 @@ export interface DocumentsConfig {
   certReturnInstructions: Entry<string>;
   consentReturnInstructions: Entry<string>;
   maxUploadMb: Entry<number>;
-  sendDocumentsToPartner: Entry<boolean>;
+  tempPasswordValidDays: Entry<number>;
   documentsRequiredBefore: Entry<string>;
   overrideReasons: Entry<{ code: string; label: string }[]>;
   medicalConsentWording: Entry<string>;
@@ -97,6 +95,7 @@ export function previewLetter(kind: LetterKind, blocks: Block[]) {
   return intoNewTab(async () => (await apiClient.post<Blob>(`/premarital/document-templates/${kind}/preview`, { blocks }, { responseType: "blob" })).data);
 }
 
-export function downloadLetter(applicationId: string, which: "consent" | "medical") {
-  return intoNewTab(async () => (await apiClient.get<Blob>(`/premarital/applications/${applicationId}/documents/letters/${which}`, { responseType: "blob" })).data);
+/** One partner's letter, as it was sent to them. */
+export function downloadLetter(applicationId: string, which: "consent" | "medical", person: "groom" | "bride") {
+  return intoNewTab(async () => (await apiClient.get<Blob>(`/premarital/applications/${applicationId}/documents/letters/${which}/${person}`, { responseType: "blob" })).data);
 }

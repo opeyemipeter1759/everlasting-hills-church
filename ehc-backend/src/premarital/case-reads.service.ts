@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CounsellingStatus, Prisma } from '@prisma/client';
+import { CounsellingRequirementKind, CounsellingStatus, Prisma } from '@prisma/client';
 import type { AuthUser } from '../auth/types/auth-user';
 import { parseSchema } from '../common/zod-parse.util';
 import { PrismaService } from '../prisma/prisma.service';
@@ -11,6 +11,7 @@ import {
   type CaseTier,
 } from './case-access';
 import { counsellingAudit } from './counselling-audit';
+import { REQUIREMENT_KINDS } from './documents/document-rules';
 import { lagosDayStart } from './lagos-time';
 import { DocumentsConfigService } from './documents/documents-config';
 import { listQuerySchema } from './premarital.schema';
@@ -50,7 +51,7 @@ export class CaseReadsService {
       can: {
         triage: can(tier, 'triage'),
         assign: can(tier, 'assign'),
-        curriculum: can(tier, 'curriculum'),
+        policy: can(tier, 'policy'),
         settings: can(tier, 'settings'),
         wedding: can(tier, 'wedding'),
       },
@@ -97,7 +98,7 @@ export class CaseReadsService {
       tier === 'PASTOR'
         ? {}
         : tier
-          ? { kind: 'PARENTAL_CONSENT' as const }
+          ? { kind: { in: ['PARENTAL_CONSENT_GROOM', 'PARENTAL_CONSENT_BRIDE'] as CounsellingRequirementKind[] } }
           : null;
     const [noLead, upcomingSessions, documentsAwaitingReview] = await Promise.all([
       this.prisma.counsellingApplication.count({
@@ -222,12 +223,8 @@ export class CaseReadsService {
         },
         Sessions: {
           orderBy: { scheduledAt: 'asc' },
-          include: {
-            Counsellor: personName,
-            Module: { select: { id: true, title: true } },
-          },
+          include: { Counsellor: personName },
         },
-        Progress: { select: { moduleId: true, completedAt: true } },
         StatusEvents: { orderBy: { createdAt: 'asc' } },
         WeddingApproval: true,
       },
@@ -282,10 +279,9 @@ export class CaseReadsService {
         assignedAt: a.assignedAt,
         endedAt: a.endedAt,
       })),
-      sessions: Sessions.map(({ Counsellor, Module, ...s }) => ({
+      sessions: Sessions.map(({ Counsellor, moduleId: _m, ...s }) => ({
         ...s,
         counsellorName: nameOf(Counsellor),
-        module: Module,
       })),
       timeline: StatusEvents.map((e) => ({
         id: e.id,
@@ -309,7 +305,7 @@ export class CaseReadsService {
     });
     return {
       status: settings.documentsRequiredBefore,
-      satisfied: verified >= 3,
+      satisfied: verified >= REQUIREMENT_KINDS.length,
       canOverride: tier === 'PASTOR',
       reasons: tier === 'PASTOR' ? settings.overrideReasons : [],
     };
@@ -335,7 +331,6 @@ export class CaseReadsService {
         can(tier, 'wedding') &&
         (status === 'FINAL_REVIEW' || status === 'COMPLETED'),
       sessions: can(tier, 'triage') || (tier === 'COUNSELLOR' && counselsIt),
-      progress: can(tier, 'triage') || (tier === 'COUNSELLOR' && counselsIt),
     };
   }
 }

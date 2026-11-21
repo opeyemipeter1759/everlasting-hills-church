@@ -14,7 +14,7 @@ import { DocumentCrypto } from './document-crypto';
 import { DocumentDispatchService } from './document-dispatch.service';
 import { DocumentLettersService } from './document-letters.service';
 import { DocumentMailer } from './document-mailer';
-import { isMedical, mayOpen, mayReview, maySeeRow, roleOf, validFrom } from './document-rules';
+import { isMedical, mayOpen, mayReview, maySeeRow, ownerOf, REQUIREMENT_KINDS, roleOf, validFrom } from './document-rules';
 import { DocumentStore } from './document-storage';
 import { DocumentsConfigService } from './documents-config';
 
@@ -76,13 +76,13 @@ export class DocumentsAdminService {
       this.config.values(),
     ]);
     const staff = tier !== 'COUNSELLOR';
-    const people = await this.names(reqs.flatMap((r) => [r.verifiedById, r.receivedById]));
+    const people = await this.names(reqs.map((r) => r.verifiedById));
     const from = validFrom(app.submittedAt, settings.screeningValidityDays);
     const closed = app.status === 'CLOSED' || !!app.archivedAt;
     const stored = staff
       ? await this.prisma.counsellingDocumentFile.count({ where: { tenantId: this.tenantId, purgedAt: null, Requirement: { applicationId } } })
       : 0;
-    const order: CounsellingRequirementKind[] = ['PARENTAL_CONSENT', 'MEDICAL_CERT_GROOM', 'MEDICAL_CERT_BRIDE'];
+    const order = REQUIREMENT_KINDS;
     return {
       applicantRole: app.applicantRole,
       validFrom: from,
@@ -97,8 +97,6 @@ export class DocumentsAdminService {
             kind: r.kind,
             status: r.status,
             uploadedAt: r.uploadedAt,
-            receivedInPersonAt: r.receivedInPersonAt,
-            receivedBy: r.receivedById ? (people.get(r.receivedById) ?? null) : null,
             verifiedAt: r.verifiedAt,
             verifiedBy: r.verifiedById ? (people.get(r.verifiedById) ?? null) : null,
             // The test date is medical information: only for those who may open the certificate.
@@ -110,9 +108,8 @@ export class DocumentsAdminService {
             fileType: file && mayOpen(tier, r.kind) ? file.mimeType : null,
             can: {
               view: !!file && mayOpen(tier, r.kind),
-              receive: review && ['PENDING', 'UPLOADED', 'NEEDS_REUPLOAD'].includes(r.status),
-              verify: review && ['UPLOADED', 'RECEIVED_IN_PERSON'].includes(r.status),
-              reupload: review && ['UPLOADED', 'RECEIVED_IN_PERSON'].includes(r.status),
+              verify: review && r.status === 'UPLOADED',
+              reupload: review && r.status === 'UPLOADED',
               reopen: tier === 'PASTOR' && r.status === 'VERIFIED',
             },
           };
@@ -182,18 +179,6 @@ export class DocumentsAdminService {
 
   // ---- Reviewing ----
 
-  async receivedInPerson(actor: AuthUser, requirementId: string) {
-    const { req, tier } = await this.openRequirement(actor, requirementId);
-    if (!mayReview(tier, req.kind)) throw notFound();
-    await this.change(actor, req.id, ['PENDING', 'UPLOADED', 'NEEDS_REUPLOAD'], {
-      status: 'RECEIVED_IN_PERSON',
-      receivedInPersonAt: new Date(),
-      receivedById: actor.profileId ?? null,
-      reuploadReason: null,
-    }, 'COUNSELLING_DOCUMENT_RECEIVED_IN_PERSON');
-    return { status: 'RECEIVED_IN_PERSON' as const };
-  }
-
   /** Accepts a document: genuine, complete, signed and dated in the window. Never a judgement on results. */
   async verify(actor: AuthUser, requirementId: string, raw: unknown) {
     const { req, tier, app } = await this.openRequirement(actor, requirementId);
@@ -208,7 +193,7 @@ export class DocumentsAdminService {
     } else if (testDate) {
       throw new BadRequestException('A consent letter has no test date.');
     }
-    await this.change(actor, req.id, ['UPLOADED', 'RECEIVED_IN_PERSON'], {
+    await this.change(actor, req.id, ['UPLOADED'], {
       status: 'VERIFIED',
       verifiedAt: new Date(),
       verifiedById: actor.profileId ?? null,
@@ -222,11 +207,11 @@ export class DocumentsAdminService {
     const { req, tier, app } = await this.openRequirement(actor, requirementId);
     if (!mayReview(tier, req.kind)) throw notFound();
     const { reason } = parseSchema(reuploadSchema, raw);
-    await this.change(actor, req.id, ['UPLOADED', 'RECEIVED_IN_PERSON'], { status: 'NEEDS_REUPLOAD', reuploadReason: reason }, 'COUNSELLING_DOCUMENT_REUPLOAD_REQUESTED');
+    await this.change(actor, req.id, ['UPLOADED'], { status: 'NEEDS_REUPLOAD', reuploadReason: reason }, 'COUNSELLING_DOCUMENT_REUPLOAD_REQUESTED');
     const email = await this.mailer.send(
       app,
       'DOCUMENT_REUPLOAD',
-      buildDocumentReuploadEmail({ ...(await this.ownerOf(app, req)), appUrl: this.mailer.appUrl }),
+      buildDocumentReuploadEmail({ ...this.personFor(app, req.kind), appUrl: this.mailer.appUrl }),
     );
     return { status: 'NEEDS_REUPLOAD' as const, email: email.status };
   }
@@ -261,22 +246,25 @@ export class DocumentsAdminService {
     return { status };
   }
 
-  /** Makes any missing dashboard sign-in, then emails both partners how to sign in. */
+  /**
+   * Makes any missing dashboard sign-in, renews a temporary password nobody
+   * has used yet (a fresh few days), then emails both partners how to sign in.
+   */
   async resendSignIn(actor: AuthUser, applicationId: string) {
     const { app, tier } = await this.access.open(actor, applicationId);
     requireCan(tier, 'triage');
     if (app.status === 'CLOSED' || app.archivedAt) throw new ConflictException('This case is closed.');
     await counsellingAudit(this.prisma, { tenantId: this.tenantId, actor, action: 'COUNSELLING_SIGN_IN_RESENT', entity: 'CounsellingApplication', entityId: app.id });
-    const plans = await this.accounts.provision(app);
+    const plans = await this.accounts.provision(app, { renew: true });
     return { email: await this.dispatch.signIn(app, plans), accounts: plans.map((p) => ({ side: p.side, ready: p.mode !== 'FAILED' })) };
   }
 
-  /** The letters as last sent (or as they would be sent today), rebuilt on demand. */
-  async letter(actor: AuthUser, applicationId: string, kind: 'consent' | 'medical'): Promise<Buffer> {
+  /** One partner's letter as last sent (or as it would be sent today), rebuilt on demand. */
+  async letter(actor: AuthUser, applicationId: string, kind: 'consent' | 'medical', person: 'GROOM' | 'BRIDE'): Promise<Buffer> {
     const { app, tier } = await this.access.open(actor, applicationId);
     requireCan(tier, 'triage');
     if (!app.applicantRole) throw new BadRequestException('Set who applied (groom or bride) first.');
-    const built = await this.letters.lastSent(app);
+    const built = await this.letters.lastSent(app, person);
     await counsellingAudit(this.prisma, { tenantId: this.tenantId, actor, action: 'COUNSELLING_LETTER_DOWNLOADED', entity: 'CounsellingApplication', entityId: app.id });
     return kind === 'consent' ? built.consent : built.medical;
   }
@@ -320,22 +308,13 @@ export class DocumentsAdminService {
 
   // ---- helpers ----
 
-  /** Who a re-upload email goes to: the certificate's owner, or whoever uploaded the consent letter (else the applicant). */
-  private async ownerOf(
-    app: { tenantId: string; id: string; applicantRole: 'GROOM' | 'BRIDE' | null; applicantFirstName: string; applicantEmail: string; partnerFirstName: string; partnerEmail: string | null },
-    req: { id: string; kind: CounsellingRequirementKind },
-  ): Promise<{ firstName: string; email: string }> {
-    let side: 'APPLICANT' | 'PARTNER' = 'APPLICANT';
-    if (isMedical(req.kind)) {
-      if (roleOf(app.applicantRole, 'PARTNER') === (req.kind === 'MEDICAL_CERT_GROOM' ? 'GROOM' : 'BRIDE')) side = 'PARTNER';
-    } else {
-      const file = await this.prisma.counsellingDocumentFile.findFirst({
-        where: { tenantId: this.tenantId, requirementId: req.id, supersededAt: null, purgedAt: null },
-        select: { UploadedBy: { select: { side: true } } },
-      });
-      side = file?.UploadedBy?.side ?? 'APPLICANT';
-    }
-    return side === 'PARTNER' && app.partnerEmail
+  /** Who a re-upload email goes to: the partner the document belongs to. */
+  private personFor(
+    app: { applicantRole: 'GROOM' | 'BRIDE' | null; applicantFirstName: string; applicantEmail: string; partnerFirstName: string; partnerEmail: string | null },
+    kind: CounsellingRequirementKind,
+  ): { firstName: string; email: string } {
+    const partners = roleOf(app.applicantRole, 'PARTNER') === ownerOf(kind);
+    return partners && app.partnerEmail
       ? { firstName: app.partnerFirstName, email: app.partnerEmail }
       : { firstName: app.applicantFirstName, email: app.applicantEmail };
   }

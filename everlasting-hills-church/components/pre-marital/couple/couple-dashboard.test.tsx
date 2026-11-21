@@ -12,7 +12,6 @@ vi.mock("@/lib/api/request", () => ({ api: { get: (...a: unknown[]) => get(...a)
 vi.mock("@/lib/api/axios", () => ({ apiClient: { post: (...a: unknown[]) => upload(...a), get: vi.fn() } }));
 
 const wrap = (node: ReactNode) => <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{node}</QueryClientProvider>;
-const inThreeDays = new Date(Date.now() + 3 * 86_400_000).toISOString();
 
 const overview = (more: Partial<CoupleOverview["documents"]> = {}): CoupleOverview => ({
   application: {
@@ -32,8 +31,6 @@ const overview = (more: Partial<CoupleOverview["documents"]> = {}): CoupleOvervi
     ],
   },
   counsellors: [{ name: "Pastor Bola Ade", lead: true }],
-  sessions: [{ id: "s1", scheduledAt: inThreeDays, durationMinutes: 60, format: "ONLINE", location: null, meetingLink: "https://meet.example.org/abc", status: "SCHEDULED", topic: "Communication", counsellor: "Pastor Bola Ade" }],
-  materials: [{ id: "m1", title: "Communication", description: "Listening well.", scriptureRefs: ["James 1:19"], objectives: [], resources: [{ label: "Read the notes", url: "https://example.org/notes" }], completed: false }],
   documents: {
     uploadsOpen: true,
     maxUploadMb: 10,
@@ -41,9 +38,8 @@ const overview = (more: Partial<CoupleOverview["documents"]> = {}): CoupleOvervi
     neededBefore: "before the final review",
     lettersAvailable: true,
     items: [
-      { kind: "PARENTAL_CONSENT", label: "Parental consent letter", status: "PENDING", yours: true, reuploadReason: null, canUpload: true, needsConsent: false },
-      { kind: "MEDICAL_CERT_GROOM", label: "Intending groom's medical certificate", status: "UPLOADED", yours: false, reuploadReason: null, canUpload: false, needsConsent: false },
-      { kind: "MEDICAL_CERT_BRIDE", label: "Intending bride's medical certificate", status: "PENDING", yours: true, reuploadReason: null, canUpload: true, needsConsent: true },
+      { kind: "PARENTAL_CONSENT_BRIDE", label: "Your parental consent letter", status: "PENDING", reuploadReason: null, canUpload: true, needsConsent: false },
+      { kind: "MEDICAL_CERT_BRIDE", label: "Your medical certificate", status: "PENDING", reuploadReason: null, canUpload: true, needsConsent: true },
     ],
     ...more,
   },
@@ -57,7 +53,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("the couple dashboard", () => {
-  it("shows where things are, the next session, the materials and each document", async () => {
+  it("shows where things are and this partner's own two documents, with no sessions or curriculum", async () => {
     get.mockResolvedValue(overview());
     render(wrap(<CoupleDashboard />));
     expect(await screen.findByRole("heading", { level: 1, name: "Ada and Tunde" })).toBeTruthy();
@@ -65,17 +61,21 @@ describe("the couple dashboard", () => {
     expect(screen.getByText("12 March 2027")).toBeTruthy();
     expect(screen.getByText("You are here")).toBeTruthy();
     expect(screen.getByText("Pastor Bola Ade", { selector: "span" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Join the online session" }).getAttribute("href")).toBe("https://meet.example.org/abc");
-    expect(screen.getByRole("link", { name: "Read the notes" })).toBeTruthy();
-    expect(screen.getByText("Tunde uploads this one on their own dashboard.")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Download the consent letter" })).toBeTruthy();
+    expect(screen.getByText("Your parental consent letter")).toBeTruthy();
+    expect(screen.getByText("Your medical certificate")).toBeTruthy();
+    expect(screen.getByText(/either your father or your mother, or a recognised guardian/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Download your consent letter" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Download your medical letter" })).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "Choose a file" })).toHaveLength(2);
+    expect(screen.queryByText(/session/i, { selector: "h2" })).toBeNull();
+    expect(screen.queryByText("Materials")).toBeNull();
+    expect(document.body.textContent?.toLowerCase()).not.toContain("church office");
   });
 
   it("needs the consent box ticked before a medical certificate can be chosen", async () => {
     get.mockResolvedValue(overview());
     render(wrap(<CoupleDashboard />));
-    await screen.findByText("Intending bride's medical certificate");
+    await screen.findByText("Your medical certificate");
     const [, medical] = screen.getAllByRole("button", { name: "Choose a file" }) as HTMLButtonElement[];
     expect(medical.disabled).toBe(true);
     fireEvent.click(screen.getByLabelText(/I consent to Everlasting Hills Church/));
@@ -87,7 +87,7 @@ describe("the couple dashboard", () => {
     post.mockResolvedValue({ recorded: true });
     upload.mockResolvedValue({ data: { status: "UPLOADED" } });
     render(wrap(<CoupleDashboard />));
-    await screen.findByText("Intending bride's medical certificate");
+    await screen.findByText("Your medical certificate");
     fireEvent.click(screen.getByLabelText(/I consent to Everlasting Hills Church/));
     const inputs = document.querySelectorAll<HTMLInputElement>('input[type="file"][accept="application/pdf,image/jpeg,image/png"]');
     await act(async () => fireEvent.change(inputs[1], { target: { files: [new File(["%PDF-1.4"], "cert.pdf", { type: "application/pdf" })] } }));
@@ -96,10 +96,10 @@ describe("the couple dashboard", () => {
     expect(await screen.findByText(/We have received it/)).toBeTruthy();
   });
 
-  it("says uploads open soon while storage is not set up, and offers no upload", async () => {
+  it("says uploading opens shortly while storage is not set up, and offers no upload", async () => {
     get.mockResolvedValue(overview({ uploadsOpen: false }));
     render(wrap(<CoupleDashboard />));
-    expect(await screen.findByText(/Uploading opens soon/)).toBeTruthy();
+    expect(await screen.findByText(/Uploading opens shortly/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Choose a file" })).toBeNull();
   });
 

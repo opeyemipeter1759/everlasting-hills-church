@@ -50,8 +50,8 @@ export const documentsConfigSchema = z.object({
   certReturnInstructions: entry(z.string().trim().min(1).max(1000)),
   consentReturnInstructions: entry(z.string().trim().min(1).max(1000)),
   maxUploadMb: entry(z.number().int().min(1).max(20)),
-  /** Also attach the two letters to the partner's welcome email (they are on both dashboards either way). */
-  sendDocumentsToPartner: entry(z.boolean()),
+  /** How long a couple account's temporary password (their phone number) works before it must be renewed. */
+  tempPasswordValidDays: entry(z.number().int().min(1).max(60)),
   documentsRequiredBefore: entry(z.enum(GATE_STATUSES)),
   overrideReasons: entry(z.array(reason).min(1).max(10)),
   medicalConsentWording: entry(z.string().trim().min(1).max(1000)),
@@ -79,13 +79,13 @@ export const DEFAULT_DOCUMENTS_CONFIG: DocumentsConfig = {
     { name: 'Total Care Medical Diagnostics', address: '', phone: '' },
   ]),
   certReturnInstructions: pending(
-    'Each of you should upload your own medical certificate on your counselling dashboard, or bring the original to the church office. Please do not send medical results by email or WhatsApp.',
+    'Please upload your medical certificate on your counselling dashboard at everlastinghills.church. Do not send medical results by email or WhatsApp.',
   ),
   consentReturnInstructions: pending(
-    'Once signed, upload a clear photo or scan of the consent letter on your counselling dashboard, or bring it to the church office.',
+    'Once it is signed, please upload a clear photo or scan of this letter on your counselling dashboard at everlastinghills.church.',
   ),
   maxUploadMb: pending(10),
-  sendDocumentsToPartner: pending(false),
+  tempPasswordValidDays: pending(7),
   documentsRequiredBefore: pending('FINAL_REVIEW' as const),
   overrideReasons: pending([
     { code: 'DOCUMENTS_SEEN_OUTSIDE_SYSTEM', label: 'Documents seen outside the system' },
@@ -136,7 +136,7 @@ export class DocumentsConfigService {
 
   /** For the Policy page: everyone on the marriage team may read, only a Pastor may change. */
   async forStaff(actor: AuthUser) {
-    const tier = this.access.requireStaff(actor, 'curriculum');
+    const tier = this.access.requireStaff(actor, 'policy');
     return { config: await this.get(), canEdit: tier === 'PASTOR' };
   }
 

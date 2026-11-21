@@ -21,15 +21,17 @@ import { CaseAccess, notFound } from '../case-access';
 import { counsellingAudit } from '../counselling-audit';
 import { DocumentCrypto, DocumentStorageNotReady } from '../documents/document-crypto';
 import { DocumentLettersService } from '../documents/document-letters.service';
-import { isMedical, mayUpload, REQUIREMENT_KINDS, roleOf } from '../documents/document-rules';
+import { isMedical, kindsOf, mayUpload, roleOf } from '../documents/document-rules';
 import { DocumentStore } from '../documents/document-storage';
 import { DocumentsConfigService } from '../documents/documents-config';
 import { detectType, UploadInspector } from '../documents/upload-inspector';
 
+/** What each partner sees: their own two documents. */
 export const KIND_LABEL: Record<CounsellingRequirementKind, string> = {
-  PARENTAL_CONSENT: 'Parental consent letter',
-  MEDICAL_CERT_GROOM: "Intending groom's medical certificate",
-  MEDICAL_CERT_BRIDE: "Intending bride's medical certificate",
+  PARENTAL_CONSENT_GROOM: 'Your parental consent letter',
+  PARENTAL_CONSENT_BRIDE: 'Your parental consent letter',
+  MEDICAL_CERT_GROOM: 'Your medical certificate',
+  MEDICAL_CERT_BRIDE: 'Your medical certificate',
 };
 const UPLOADS_PER_HOUR = 20;
 /** A partner may upload while a document is waiting, uploaded, or asked for again. */
@@ -82,22 +84,13 @@ const personName = { select: { Member: { select: { firstName: true, lastName: tr
 const nameOf = (p: { Member: { firstName: string; lastName: string } | null } | null) =>
   p?.Member ? `${p.Member.firstName} ${p.Member.lastName}`.trim() : null;
 
-/** Only {label, url} pairs with a web address make it to the couple. */
-function resourcesOf(raw: unknown): { label: string; url: string }[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.flatMap((r) => {
-    const label = (r as { label?: unknown })?.label;
-    const url = (r as { url?: unknown })?.url;
-    return typeof label === 'string' && typeof url === 'string' && /^https?:\/\//i.test(url) ? [{ label, url }] : [];
-  });
-}
-
 /**
  * The couple dashboard: each partner signs in (their member account, or the
- * sign-in made for the dashboard) and sees their own application. It never
- * shows a file, a file name, a test date, anything a counsellor wrote, the
- * safeguarding flag or the office's notes. Each partner uploads the consent
- * letter or their own medical certificate; neither can open any document.
+ * sign-in made for the dashboard) and sees where their application is, and
+ * their own two documents: their consent letter and their medical
+ * certificate. Everything is submitted here. It never shows a file, a file
+ * name, a test date, the other partner's documents, anything a counsellor
+ * wrote, the safeguarding flag or the office's notes.
  */
 @Injectable()
 export class CoupleDashboardService {
@@ -134,39 +127,18 @@ export class CoupleDashboardService {
     const me = await this.me(actor);
     const { app } = me;
     const tenantId = this.access.tenantId;
-    const [sessions, assignments, modules, progress, requirements, settings] = await Promise.all([
-      this.prisma.counsellingSession.findMany({
-        where: { tenantId, applicationId: app.id, status: { not: 'RESCHEDULED' } },
-        orderBy: { scheduledAt: 'asc' },
-        select: {
-          id: true,
-          scheduledAt: true,
-          durationMinutes: true,
-          format: true,
-          location: true,
-          meetingLink: true,
-          status: true,
-          Module: { select: { title: true } },
-          Counsellor: personName,
-        },
-      }),
+    const mine = me.role ? kindsOf(me.role) : [];
+    const [assignments, requirements, settings] = await Promise.all([
       this.prisma.counsellingAssignment.findMany({
         where: { tenantId, applicationId: app.id, active: true },
         orderBy: [{ isLead: 'desc' }, { assignedAt: 'asc' }],
         select: { isLead: true, Counsellor: personName },
       }),
-      this.prisma.counsellingModule.findMany({
-        where: { tenantId, active: true, approvalState: 'APPROVED' },
-        orderBy: { sortOrder: 'asc' },
-        select: { id: true, title: true, description: true, scriptureRefs: true, objectives: true, resources: true },
-      }),
-      this.prisma.counsellingProgress.findMany({ where: { tenantId, applicationId: app.id }, select: { moduleId: true } }),
-      this.prisma.counsellingDocumentRequirement.findMany({ where: { tenantId, applicationId: app.id } }),
+      this.prisma.counsellingDocumentRequirement.findMany({ where: { tenantId, applicationId: app.id, kind: { in: mine } } }),
       this.config.values(),
     ]);
     const closed = app.status === 'CLOSED' || !!app.archivedAt;
     const position = POSITION[app.status];
-    const done = new Set(progress.map((p) => p.moduleId));
     const partnerSide: CounsellingParticipantSide = me.side === 'APPLICANT' ? 'PARTNER' : 'APPLICANT';
     return {
       application: {
@@ -183,47 +155,23 @@ export class CoupleDashboardService {
           : STAGES.map((label, i) => ({ label, state: i < position ? 'DONE' : i === position ? 'CURRENT' : 'UPCOMING' })),
       },
       counsellors: assignments.map((a) => ({ name: nameOf(a.Counsellor), lead: a.isLead })).filter((c) => c.name),
-      sessions: sessions.map((s) => ({
-        id: s.id,
-        scheduledAt: s.scheduledAt,
-        durationMinutes: s.durationMinutes,
-        format: s.format,
-        location: s.format === 'PHYSICAL' ? s.location : null,
-        meetingLink: s.format === 'ONLINE' && s.status === 'SCHEDULED' ? s.meetingLink : null,
-        status: s.status,
-        topic: s.Module?.title ?? null,
-        counsellor: nameOf(s.Counsellor),
-      })),
-      materials: modules.map((m) => ({
-        id: m.id,
-        title: m.title,
-        description: m.description,
-        scriptureRefs: m.scriptureRefs,
-        objectives: m.objectives,
-        resources: resourcesOf(m.resources),
-        completed: done.has(m.id),
-      })),
       documents: {
         uploadsOpen: this.crypto.configured && this.store.configured && !closed,
         maxUploadMb: settings.maxUploadMb,
         medicalConsentWording: settings.medicalConsentWording,
         neededBefore: NEEDED_BEFORE[settings.documentsRequiredBefore] ?? null,
         lettersAvailable: !!app.applicantRole,
-        items: REQUIREMENT_KINDS.map((kind) => requirements.find((r) => r.kind === kind))
+        items: mine
+          .map((kind) => requirements.find((r) => r.kind === kind))
           .filter((r): r is NonNullable<typeof r> => !!r)
-          .map((r) => {
-            const yours = mayUpload(me.role, r.kind);
-            return {
-              kind: r.kind,
-              label: KIND_LABEL[r.kind],
-              status: r.status,
-              yours,
-              // The reason is for the person who uploads it.
-              reuploadReason: yours && r.status === 'NEEDS_REUPLOAD' ? r.reuploadReason : null,
-              canUpload: yours && !closed && OPEN.includes(r.status),
-              needsConsent: yours && isMedical(r.kind) && !r.storageConsentAt,
-            };
-          }),
+          .map((r) => ({
+            kind: r.kind,
+            label: KIND_LABEL[r.kind],
+            status: r.status,
+            reuploadReason: r.status === 'NEEDS_REUPLOAD' ? r.reuploadReason : null,
+            canUpload: !closed && OPEN.includes(r.status),
+            needsConsent: isMedical(r.kind) && !r.storageConsentAt,
+          })),
       },
     };
   }
@@ -266,7 +214,7 @@ export class CoupleDashboardService {
       throw new ConflictException(
         req.status === 'VERIFIED'
           ? 'This document has been accepted. Please contact the church office if it needs replacing.'
-          : 'We already have this document from the church office.',
+          : 'This document cannot be replaced now. Please contact the church office.',
       );
     if (isMedical(kind) && !req.storageConsentAt) throw new BadRequestException('Please tick the consent box before uploading a medical certificate.');
     if (!file?.length) throw new BadRequestException('Choose a file to upload.');
@@ -331,11 +279,11 @@ export class CoupleDashboardService {
     return { status: 'UPLOADED' as const };
   }
 
-  /** One of the two letters, as last sent. Both partners may download both. */
+  /** One of this partner's own two letters, with their name, as last sent. */
   async letter(actor: AuthUser, kind: 'consent' | 'medical'): Promise<Buffer> {
     const me = await this.me(actor);
-    if (!me.app.applicantRole) throw notFound();
-    const built = await this.letters.lastSent(me.app);
+    if (!me.role) throw notFound();
+    const built = await this.letters.lastSent(me.app, me.role);
     await counsellingAudit(this.prisma, {
       tenantId: this.access.tenantId,
       actor,

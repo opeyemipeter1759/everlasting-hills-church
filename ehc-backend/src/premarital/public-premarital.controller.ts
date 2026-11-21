@@ -9,7 +9,6 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
-import { ModulesService } from './modules.service';
 import { PolicyService } from './policy';
 import { PublicApplicationsService } from './public-applications.service';
 
@@ -19,7 +18,6 @@ import { PublicApplicationsService } from './public-applications.service';
 export class PublicPremaritalController {
   constructor(
     private readonly applications: PublicApplicationsService,
-    private readonly modules: ModulesService,
     private readonly policy: PolicyService,
   ) {}
 
@@ -39,13 +37,9 @@ export class PublicPremaritalController {
   @Get('page')
   @ApiOperation({
     summary:
-      "The public page's approved policy text, privacy notice and active curriculum (no personal data)",
+      "The public page's approved policy text and privacy notice (no personal data)",
   })
   async page() {
-    const [policy, modules] = await Promise.all([
-      this.policy.publicView(),
-      this.modules.listPublic(),
-    ]);
-    return { policy, modules };
+    return { policy: await this.policy.publicView() };
   }
 }

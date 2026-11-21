@@ -26,7 +26,6 @@ import { CounsellingNotifier } from './counselling-notifier';
 import { CoupleAccountsService } from './couple/couple-accounts.service';
 import { DocumentDispatchService } from './documents/document-dispatch.service';
 import { DocumentsConfigService } from './documents/documents-config';
-import { ModulesService } from './modules.service';
 import { PolicyService } from './policy';
 import { PremaritalController } from './premarital.controller';
 import { validApplication } from './premarital.fixture-spec';
@@ -218,7 +217,6 @@ maybe('Pre-marital counselling over HTTP, against Postgres', () => {
       providers: [
         CaseAccess,
         PolicyService,
-        ModulesService,
         PublicApplicationsService,
         CaseReadsService,
         CaseActionsService,
@@ -358,13 +356,9 @@ maybe('Pre-marital counselling over HTTP, against Postgres', () => {
       expect([res.status, again.status]).toContain(429);
     });
 
-    it('the page content carries no personal data and lists the proposed curriculum', async () => {
+    it('the page content carries no personal data and no curriculum', async () => {
       const res = await http().get('/public/premarital/page').expect(200);
-      expect(res.body.data.modules).toHaveLength(8);
-      expect(res.body.data.modules[0]).toMatchObject({
-        title: "God's Design for Marriage",
-        approvalState: 'PROPOSED',
-      });
+      expect(res.body.data).not.toHaveProperty('modules');
       expect(res.body.data.policy).toMatchObject({
         eligibility: null,
         fees: null,
@@ -402,9 +396,6 @@ maybe('Pre-marital counselling over HTTP, against Postgres', () => {
           format: 'ONLINE',
           meetingLink: 'https://meet.example.com/x',
         })
-        .expect(404);
-      await as('counsellorA')
-        .put(`/premarital/applications/${b}/progress/x`)
         .expect(404);
       const list = await as('counsellorA')
         .get('/premarital/applications')
@@ -446,10 +437,10 @@ maybe('Pre-marital counselling over HTTP, against Postgres', () => {
     let id: string;
     beforeAll(async () => {
       id = await caseIn(tenantId);
-      // All three documents accepted, so the documents check lets Final review through.
+      // All four documents accepted, so the documents check lets Final review through.
       await prisma.counsellingDocumentRequirement.createMany({
         data: (
-          ['PARENTAL_CONSENT', 'MEDICAL_CERT_GROOM', 'MEDICAL_CERT_BRIDE'] as const
+          ['PARENTAL_CONSENT_GROOM', 'MEDICAL_CERT_GROOM', 'PARENTAL_CONSENT_BRIDE', 'MEDICAL_CERT_BRIDE'] as const
         ).map((kind) => ({
           id: randomUUID(),
           tenantId,

@@ -8,7 +8,6 @@ import { AdminPanel } from "./AdminPanel";
 import { CounsellorsPanel } from "./CounsellorsPanel";
 import { DocumentsPanel } from "./DocumentsPanel";
 import { PeoplePanel } from "./PeoplePanel";
-import { ProgressPanel } from "./ProgressPanel";
 import { SessionsPanel } from "./SessionsPanel";
 import { StatusPanel } from "./StatusPanel";
 import { Timeline } from "./Timeline";
@@ -46,7 +45,6 @@ export default function CaseClient({ id }: { id: string }) {
               <PeoplePanel c={c} />
               <DocumentsPanel c={c} />
               <SessionsPanel c={c} />
-              <ProgressPanel c={c} />
             </div>
             <div className="min-w-0 space-y-4">
               <CounsellorsPanel c={c} />

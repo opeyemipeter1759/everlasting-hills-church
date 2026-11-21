@@ -108,4 +108,29 @@ describe('JwtStrategy', () => {
       strategy.validate({ sub: 'user-uuid-123', email: 'former@example.com' } as never),
     ).rejects.toThrow(UnauthorizedException);
   });
+
+  describe('an expired temporary password (couple dashboard accounts)', () => {
+    const past = new Date(Date.now() - 60_000).toISOString();
+    const future = new Date(Date.now() + 86_400_000).toISOString();
+    const token = (amr: string, meta: Record<string, unknown>) =>
+      ({ sub: 'user-1', email: 'ada@example.com', amr: [{ method: amr, timestamp: 1 }], user_metadata: meta }) as never;
+
+    it('refuses a session opened with it, on every route', async () => {
+      const strategy = makeStrategy(jest.fn().mockResolvedValue(null));
+      await expect(strategy.validate(token('password', { needs_password_change: true, temp_password_expires_at: past }))).rejects.toThrow(
+        'Your temporary password has expired',
+      );
+    });
+
+    it('lets a "Forgot password" session through, so they can choose a new password', async () => {
+      const strategy = makeStrategy(jest.fn().mockResolvedValue(null));
+      await expect(strategy.validate(token('otp', { needs_password_change: true, temp_password_expires_at: past }))).resolves.toMatchObject({ userId: 'user-1' });
+    });
+
+    it('allows it within its days, and once a password has been chosen', async () => {
+      const strategy = makeStrategy(jest.fn().mockResolvedValue(null));
+      await expect(strategy.validate(token('password', { needs_password_change: true, temp_password_expires_at: future }))).resolves.toBeTruthy();
+      await expect(strategy.validate(token('password', { needs_password_change: false, temp_password_expires_at: past }))).resolves.toBeTruthy();
+    });
+  });
 });

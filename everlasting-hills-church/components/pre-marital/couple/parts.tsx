@@ -21,16 +21,6 @@ export function Panel({ id, title, children, aside }: { id: string; title: strin
   );
 }
 
-const LAGOS = "Africa/Lagos";
-
-/** "Saturday, 5 December 2026" in Lagos time. */
-export const longDay = (iso: string) =>
-  new Intl.DateTimeFormat("en-GB", { timeZone: LAGOS, weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
-
-/** "10:30 am" in Lagos time. */
-export const clock = (iso: string) =>
-  new Intl.DateTimeFormat("en-GB", { timeZone: LAGOS, hour: "numeric", minute: "2-digit", hour12: true }).format(new Date(iso)).toLowerCase();
-
 /** A calendar date with no time ("2027-03-12") as "12 March 2027". */
 export const plainDate = (day: string) =>
   new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" }).format(new Date(`${day}T00:00:00Z`));

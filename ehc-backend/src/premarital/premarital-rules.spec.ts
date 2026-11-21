@@ -2,7 +2,6 @@ import { CounsellingStatus } from '@prisma/client';
 import { lagosLabel, lagosParts, lagosToUtc } from './lagos-time';
 import {
   adminPatchSchema,
-  modulePatchSchema,
   publicApplicationSchema,
   sessionPatchSchema,
   STATUSES,
@@ -113,7 +112,6 @@ describe('PATCH shapes leave out what is not sent (the Gatherings .partial() bug
       { durationMinutes: 90 },
       ['durationMinutes'],
     ],
-    ['module', modulePatchSchema, { active: false }, ['active']],
   ] as const)('%s', (_name, schema, input, keys) => {
     expect(Object.keys(schema.parse(input))).toEqual(keys);
   });

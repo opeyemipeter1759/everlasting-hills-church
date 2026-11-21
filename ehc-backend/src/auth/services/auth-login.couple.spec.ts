@@ -1,10 +1,10 @@
 import { AuthLoginService } from './auth-login.service';
 
 /** The login answer tells the website whether to send someone to the couple dashboard. */
-function build(appMetadata: Record<string, unknown>, role: string | null) {
+function build(appMetadata: Record<string, unknown>, role: string | null, userMetadata: Record<string, unknown> = { needs_password_change: true }) {
   const signInWithPassword = jest.fn().mockResolvedValue({
     data: {
-      user: { id: 'user-1', email: 'ada@example.com', app_metadata: appMetadata, user_metadata: { needs_password_change: true } },
+      user: { id: 'user-1', email: 'ada@example.com', app_metadata: appMetadata, user_metadata: userMetadata },
       session: { access_token: 'jwt', refresh_token: 'refresh', expires_in: 3600, token_type: 'bearer' },
     },
     error: null,
@@ -34,6 +34,11 @@ describe('signing in with a couple dashboard account', () => {
   it('treats the account as a church account once it has a role (the person became a member)', async () => {
     const out = await build({ account: 'counselling_couple' }, 'MEMBER').login('ada@example.com', 'secret');
     expect(out.user.account).toBe('CHURCH');
+  });
+
+  it('refuses a temporary password whose days have run out, and says to use Forgot password', async () => {
+    const expired = { needs_password_change: true, temp_password: 'phone', temp_password_expires_at: new Date(Date.now() - 1000).toISOString() };
+    await expect(build({ account: 'counselling_couple' }, null, expired).login('ada@example.com', '08031234567')).rejects.toThrow(/expired.*Forgot password/);
   });
 
   it('leaves ordinary accounts as church accounts', async () => {

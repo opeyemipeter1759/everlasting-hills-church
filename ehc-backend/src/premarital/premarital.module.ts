@@ -6,7 +6,6 @@ import { CaseAccess } from './case-access';
 import { CaseActionsService } from './case-actions.service';
 import { CaseReadsService } from './case-reads.service';
 import { CounsellingNotifier } from './counselling-notifier';
-import { ModulesService } from './modules.service';
 import { PolicyService } from './policy';
 import { PremaritalController } from './premarital.controller';
 import { PublicApplicationsService } from './public-applications.service';
@@ -45,7 +44,6 @@ import { UploadInspector } from './documents/upload-inspector';
     CaseAccess,
     CounsellingNotifier,
     PolicyService,
-    ModulesService,
     PublicApplicationsService,
     CaseReadsService,
     CaseActionsService,

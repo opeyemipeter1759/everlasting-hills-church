@@ -26,7 +26,7 @@ const person = {
 } as const;
 
 /**
- * Sessions, attendance and module progress. Staff manage every session on a
+ * Sessions and attendance. Staff manage every session on a
  * case they can see; a counsellor manages only their own sessions on their own
  * cases. Times are entered in Lagos and stored in UTC.
  */
@@ -70,7 +70,6 @@ export class SessionsService {
       take: 500,
       include: {
         Counsellor: person,
-        Module: { select: { id: true, title: true } },
         Application: {
           select: {
             id: true,
@@ -107,7 +106,6 @@ export class SessionsService {
     const scheduledAt = lagosToUtc(input.date, input.time);
     if (scheduledAt.getTime() <= Date.now())
       throw new BadRequestException('Pick a time in the future');
-    if (input.moduleId) await this.requireModule(input.moduleId);
     const session = await this.prisma.$transaction(async (tx) => {
       const row = await tx.counsellingSession.create({
         data: {
@@ -115,7 +113,6 @@ export class SessionsService {
           tenantId: this.tenantId,
           applicationId,
           counsellorProfileId,
-          moduleId: input.moduleId ?? null,
           scheduledAt,
           durationMinutes: input.durationMinutes ?? 60,
           format: input.format,
@@ -196,7 +193,6 @@ export class SessionsService {
       throw new BadRequestException('Say where you will meet');
     if (merged.format === 'ONLINE' && !merged.meetingLink)
       throw new BadRequestException('Add the meeting link');
-    if (patch.moduleId) await this.requireModule(patch.moduleId);
     return this.prisma.$transaction(async (tx) => {
       const row = await tx.counsellingSession.update({
         where: { id: sessionId },
@@ -259,44 +255,6 @@ export class SessionsService {
       });
       return row;
     });
-  }
-
-  async setProgress(
-    actor: AuthUser,
-    applicationId: string,
-    moduleId: string,
-    done: boolean,
-  ) {
-    const { tier } = await this.access.open(actor, applicationId);
-    if (!can(tier, 'triage') && tier !== 'COUNSELLOR') throw notFound();
-    await this.requireModule(moduleId);
-    await this.prisma.$transaction(async (tx) => {
-      if (done) {
-        await tx.counsellingProgress.upsert({
-          where: { applicationId_moduleId: { applicationId, moduleId } },
-          create: {
-            id: randomUUID(),
-            tenantId: this.tenantId,
-            applicationId,
-            moduleId,
-            markedById: actor.profileId ?? actor.userId,
-          },
-          update: {},
-        });
-      } else {
-        await tx.counsellingProgress.deleteMany({
-          where: { applicationId, moduleId },
-        });
-      }
-      await counsellingAudit(tx, {
-        tenantId: this.tenantId,
-        actor,
-        action: done ? 'COUNSELLING_MODULE_DONE' : 'COUNSELLING_MODULE_UNDONE',
-        entity: 'CounsellingApplication',
-        entityId: applicationId,
-      });
-    });
-    return { moduleId, done };
   }
 
   /**
@@ -402,11 +360,4 @@ export class SessionsService {
     return { session, app };
   }
 
-  private async requireModule(moduleId: string) {
-    const m = await this.prisma.counsellingModule.findFirst({
-      where: { id: moduleId, tenantId: this.tenantId },
-      select: { id: true },
-    });
-    if (!m) throw new BadRequestException('That module was not found');
-  }
 }

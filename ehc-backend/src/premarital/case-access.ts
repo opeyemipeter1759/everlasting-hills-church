@@ -32,8 +32,8 @@ export const CAN = {
   archive: ['PASTOR', 'SUPER_ADMIN'],
   safeguarding: ['PASTOR'],
   wedding: ['PASTOR'],
-  approveModule: ['PASTOR'],
-  curriculum: ['PASTOR', 'SUPER_ADMIN', 'MINISTRY'],
+  /** Read the policy, letters and documents settings. */
+  policy: ['PASTOR', 'SUPER_ADMIN', 'MINISTRY'],
   settings: ['PASTOR'],
 } as const satisfies Record<string, readonly CaseTier[]>;
 export type Capability = keyof typeof CAN;

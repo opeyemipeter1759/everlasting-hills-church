@@ -4,9 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { ApiError } from "@/lib/api/axios";
 import { COUPLE_KEY, useCoupleOverview } from "@/lib/api/couple";
 import { DocumentsPanel } from "./DocumentsPanel";
-import { MaterialsPanel } from "./MaterialsPanel";
 import { ProgressPanel } from "./ProgressPanel";
-import { SessionsPanel } from "./SessionsPanel";
 import { muted, panel, plainDate, roleWord } from "./parts";
 
 /**
@@ -63,15 +61,9 @@ export default function CoupleDashboard() {
           )}
         </p>
       </header>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
-        <div className="space-y-6">
-          <ProgressPanel data={d} />
-          <SessionsPanel sessions={d.sessions} />
-        </div>
-        <div className="space-y-6">
-          <DocumentsPanel data={d} onChanged={refresh} />
-          <MaterialsPanel materials={d.materials} />
-        </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
+        <ProgressPanel data={d} />
+        <DocumentsPanel data={d} onChanged={refresh} />
       </div>
     </div>
   );

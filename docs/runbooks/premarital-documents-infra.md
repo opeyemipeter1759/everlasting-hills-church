@@ -230,14 +230,9 @@ gcloud run services describe "$BACKEND" --region="$REGION" --format=json | \
 
 The four names are listed: `COUNSELLING_DOC_KEK_V1`, `CLIENT_IP_SIGNING_SECRET`, `COUNSELLING_DOC_KEK_CURRENT` and `COUNSELLING_DOCS_BUCKET`.
 
-**Check 2.** The upload page now answers "link not working" for a made-up link, instead of "not set up yet":
+**Check 2.** Sign in to a test couple dashboard (see Step 9). The yellow "Uploading opens shortly" note is gone and each document has a **Choose a file** button. If the note is still there, `COUNSELLING_DOC_KEK_V1` is missing from Check 1: run the `--update-secrets` part of this step again.
 
-```bash
-curl -s -X POST https://everlastinghills.church/api/backend/public/premarital/documents/access \
-  -H 'content-type: application/json' -d '{"token":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}'
-```
-
-The reply contains `This link isn't working`. If it says `not set up`, the key did not mount: re-check steps 2, 4 and 7.
+**Careful later:** a `gcloud run services update` that uses `--set-secrets` replaces every mounted secret. Use `--update-secrets` to add one, or the key mount disappears and uploads close again (this happened once on 2026-11-20).
 
 ---
 
@@ -263,10 +258,10 @@ It prints `['CLIENT_IP_SIGNING_SECRET']`.
 
 ## Step 9. Try it end to end
 
-1. Apply on https://www.everlastinghills.church/pre-marital-counselling with your own email address.
-2. Open the email. Check that both letters are attached and that the link opens the documents page.
-3. Ask for a code, enter it, tick the consent box, and upload a photo.
-4. In the dashboard, on that application, the medical certificate shows "New upload". Only an account with the Pastor role sees **View**.
+1. Apply on https://www.everlastinghills.church/pre-marital-counselling with two email addresses you can read (one for each partner) and two different phone numbers.
+2. Open both emails. Each has that partner's own two letters attached and explains how to sign in.
+3. Sign in as one partner with the phone number (digits only), choose a new password, then on the dashboard tick the consent box and upload a photo of a certificate and the signed consent letter.
+4. In the office dashboard, on that application, those documents show "New upload". Only an account with the Pastor role sees **View** on a medical certificate.
 5. Close the test application, then use **Delete stored documents** (Pastor only) to remove its files.
 
 ---

@@ -9,8 +9,9 @@ import { STATUS_WORDS } from "@/lib/api/couple";
 import { input, lagosDate, primary, secondary, selectBox, useRun } from "../ui";
 
 export const KIND_LABEL: Record<RequirementRow["kind"], string> = {
-  PARENTAL_CONSENT: "Parental consent letter",
+  PARENTAL_CONSENT_GROOM: "Intending groom's parental consent letter",
   MEDICAL_CERT_GROOM: "Intending groom's medical certificate",
+  PARENTAL_CONSENT_BRIDE: "Intending bride's parental consent letter",
   MEDICAL_CERT_BRIDE: "Intending bride's medical certificate",
 };
 const REASONS = [
@@ -31,7 +32,7 @@ export function DocumentRow({ r, validFrom }: { r: RequirementRow; validFrom: st
   const [mode, setMode] = useState<"" | "verify" | "reupload">("");
   const [testDate, setTestDate] = useState("");
   const [reason, setReason] = useState("");
-  const medical = r.kind !== "PARENTAL_CONSENT";
+  const medical = r.kind.startsWith("MEDICAL_");
   const base = `/premarital/documents/${r.id}`;
   const outside = medical && testDate !== "" && testDate < validFrom;
 
@@ -48,7 +49,6 @@ export function DocumentRow({ r, validFrom }: { r: RequirementRow; validFrom: st
 
   const facts = [
     r.uploadedAt && `Uploaded ${lagosDate(r.uploadedAt)}`,
-    r.receivedInPersonAt && `Received in person ${lagosDate(r.receivedInPersonAt)}${r.receivedBy ? ` by ${r.receivedBy}` : ""}`,
     r.verifiedAt && `Accepted ${lagosDate(r.verifiedAt)}${r.verifiedBy ? ` by ${r.verifiedBy}` : ""}`,
     r.testDate && `Test date ${lagosDate(`${r.testDate}T12:00:00Z`)}`,
   ].filter(Boolean);
@@ -68,11 +68,6 @@ export function DocumentRow({ r, validFrom }: { r: RequirementRow; validFrom: st
       )}
       <div className="mt-2 flex flex-wrap gap-2">
         {r.can.view && <button type="button" className={secondary} onClick={view}>View</button>}
-        {r.can.receive && (
-          <button type="button" className={secondary} disabled={pending} onClick={() => run("post", `${base}/received-in-person`, {}, "Marked as received in person")}>
-            Mark received in person
-          </button>
-        )}
         {r.can.verify && <button type="button" className={secondary} onClick={() => setMode(mode === "verify" ? "" : "verify")}>Accept</button>}
         {r.can.reupload && <button type="button" className={secondary} onClick={() => setMode(mode === "reupload" ? "" : "reupload")}>Ask for it again</button>}
         {r.can.reopen && (
@@ -102,11 +97,11 @@ export function DocumentRow({ r, validFrom }: { r: RequirementRow; validFrom: st
             type="button"
             className={primary}
             disabled={pending || !reason}
-            onClick={async () => (await run("post", `${base}/request-reupload`, { reason }, "The couple has been asked to upload it again")) && setMode("")}
+            onClick={async () => (await run("post", `${base}/request-reupload`, { reason }, "They have been asked to upload it again")) && setMode("")}
           >
             Send
           </button>
-          <span className="text-xs text-gray-600 dark:text-white/55">They get a short email; the reason shows only on their secure page.</span>
+          <span className="text-xs text-gray-600 dark:text-white/55">They get a short email; the reason shows only on their dashboard.</span>
         </div>
       )}
     </li>

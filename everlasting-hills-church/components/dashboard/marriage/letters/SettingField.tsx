@@ -45,7 +45,7 @@ export function SettingField({ spec, entry, disabled, onChange }: { spec: FieldS
       <legend className="sr-only">{spec.label}</legend>
       {spec.kind === "bool" ? (
         <label className="flex min-h-10 items-center gap-2 text-sm font-semibold text-[#111] dark:text-white/90">
-          <input id={id} type="checkbox" className="h-5 w-5 accent-[#87102C]" checked={entry.value as boolean} onChange={(e) => set(e.target.checked)} />
+          <input id={id} type="checkbox" className="h-5 w-5 accent-[#87102C]" checked={entry.value as unknown as boolean} onChange={(e) => set(e.target.checked)} />
           {spec.label}
         </label>
       ) : (

@@ -847,10 +847,12 @@ enum CounsellingTemplateState {
   APPROVED
 }
 
+/// Each partner's own two documents: a consent letter signed by one of their parents (or a guardian), and their medical certificate.
 enum CounsellingRequirementKind {
-  PARENTAL_CONSENT
+  PARENTAL_CONSENT_GROOM
   MEDICAL_CERT_GROOM
   MEDICAL_CERT_BRIDE
+  PARENTAL_CONSENT_BRIDE
 }
 
 enum CounsellingRequirementStatus {
@@ -1150,7 +1152,7 @@ model CounsellingParticipant {
   @@index([tenantId, authUserId])
 }
 
-/// The document checklist: three rows per application. No result values, ever.
+/// The document checklist: four rows per application, two per partner. No result values, ever.
 model CounsellingDocumentRequirement {
   id                 String                       @id
   tenantId           String
