@@ -27,8 +27,8 @@ by staff while this switch is false.
 Run one step at a time. Each step ends with a check. Do not continue past a check that fails.
 
 > The keys are generated inside Cloud Shell and piped straight into Secret
-> Manager. They are never printed, logged or saved to a file. Nobody, including
-> you, needs to see their values.
+> Manager. The backup below is also piped directly between Secret Manager
+> projects; the key is never printed or saved to a local file.
 
 ---
 
@@ -36,6 +36,7 @@ Run one step at a time. Each step ends with a check. Do not continue past a chec
 
 ```bash
 gcloud config set project everlasting-hills
+PROJECT_ID=everlasting-hills
 REGION=europe-west1
 BACKEND=ehc-backend-api
 BUCKET=everlasting-hills-counselling-documents
@@ -45,10 +46,10 @@ echo "Backend runs as: $BACKEND_SA"
 
 **Check:** the last line shows an email address ending in `.iam.gserviceaccount.com`.
 
-> If it is `<number>-compute@developer.gserviceaccount.com` (the default
-> compute account), it works, but that account usually has broad project
-> rights. Moving the backend to its own service account is worth doing
-> separately. The grants below stay the same.
+Do not continue if this is the default Compute Engine account. Use a dedicated
+backend service account instead. Before changing either Cloud Run identity,
+inventory and preserve its other required permissions; changing identities
+without that review can break unrelated backend or website features.
 
 Now find the website's Cloud Run service (the one behind www):
 
@@ -65,6 +66,30 @@ echo "Website runs as: $FRONTEND_SA"
 ```
 
 **Check:** an email address is printed.
+
+The backend and website service accounts must be different and neither may be
+the default Compute Engine account. If they are shared or default accounts,
+stop here: create dedicated identities, migrate the permissions each service
+actually needs, update the Cloud Run services, and verify both services before
+continuing. The document key and bucket permissions below belong only to the
+backend identity.
+
+```bash
+if [ -z "$BACKEND_SA" ] || [ -z "$FRONTEND_SA" ]; then
+  echo "STOP: could not determine both Cloud Run service accounts." >&2
+  exit 1
+fi
+if [ "$BACKEND_SA" = "$FRONTEND_SA" ]; then
+  echo "STOP: backend and website share a service account." >&2
+  exit 1
+fi
+case "$BACKEND_SA $FRONTEND_SA" in
+  *-compute@developer.gserviceaccount.com*)
+    echo "STOP: use dedicated service accounts, not the default compute account." >&2
+    exit 1
+    ;;
+esac
+```
 
 ---
 
@@ -100,6 +125,46 @@ gcloud secrets versions access 1 --secret=counselling-documents-kek | base64 -d 
 ```
 
 The first command shows version `1` as `ENABLED`. The second prints `32`.
+
+### Back up the key without displaying it
+
+Use a separate, access-restricted project for recovery. Do not grant either
+runtime service account access to this backup. The key is streamed directly
+between Secret Manager projects; it is not printed or written to disk.
+
+```bash
+BACKUP_PROJECT=replace-with-approved-backup-project
+BACKUP_REGION=europe-west1
+if [ "$BACKUP_PROJECT" = "replace-with-approved-backup-project" ]; then
+  echo "Set BACKUP_PROJECT to the approved, separate backup project." >&2
+  exit 1
+fi
+set -o pipefail
+gcloud secrets versions access 1 --project="$PROJECT_ID" --secret=counselling-documents-kek | \
+  gcloud secrets create counselling-documents-kek \
+    --project="$BACKUP_PROJECT" \
+    --replication-policy=user-managed --locations="$BACKUP_REGION" --data-file=-
+```
+
+**Check:** version `1` exists in the backup project, and the backup secret's
+IAM policy grants access only to designated custodians:
+
+```bash
+gcloud secrets versions list counselling-documents-kek --project="$BACKUP_PROJECT" --format='table(name,state)'
+gcloud secrets get-iam-policy counselling-documents-kek --project="$BACKUP_PROJECT" --format='table(bindings.role,bindings.members)'
+gcloud projects get-iam-policy "$BACKUP_PROJECT" \
+  --flatten='bindings[].members' \
+  --filter='bindings.role:roles/secretmanager.*' \
+  --format='table(bindings.role,bindings.members)'
+cmp <(gcloud secrets versions access 1 --project="$PROJECT_ID" --secret=counselling-documents-kek) \
+  <(gcloud secrets versions access 1 --project="$BACKUP_PROJECT" --secret=counselling-documents-kek)
+```
+
+The `cmp` command prints nothing and exits successfully only if the two secret
+values match. Also check any folder- or organization-level grants on the
+backup project. No runtime service account or group that contains one may read
+the backup. Do not proceed until the backup exists, matches, and recovery
+access has been reviewed.
 
 ---
 
@@ -211,20 +276,53 @@ gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
 ```bash
 gcloud iam roles describe counsellingDocumentsObjects --project=everlasting-hills --format='value(includedPermissions)'
 gcloud storage buckets get-iam-policy "gs://$BUCKET" --format='table(bindings.role,bindings.members)'
+gcloud projects get-iam-policy "$PROJECT_ID" \
+  --flatten='bindings[].members' \
+  --filter='bindings.role:roles/storage.*' \
+  --format='table(bindings.role,bindings.members)'
 ```
 
-The role lists exactly the three permissions. The bucket policy shows the custom role for the backend account. The website account is not listed.
+The custom role lists exactly the three permissions. The bucket policy shows
+the custom role for the backend account, and the website account is not listed.
+Review the project-level output for broad roles such as `roles/storage.admin`
+or `roles/storage.objectAdmin`; also check any folder- or organization-level
+grants. Remove broad access only after confirming which service depends on it.
 
 ---
 
-## Step 7. Give the backend the key, the bucket and the signing secret
+## Step 6a. Enable Data Access audit logs
 
-This makes a new backend revision. The secrets are mounted from Secret Manager; the bucket name and key version are plain settings.
+In Google Cloud Console, open **IAM & Admin → Audit Logs** for this project.
+Enable **Data Read** and **Data Write** for **Cloud Storage** and **Secret
+Manager**, then save. Data Access logs can incur logging charges; confirm the
+expected volume and retention with the project owner.
+
+**Check:** the project policy lists both services and both log types:
+
+```bash
+gcloud projects get-iam-policy "$PROJECT_ID" --format='yaml(auditConfigs)'
+```
+
+After the dummy-document test in Step 9, use Logs Explorer to confirm the
+storage object read/write events are present. Do not log or paste document
+contents, access tokens, or key values.
+
+---
+
+## Step 7. Configure the routes with uploads closed and the key unmounted
+
+This makes a new backend revision with the upload switch explicitly off. Keep
+the encryption key unmounted for this route and switch check; the authenticated
+dashboard and disabled response do not require it.
+
+Before running the update, inspect the current secret names. If a
+`COUNSELLING_DOC_KEK_V<n>` secret is already mounted, stop and confirm that no
+stored documents need it before taking any action to unmount it.
 
 ```bash
 gcloud run services update "$BACKEND" --region="$REGION" \
-  --update-secrets=COUNSELLING_DOC_KEK_V1=counselling-documents-kek:1,CLIENT_IP_SIGNING_SECRET=client-ip-signing-secret:1 \
-  --update-env-vars=COUNSELLING_DOC_KEK_CURRENT=1,COUNSELLING_DOCS_BUCKET="$BUCKET",DOCUMENT_UPLOADS_ENABLED=false
+  --update-secrets=CLIENT_IP_SIGNING_SECRET=client-ip-signing-secret:1 \
+  --update-env-vars=COUNSELLING_DOCS_BUCKET="$BUCKET",DOCUMENT_UPLOADS_ENABLED=false
 ```
 
 **Check 1.** The settings are there. Only names are printed:
@@ -234,11 +332,60 @@ gcloud run services describe "$BACKEND" --region="$REGION" --format=json | \
   python3 -c "import json,sys; e=json.load(sys.stdin)['spec']['template']['spec']['containers'][0]['env']; print([x['name'] for x in e if x['name'].startswith(('COUNSELLING_DOC','CLIENT_IP')) or x['name']=='DOCUMENT_UPLOADS_ENABLED'])"
 ```
 
-The five names are listed: `COUNSELLING_DOC_KEK_V1`, `CLIENT_IP_SIGNING_SECRET`, `COUNSELLING_DOC_KEK_CURRENT`, `COUNSELLING_DOCS_BUCKET` and `DOCUMENT_UPLOADS_ENABLED`.
+Expect `CLIENT_IP_SIGNING_SECRET`, `COUNSELLING_DOCS_BUCKET` and
+`DOCUMENT_UPLOADS_ENABLED`. Confirm that no `COUNSELLING_DOC_KEK_V<n>` secret
+is mounted yet and that the switch is `false`.
 
-**Check 2.** Sign in to a test couple dashboard (see Step 9). While `DOCUMENT_UPLOADS_ENABLED=false`, the yellow "Uploading opens shortly" note stays visible and upload controls are hidden. After the Pastor approves and the switch is enabled, the note disappears and each document has a **Choose a file** button.
+**Check 2.** Use the signed-in test partner from Step 9, not a fabricated
+token or the retired public-link endpoint. The authenticated
+`GET /counselling/me` call should return `200`, with `documents.uploadsOpen`
+false and all `canUpload` values false. The page should say online uploads
+are not open and show no upload controls.
 
-**Careful later:** a `gcloud run services update` that uses `--set-secrets` replaces every mounted secret. Use `--update-secrets` to add one, or the key mount disappears and uploads close again (this happened once on 2026-11-20).
+For a direct Cloud Shell check, use a short-lived access token from that
+signed-in test account (never a made-up token). The GET output is limited to
+upload flags, not the dashboard's personal data. Set `UPLOAD_KIND` to a
+requirement belonging to that test account:
+
+```bash
+API_URL=$(gcloud run services describe "$BACKEND" --region="$REGION" --format='value(status.url)')
+UPLOAD_KIND=PARENTAL_CONSENT_GROOM  # use a kind belonging to the signed-in test partner
+read -r -s -p "Short-lived access token for the signed-in test partner: " COUPLE_TOKEN; printf '\n'
+
+curl -sS -w '\nHTTP %{http_code}\n' "$API_URL/counselling/me" \
+  -H "Authorization: Bearer $COUPLE_TOKEN" | \
+  python3 -c "import json,sys; body,status=sys.stdin.read().rsplit('\nHTTP ',1); print('GET HTTP',status.strip()); d=json.loads(body)['data']['documents']; print({'uploadsOpen':d['uploadsOpen'],'canUpload':[x['canUpload'] for x in d['items']]})"
+
+curl -sS -w '\nHTTP %{http_code}\n' -X POST \
+  "$API_URL/counselling/me/documents/$UPLOAD_KIND/upload" \
+  -H "Authorization: Bearer $COUPLE_TOKEN" | \
+  python3 -c "import json,sys; body,status=sys.stdin.read().rsplit('\nHTTP ',1); print('Upload HTTP',status.strip()); print(json.loads(body).get('message'))"
+unset COUPLE_TOKEN
+```
+
+The GET should report `uploadsOpen: False` and all `canUpload` values false;
+the POST should report HTTP `503`. Do not add a file to this POST.
+
+The current routes are:
+
+| Purpose | Route |
+| --- | --- |
+| Couple dashboard and document statuses | `GET /counselling/me` |
+| Record medical-document consent | `POST /counselling/me/documents/consent` |
+| Upload or replace an owned document | `POST /counselling/me/documents/:kind/upload` |
+| Download a partner's letter | `GET /counselling/me/letters/:kind` |
+| Staff: request a one-use viewing ticket | `POST /premarital/documents/:requirementId/view-ticket` |
+| Staff: open a file using that ticket | `POST /premarital/documents/view` |
+| Pastor: delete files for a closed case | `POST /premarital/applications/:id/documents/delete-stored` |
+
+These routes are on the backend URL without an `/api` prefix. Couple routes
+require a signed-in account linked to the application. Couples see status
+only, never the uploaded file. Staff viewing still requires the encryption
+key; the upload switch does not disable staff viewing.
+
+**Careful later:** a `gcloud run services update` that uses `--set-secrets`
+replaces every mounted secret. Use `--update-secrets` to add one, or the key
+mount disappears and uploads close again (this happened once on 2026-11-20).
 
 ---
 
@@ -264,6 +411,28 @@ It prints `['CLIENT_IP_SIGNING_SECRET']`.
 
 ## Step 9. Try it end to end
 
+### Verify the authenticated routes while the key is unmounted
+
+1. Apply on https://www.everlastinghills.church/pre-marital-counselling with two test email addresses and two different phone numbers.
+2. Open both emails and sign in as one test partner.
+3. Confirm the dashboard's authenticated `GET /counselling/me` succeeds and shows uploads as closed.
+4. With the same signed-in test account, attempt that partner's own `POST /counselling/me/documents/:kind/upload` route while the switch is false. It should return `503` with "Online document uploads are not open yet." Do not send a file. Do not use a fabricated token or the retired `/public/premarital/documents/access` route.
+
+If either route is missing or the switch does not return the expected response,
+stop. Leave the key unmounted and do not send couples upload instructions.
+
+### Mount the key, then test only after pastoral approval
+
+After the route/switch check and the hardening checks above pass, mount the
+key while leaving uploads disabled. This makes secure staff review available
+without opening couple uploads:
+
+```bash
+gcloud run services update "$BACKEND" --region="$REGION" \
+  --update-secrets=COUNSELLING_DOC_KEK_V1=counselling-documents-kek:1 \
+  --update-env-vars=COUNSELLING_DOC_KEK_CURRENT=1,DOCUMENT_UPLOADS_ENABLED=false
+```
+
 Only after the Pastor approves opening online uploads, enable them:
 
 ```bash
@@ -272,13 +441,37 @@ gcloud run services update "$BACKEND" --region="$REGION" \
 ```
 
 This makes a new backend revision. If approval has not been given, leave the
-switch false and stop here; do not send couples upload links.
+switch false and stop here.
 
-1. Apply on https://www.everlastinghills.church/pre-marital-counselling with two email addresses you can read (one for each partner) and two different phone numbers.
-2. Open both emails. Each has that partner's own two letters attached and explains how to sign in.
-3. Sign in as one partner with the phone number (digits only), choose a new password, then on the dashboard tick the consent box and upload a photo of a certificate and the signed consent letter.
-4. In the office dashboard, on that application, those documents show "New upload". Only an account with the Pastor role sees **View** on a medical certificate.
-5. Close the test application, then use **Delete stored documents** (Pastor only) to remove its files.
+Create a clearly marked dummy PDF with no personal information. For a test
+application with a groom account, run these calls using that signed-in test
+user's short-lived access token. For a bride account, use the corresponding
+`*_BRIDE` document kinds instead.
+
+```bash
+API_URL=$(gcloud run services describe "$BACKEND" --region="$REGION" --format='value(status.url)')
+UPLOAD_FILE=./ehc-test-medical-certificate.pdf
+test -f "$UPLOAD_FILE" || { echo "Create or upload the marked dummy PDF first." >&2; exit 1; }
+read -r -s -p "Short-lived access token for the signed-in test partner: " COUPLE_TOKEN; printf '\n'
+
+curl -sS -o /dev/null -w 'Consent HTTP %{http_code}\n' -X POST \
+  "$API_URL/counselling/me/documents/consent" \
+  -H "Authorization: Bearer $COUPLE_TOKEN" \
+  -H 'Content-Type: application/json' \
+  --data '{"kind":"MEDICAL_CERT_GROOM"}'
+
+curl -sS -o /dev/null -w 'Dummy upload HTTP %{http_code}\n' \
+  "$API_URL/counselling/me/documents/MEDICAL_CERT_GROOM/upload" \
+  -H "Authorization: Bearer $COUPLE_TOKEN" \
+  -F "file=@$UPLOAD_FILE;type=application/pdf"
+unset COUPLE_TOKEN
+```
+
+Both calls should return HTTP `200`. Then:
+
+1. Confirm the couple dashboard shows the upload awaiting review and provides no file preview.
+2. In the office dashboard, confirm the application shows "New upload". Only a Pastor can view a medical certificate; use the one-use view-ticket flow and confirm the document is readable.
+3. Close the test application, then use **Delete stored documents** (Pastor only) to remove its files. Verify the file count is zero and confirm the audit events are present.
 
 ---
 
