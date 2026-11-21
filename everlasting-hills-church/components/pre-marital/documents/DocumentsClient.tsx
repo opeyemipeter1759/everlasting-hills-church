@@ -71,8 +71,9 @@ export default function DocumentsClient() {
           Application reference <span className="font-semibold text-white">{page.reference}</span>
         </p>
         <p className="mt-3 max-w-2xl text-white/80">
-          Upload each document when it is ready, or bring it to the church office. Documents you upload are kept securely, and you will not see them here
-          again once they are sent. PDF, JPG or PNG, up to {page.maxUploadMb} MB each.
+          {page.uploadsEnabled
+            ? `Upload each document when it is ready, or bring it to the church office. Documents you upload are kept securely, and you will not see them here again once they are sent. PDF, JPG or PNG, up to ${page.maxUploadMb} MB each.`
+            : "Online uploads are not open yet. Please bring your documents to the church office."}
         </p>
       </div>
       <ul className="space-y-4">

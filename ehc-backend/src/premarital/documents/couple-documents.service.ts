@@ -5,15 +5,18 @@ import {
   HttpStatus,
   Injectable,
   Logger,
+  ServiceUnavailableException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { CounsellingRequirementKind, CounsellingRequirementStatus } from '@prisma/client';
 import { createHash, randomUUID } from 'crypto';
+import type { Env } from '../../config/env.validation';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CaseAccess } from '../case-access';
 import { counsellingAudit } from '../counselling-audit';
 import type { CoupleSession } from './couple-access.service';
 import { LinkNotWorking } from './couple-access.service';
-import { DocumentCrypto } from './document-crypto';
+import { DocumentCrypto, DocumentStorageNotReady } from './document-crypto';
 import { coupleOf, isMedical, kindsFor } from './document-rules';
 import { DocumentStore } from './document-storage';
 import { DocumentsConfigService } from './documents-config';
@@ -45,7 +48,22 @@ export class CoupleDocumentsService {
     private readonly store: DocumentStore,
     private readonly inspector: UploadInspector,
     private readonly config: DocumentsConfigService,
+    private readonly env: ConfigService<Env, true>,
   ) {}
+
+  private get uploadsEnabledByConfig(): boolean {
+    return this.env.get('DOCUMENT_UPLOADS_ENABLED', { infer: true }) ?? false;
+  }
+
+  get uploadsEnabled(): boolean {
+    return this.uploadsEnabledByConfig && this.crypto.configured && this.store.configured;
+  }
+
+  assertUploadsEnabled(): void {
+    if (!this.uploadsEnabledByConfig)
+      throw new ServiceUnavailableException('Online document uploads are not open yet. Please bring your documents to the church office for now.');
+    if (!this.crypto.configured || !this.store.configured) throw new DocumentStorageNotReady();
+  }
 
   async page(s: CoupleSession) {
     const kinds = kindsFor(s.scope);
@@ -68,6 +86,7 @@ export class CoupleDocumentsService {
       reference: s.app.referenceCode,
       maxUploadMb: settings.maxUploadMb,
       medicalConsentWording: settings.medicalConsentWording,
+      uploadsEnabled: this.uploadsEnabled,
       documents: kinds
         .map((kind) => rows.find((r) => r.kind === kind))
         .filter((r): r is NonNullable<typeof r> => !!r)
@@ -76,13 +95,14 @@ export class CoupleDocumentsService {
           label: KIND_LABEL[r.kind],
           status: r.status,
           reuploadReason: r.status === 'NEEDS_REUPLOAD' ? r.reuploadReason : null,
-          canUpload: OPEN.includes(r.status),
+          canUpload: this.uploadsEnabled && OPEN.includes(r.status),
           needsConsent: isMedical(r.kind) && !r.storageConsentAt,
         })),
     };
   }
 
   async consent(s: CoupleSession, kind: CounsellingRequirementKind) {
+    this.assertUploadsEnabled();
     if (!isMedical(kind)) throw new BadRequestException('Consent is only asked for medical certificates');
     const req = await this.requirement(s, kind);
     if (!req.storageConsentAt)
@@ -105,6 +125,7 @@ export class CoupleDocumentsService {
    * recorded; any failure before that leaves the old file exactly as it was.
    */
   async upload(s: CoupleSession, kind: CounsellingRequirementKind, file: Buffer | undefined) {
+    this.assertUploadsEnabled();
     const req = await this.requirement(s, kind);
     if (!OPEN.includes(req.status))
       throw new ConflictException(

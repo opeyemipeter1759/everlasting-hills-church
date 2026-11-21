@@ -48,13 +48,23 @@ describe("the couple's documents page", () => {
 
   it("greets with first names and shows a card per document, status only", async () => {
     loadPage.mockResolvedValue({
-      firstNames: ["Tunde", "Ada"], reference: "PMC-7K4QH2", maxUploadMb: 10, medicalConsentWording: "I consent.",
+      firstNames: ["Tunde", "Ada"], reference: "PMC-7K4QH2", maxUploadMb: 10, uploadsEnabled: true, medicalConsentWording: "I consent.",
       documents: [{ kind: "PARENTAL_CONSENT", label: "Parental consent letter", status: "PENDING", reuploadReason: null, canUpload: true, needsConsent: false }],
     });
     render(<DocumentsClient />);
     expect(await screen.findByText("Hello Tunde and Ada")).toBeTruthy();
     expect(screen.getByText("PMC-7K4QH2")).toBeTruthy();
     expect(screen.getByText("Not uploaded")).toBeTruthy();
+  });
+
+  it("explains when uploads are closed and does not show upload controls", async () => {
+    loadPage.mockResolvedValue({
+      firstNames: ["Tunde"], reference: "PMC-7K4QH2", maxUploadMb: 10, uploadsEnabled: false, medicalConsentWording: "I consent.",
+      documents: [{ kind: "PARENTAL_CONSENT", label: "Parental consent letter", status: "PENDING", reuploadReason: null, canUpload: false, needsConsent: false }],
+    });
+    render(<DocumentsClient />);
+    expect(await screen.findByText(/Online uploads are not open yet/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Choose a file" })).toBeNull();
   });
 
   it("reads the token helper alone: returns it and clears the hash; no hash means no token", () => {

@@ -96,6 +96,7 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
     FRONTEND_URL: 'https://example.org',
     COUNSELLING_DOC_KEK_V1: Buffer.alloc(32, 9).toString('base64'),
     COUNSELLING_DOC_KEK_CURRENT: 1,
+    DOCUMENT_UPLOADS_ENABLED: true,
   };
   const config = { get: (k: string) => values[k] };
   const store = new MemoryStore();
@@ -391,6 +392,29 @@ maybe('Pre-marital documents over HTTP, against Postgres', () => {
       beforeAll(async () => {
         a = await apply();
         cookie = await signIn(a.id, tokenFrom(lastMail(a.id, 'DOCUMENTS')!.payload));
+      });
+
+      it('keeps couple uploads closed until the switch is explicitly enabled', async () => {
+        const testApp = await apply();
+        const testCookie = await signIn(testApp.id, tokenFrom(lastMail(testApp.id, 'DOCUMENTS')!.payload));
+        const wasEnabled = values.DOCUMENT_UPLOADS_ENABLED;
+        values.DOCUMENT_UPLOADS_ENABLED = false;
+        const previousOperations = store.ops.length;
+        try {
+          const page = await http().get('/public/premarital/documents').set('Cookie', testCookie).expect(200);
+          expect(page.body.data.uploadsEnabled).toBe(false);
+          expect(page.body.data.documents.every((d: { canUpload: boolean }) => !d.canUpload)).toBe(true);
+          await upload(testCookie, 'PARENTAL_CONSENT', await pdf()).expect(503);
+          await http()
+            .post('/public/premarital/documents/consent')
+            .set('Cookie', testCookie)
+            .send({ kind: 'MEDICAL_CERT_GROOM' })
+            .expect(503);
+          expect(store.ops).toHaveLength(previousOperations);
+          expect((await requirement(testApp.id, 'PARENTAL_CONSENT')).status).toBe('PENDING');
+        } finally {
+          values.DOCUMENT_UPLOADS_ENABLED = wasEnabled;
+        }
       });
 
       it('refuses a renamed .exe, an oversized file and a PDF with JavaScript', async () => {

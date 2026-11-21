@@ -23,6 +23,7 @@ export interface CouplePage {
   firstNames: string[];
   reference: string;
   maxUploadMb: number;
+  uploadsEnabled: boolean;
   medicalConsentWording: string;
   documents: CoupleDocument[];
 }

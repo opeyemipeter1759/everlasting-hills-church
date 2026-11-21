@@ -100,6 +100,7 @@ export class CoupleDocumentsController {
     // The session is checked before a single byte of the file is read.
     const session = await this.access.requireVerified(cookieFrom(req.headers.cookie));
     const kind = parseSchema(kindSchema, rawKind);
+    this.documents.assertUploadsEnabled();
     const { maxUploadMb } = await this.config.values();
     const file = await readOneFile(req, res, maxUploadMb);
     return this.documents.upload(session, kind, file);
