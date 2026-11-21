@@ -26,6 +26,7 @@ vi.mock("./DrawerHeader", () => ({ DrawerHeader: () => null }));
 vi.mock("./DrawerFacts", () => ({ DrawerFacts: () => null }));
 vi.mock("./ActivityThread", () => ({ ActivityThread: () => null }));
 vi.mock("./StatusPicker", () => ({ StatusPicker: () => null }));
+vi.mock("./StatusSelect", () => ({ StatusSelect: ({ visitorId }: { visitorId: string }) => <p>Status for {visitorId}</p> }));
 vi.mock("./v2/visits/CameAgainButton", () => ({
   CameAgainButton: ({ visitorId, firstName }: { visitorId: string; firstName: string }) => <button type="button">Came again {firstName} {visitorId}</button>,
 }));
@@ -89,19 +90,24 @@ describe("PersonDrawer on each board", () => {
     spy.mockRestore();
   });
 
-  it("lets a first or second timer's return visit be recorded from Notes, but not anyone further on", () => {
+  it("lets a first, second or third timer's return visit be recorded, and their status be set, from Feedback", () => {
     const visitor = { ...row, id: "m1", hasAccount: true, visitorId: "v1", firstVisitDate: "2026-11-01" };
     render(<PersonDrawer person={{ ...visitor, status: "FIRST_TIMER" as never }} onClose={vi.fn()} />);
     expect(screen.getByRole("button", { name: "Came again Tunde v1" })).toBeInTheDocument();
+    expect(screen.getByText("Status for v1")).toBeInTheDocument();
     cleanup();
     render(<PersonDrawer person={{ ...visitor, status: "SECOND_TIMER" as never }} onClose={vi.fn()} />);
     expect(screen.getByRole("button", { name: /Came again/ })).toBeInTheDocument();
     cleanup();
     render(<PersonDrawer person={{ ...visitor, status: "THIRD_TIMER" as never }} onClose={vi.fn()} />);
+    expect(screen.getByRole("button", { name: /Came again/ })).toBeInTheDocument();
+    cleanup();
+    render(<PersonDrawer person={{ ...visitor, status: "FOURTH_TIMER" as never }} onClose={vi.fn()} />);
     expect(screen.queryByRole("button", { name: /Came again/ })).not.toBeInTheDocument();
     cleanup();
-    // A member with no first-timer form has no visits to add to.
+    // A member with no first-timer form has no visits to add to, and no status to set.
     render(<PersonDrawer person={{ ...row, status: "FIRST_TIMER" as never }} onClose={vi.fn()} />);
     expect(screen.queryByRole("button", { name: /Came again/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Status for/)).not.toBeInTheDocument();
   });
 });

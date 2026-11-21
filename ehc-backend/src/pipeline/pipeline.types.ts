@@ -2,9 +2,13 @@
  * Where a first-timer stands, worked out from their stage and their visits and
  * never stored. First match wins: opted out, integrated, then 3+, 2 or 1 visits.
  */
-export type PipelineStatus = 'FIRST_TIMER' | 'SECOND_TIMER' | 'THIRD_TIMER' | 'INTEGRATED' | 'OPTED_OUT';
+export type PipelineStatus = 'FIRST_TIMER' | 'SECOND_TIMER' | 'THIRD_TIMER' | 'FOURTH_TIMER' | 'AWAY' | 'INTEGRATED' | 'OPTED_OUT';
 
-export const PIPELINE_STATUSES: PipelineStatus[] = ['FIRST_TIMER', 'SECOND_TIMER', 'THIRD_TIMER', 'INTEGRATED', 'OPTED_OUT'];
+export const PIPELINE_STATUSES: PipelineStatus[] = ['FIRST_TIMER', 'SECOND_TIMER', 'THIRD_TIMER', 'FOURTH_TIMER', 'AWAY', 'INTEGRATED', 'OPTED_OUT'];
+
+/** What the board may set by hand. Integrated and opted out keep their own flows (approval, Opt out). */
+export const OVERRIDE_STATUSES = ['FIRST_TIMER', 'SECOND_TIMER', 'THIRD_TIMER', 'FOURTH_TIMER', 'AWAY'] as const;
+export type OverrideStatus = (typeof OVERRIDE_STATUSES)[number];
 
 export interface PipelineFilters {
   status?: PipelineStatus;
@@ -66,6 +70,8 @@ export interface PipelineRow {
   heardFromOther: string | null;
   isStudent: boolean | null;
   possibleReturn: boolean;
+  /** Set by hand on the board, winning over their visits; null while they follow their visits. */
+  statusOverride: OverrideStatus | null;
 }
 
 export type StatusCounts = Record<PipelineStatus, number>;

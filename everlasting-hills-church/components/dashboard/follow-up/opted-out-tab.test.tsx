@@ -17,7 +17,7 @@ describe("Opted out has its own tab", () => {
     expect(values("FOLLOW_UP")).not.toContain("OPTED_OUT");
     expect(values("INTEGRATION")).not.toContain("OPTED_OUT");
     expect(values("ALL")).not.toContain("OPTED_OUT");
-    expect(values("FOLLOW_UP")).toEqual(["FIRST_TIMER", "SECOND_TIMER", "THIRD_TIMER", "AWAY"]);
+    expect(values("FOLLOW_UP")).toEqual(["FIRST_TIMER", "SECOND_TIMER", "THIRD_TIMER", "FOURTH_TIMER", "AWAY"]);
   });
 
   it("needs no status filter on the Opted out tab itself", () => {

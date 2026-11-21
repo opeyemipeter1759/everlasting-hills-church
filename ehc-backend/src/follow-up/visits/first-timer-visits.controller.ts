@@ -9,7 +9,7 @@ import { FollowUpAuthService } from '../services/follow-up-auth.service';
 import { ApprovalsService } from '../approvals/approvals.service';
 import { FirstTimerVisitsService } from './first-timer-visits.service';
 import { PossibleReturnService } from './possible-return.service';
-import { cameAgainSchema, firstVisitSchema } from './visit-day.schema';
+import { cameAgainSchema, firstVisitSchema, setStatusSchema } from './visit-day.schema';
 
 /**
  * A first-timer's visits ("Came again", undo, the first visit date) and the
@@ -60,6 +60,15 @@ export class FirstTimerVisitsController {
   async firstVisit(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string, @Body() body: unknown) {
     await this.auth.requireAccess(actor);
     return this.visits.correctFirstVisit(actor, visitorId, parseSchema(firstVisitSchema, body).date);
+  }
+
+  @Patch('status')
+  @ApiOperation({ summary: 'Set their status by hand (wins over visits), or null to follow their visits again. Fourth timer asks for integration.' })
+  async setStatus(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string, @Body() body: unknown) {
+    await this.auth.requireAccess(actor);
+    const person = await this.visits.setStatus(actor, visitorId, parseSchema(setStatusSchema, body).status);
+    await this.integrateIfDue(visitorId);
+    return person;
   }
 
   @Get('possible-return')

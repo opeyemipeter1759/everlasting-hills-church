@@ -9,6 +9,7 @@ import { CameAgainButton } from "./v2/visits/CameAgainButton";
 import { DrawerFacts } from "./DrawerFacts";
 import { ActivityThread } from "./ActivityThread";
 import { StatusPicker } from "./StatusPicker";
+import { StatusSelect } from "./StatusSelect";
 import { AssigneeCard } from "./AssigneeCard";
 import { useFollowUpLeadership } from "./useFollowUpLeadership";
 import { useIntegrationTeam } from "./useIntegrationTeam";
@@ -54,9 +55,9 @@ export function PersonDrawer({
   // filled in and the rest arrives a moment later — no empty panel.
   const shown = data && data.id === person.id ? data : null;
   const status = shown?.status ?? person.status;
-  // A return visit moves a first timer on to second, then third; integrating stays a lead's approval.
+  // A return visit moves a first timer on to second, third, then fourth; integrating stays a lead's approval.
   const visitorId = person.visitorId ?? (person.kind === "VISITOR" ? person.id : undefined);
-  const canComeAgain = !!visitorId && (status === "FIRST_TIMER" || status === "SECOND_TIMER");
+  const canComeAgain = !!visitorId && (status === "FIRST_TIMER" || status === "SECOND_TIMER" || status === "THIRD_TIMER");
 
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label={person.name} className="fixed inset-0 z-50">
@@ -71,11 +72,12 @@ export function PersonDrawer({
           {/* What people came to change, in one card. */}
           <div className="divide-y divide-gray-100 rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm dark:divide-white/[0.06] dark:border-white/10 dark:bg-white/[0.04]">
             <div className="pb-3">
-              <StatusPicker
-                person={person}
-                status={status}
-                awaiting={shown?.statusAwaitingApproval ?? null}
-              />
+              {/* Anyone with a first-timer form can be set by hand; other members read their status only. */}
+              {visitorId ? (
+                <StatusSelect visitorId={visitorId} firstName={person.name.split(" ")[0]} fallback={status} />
+              ) : (
+                <StatusPicker person={person} status={status} awaiting={shown?.statusAwaitingApproval ?? null} />
+              )}
               {canComeAgain && (
                 <div className="ml-24 mt-3">
                   <CameAgainButton visitorId={visitorId} firstName={person.name.split(" ")[0]} firstVisitDate={person.firstVisitDate} />

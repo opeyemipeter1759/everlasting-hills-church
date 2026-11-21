@@ -13,6 +13,10 @@ const STATUS: Record<MasterListStatus, { label: string; className: string }> = {
     label: "Third timer",
     className: "bg-sky-50 text-sky-700 ring-sky-600/15 dark:bg-sky-500/10 dark:text-sky-300",
   },
+  FOURTH_TIMER: {
+    label: "Fourth timer",
+    className: "bg-cyan-50 text-cyan-700 ring-cyan-600/15 dark:bg-cyan-500/10 dark:text-cyan-300",
+  },
   INTEGRATED: {
     label: "Integrated",
     className: "bg-emerald-50 text-emerald-700 ring-emerald-600/15 dark:bg-emerald-500/10 dark:text-emerald-300",

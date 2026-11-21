@@ -3,8 +3,8 @@ import type { MonthSummary, PipelineStatus } from "@/lib/api/pipeline";
 export const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 /** The status lines above the divider, and the two below it. */
-export const TIMER_STATUSES: PipelineStatus[] = ["FIRST_TIMER", "SECOND_TIMER", "THIRD_TIMER"];
-export const SETTLED_STATUSES: PipelineStatus[] = ["INTEGRATED", "OPTED_OUT"];
+export const TIMER_STATUSES: PipelineStatus[] = ["FIRST_TIMER", "SECOND_TIMER", "THIRD_TIMER", "FOURTH_TIMER"];
+export const SETTLED_STATUSES: PipelineStatus[] = ["AWAY", "INTEGRATED", "OPTED_OUT"];
 
 export const OVERVIEW_PATH = "/dashboard/follow-up/overview";
 

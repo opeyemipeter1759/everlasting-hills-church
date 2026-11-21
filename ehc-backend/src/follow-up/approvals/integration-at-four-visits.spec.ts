@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { ApprovalsService } from './approvals.service';
 
 const config = { get: () => 'tenant' } as never;
-const row = (visitorId: string, visits: number, assigneeId: string | null = 'm-bola') => ({ visitorId, visits, assigneeId });
+const row = (visitorId: string, visits: number, assigneeId: string | null = 'm-bola', statusOverride: string | null = null) => ({ visitorId, visits, assigneeId, statusOverride });
 
 function setup(rows: ReturnType<typeof row>[], askedBefore: string[] = []) {
   const prisma = {
@@ -16,13 +16,13 @@ function setup(rows: ReturnType<typeof row>[], askedBefore: string[] = []) {
 }
 
 describe('A fourth visit puts a first-timer forward for integration', () => {
-  it('asks once, on their assignee’s behalf, for third timers with four or more visits', async () => {
-    const { svc, raise, pipeline } = setup([row('v4', 4), row('v5', 5), row('v3', 3)]);
-    expect(await svc.requestAtFourVisits()).toBe(2);
-    expect(pipeline.list).toHaveBeenCalledWith(expect.objectContaining({ status: 'THIRD_TIMER' }));
+  it('asks once, on their assignee’s behalf, for every Fourth timer, by visits or set by hand', async () => {
+    const { svc, raise, pipeline } = setup([row('v4', 4), row('v5', 5), row('v-hand', 2, 'm-bola', 'FOURTH_TIMER')]);
+    expect(await svc.requestAtFourVisits()).toBe(3);
+    expect(pipeline.list).toHaveBeenCalledWith(expect.objectContaining({ status: 'FOURTH_TIMER' }));
     expect(raise).toHaveBeenCalledWith('v4', 'p-bola', 'Came 4 times');
     expect(raise).toHaveBeenCalledWith('v5', 'p-bola', 'Came 5 times');
-    expect(raise).not.toHaveBeenCalledWith('v3', expect.anything(), expect.anything());
+    expect(raise).toHaveBeenCalledWith('v-hand', 'p-bola', 'Set to Fourth timer');
   });
 
   it('leaves anyone with nobody assigned, or already asked about, to the team', async () => {

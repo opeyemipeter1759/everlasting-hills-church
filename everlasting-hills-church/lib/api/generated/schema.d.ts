@@ -4119,6 +4119,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/follow-up/first-timers/{visitorId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set their status by hand (wins over visits), or null to follow their visits again. Fourth timer asks for integration. */
+        patch: operations["FirstTimerVisitsController_setStatus"];
+        trace?: never;
+    };
     "/follow-up/first-timers/{visitorId}/visits": {
         parameters: {
             query?: never;
@@ -22861,6 +22878,39 @@ export interface operations {
             };
         };
     };
+    FirstTimerVisitsController_setStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visitorId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FirstTimerVisitsController_list: {
         parameters: {
             query?: never;
@@ -23368,7 +23418,7 @@ export interface operations {
                 search?: unknown;
                 month?: unknown;
                 year?: unknown;
-                status?: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "INTEGRATED" | "OPTED_OUT";
+                status?: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "AWAY" | "INTEGRATED" | "OPTED_OUT";
             };
             header?: never;
             path?: never;

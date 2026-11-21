@@ -20,8 +20,6 @@ import type { ApprovalView, PendingDecision, QueueItem, SubjectApproval } from '
 import { WORKFLOW_TX } from '../workflow-tx';
 
 const QUEUE_LIMIT = 200;
-/** Visits after which a first-timer is put forward for integration without anyone asking. */
-export const VISITS_FOR_INTEGRATION = 4;
 
 /**
  * Generic approvals. A request is asked for (or raised by the system) and
@@ -58,17 +56,18 @@ export class ApprovalsService {
   }
 
   /**
-   * A first-timer's fourth visit puts them forward for integration by itself:
-   * the same request as Request approval, asked on their assignee's behalf, so
-   * the team leads decide it as usual. Only ever once per person: after any
-   * request (pending, approved or sent back for changes) it is the team's call.
-   * Someone with nobody assigned yet is left for when they are. Returns how many were raised.
+   * A Fourth timer (a fourth visit, or put there by hand) is put forward for
+   * integration by itself: the same request as Request approval, asked on
+   * their assignee's behalf, so the team leads decide it as usual. Only ever
+   * once per person: after any request (pending, approved or sent back for
+   * changes) it is the team's call. Someone with nobody assigned yet is left
+   * for when they are. Returns how many were raised.
    */
   async requestAtFourVisits(visitorIds?: string[]): Promise<number> {
     let raised = 0;
     for (let skip = 0; ; skip += 200) {
-      const page = await this.pipeline.list({ status: 'THIRD_TIMER', visitorIds, take: 200, skip });
-      const ready = page.rows.filter((r) => r.visits >= VISITS_FOR_INTEGRATION && r.assigneeId);
+      const page = await this.pipeline.list({ status: 'FOURTH_TIMER', visitorIds, take: 200, skip });
+      const ready = page.rows.filter((r) => r.assigneeId);
       const asked = new Set(
         (await this.prisma.approvalRequest.findMany({
           where: { tenantId: this.tenantId, kind: firstTimerIntegration.kind, subjectId: { in: ready.map((r) => r.visitorId) } },
@@ -79,7 +78,7 @@ export class ApprovalsService {
         const assignee = await this.prisma.member.findFirst({ where: { id: row.assigneeId!, tenantId: this.tenantId }, select: { profileId: true } });
         if (!assignee) continue;
         try {
-          await this.raiseIntegration(row.visitorId, assignee.profileId, `Came ${row.visits} times`);
+          await this.raiseIntegration(row.visitorId, assignee.profileId, row.statusOverride === 'FOURTH_TIMER' ? 'Set to Fourth timer' : `Came ${row.visits} times`);
           raised++;
         } catch (err) {
           // Not ready after all (opted out, already asked a moment ago): leave them to the team.

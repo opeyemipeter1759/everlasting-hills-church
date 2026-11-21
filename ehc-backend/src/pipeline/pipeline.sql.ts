@@ -28,7 +28,8 @@ export function pipelineCte(tenantId: string): Prisma.Sql {
              COALESCE(v."firstVisitDate", ${lagosDate(Prisma.sql`v."submittedAt"`)}) AS "firstVisitDate",
              v."howDidYouLearn" AS "heardFrom", v."invitedBy", v."heardFromOther", v."isStudent",
              (v."possibleReturnVisitorId" IS NOT NULL OR v."possibleReturnMemberId" IS NOT NULL)
-               AND v."possibleReturnResolvedAt" IS NULL AS "possibleReturn"
+               AND v."possibleReturnResolvedAt" IS NULL AS "possibleReturn",
+             v."statusOverride"::text AS "statusOverride"
         FROM "Visitor" v
         LEFT JOIN "Member" m ON m.id = v."convertedToMemberId"
        WHERE v."tenantId" = ${tenantId}
@@ -64,6 +65,9 @@ export function pipelineCte(tenantId: string): Prisma.Sql {
              CASE
                WHEN e.stage = 'OPTED_OUT' OR (p."memberStatus" IS NOT NULL AND p."memberStatus" <> 'ACTIVE') THEN 'OPTED_OUT'
                WHEN e.stage = 'CONFIRMED' THEN 'INTEGRATED'
+               -- Set by hand on the board: wins over their visits until it is cleared.
+               WHEN p."statusOverride" IS NOT NULL THEN p."statusOverride"
+               WHEN COALESCE(vs.n, 1) >= 4 THEN 'FOURTH_TIMER'
                WHEN COALESCE(vs.n, 1) >= 3 THEN 'THIRD_TIMER'
                WHEN vs.n = 2 THEN 'SECOND_TIMER'
                ELSE 'FIRST_TIMER'

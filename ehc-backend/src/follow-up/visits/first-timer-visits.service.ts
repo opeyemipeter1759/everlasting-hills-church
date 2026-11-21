@@ -6,7 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { PipelineRepository } from '../../pipeline/pipeline.repository';
-import type { PipelineRow } from '../../pipeline/pipeline.types';
+import type { OverrideStatus, PipelineRow } from '../../pipeline/pipeline.types';
 import { dateColumn, dayOf, lagosDay, parseVisitDay, prettyDay } from './visit-day.util';
 
 /** A visit as it is recorded: FORM, CAME_AGAIN, RETURN_FORM, BACKFILL or BACKFILL_STATUS. */
@@ -122,6 +122,23 @@ export class FirstTimerVisitsService {
       }
       await this.audit(actor, 'UPDATE', 'Visitor', visitorId, { firstVisitDate: person.firstVisitDate }, { firstVisitDate: day }, tx);
     }, { timeout: 15_000 }); // a cold pooler connection can take longer than the 5 s default
+    return this.person(visitorId);
+  }
+
+  /**
+   * Put them at a status by hand, which wins over their visits, or null to
+   * follow their visits again. Integrated and opted out have their own flows
+   * (the team leads' approval, Opt out and Restore), so neither is set here.
+   */
+  async setStatus(actor: AuthUser, visitorId: string, status: OverrideStatus | null): Promise<PipelineRow> {
+    const before = await this.person(visitorId);
+    if (before.status === 'OPTED_OUT') throw new BadRequestException('They have opted out. Restore them from their profile first.');
+    if (before.status === 'INTEGRATED') throw new BadRequestException('They are already integrated');
+    await this.prisma.visitor.update({
+      where: { id: visitorId },
+      data: { statusOverride: status, statusOverrideAt: status ? new Date() : null, statusOverrideById: status ? (actor.profileId ?? null) : null },
+    });
+    await this.audit(actor, 'UPDATE', 'Visitor', visitorId, { status: before.status, statusOverride: before.statusOverride }, { statusOverride: status });
     return this.person(visitorId);
   }
 

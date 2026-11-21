@@ -49,6 +49,7 @@ const LABEL: Record<MasterListStatus, string> = {
   FIRST_TIMER: "First timer",
   SECOND_TIMER: "Second timer",
   THIRD_TIMER: "Third timer",
+  FOURTH_TIMER: "Fourth timer",
   INTEGRATED: "Integrated",
   AWAY: "Away",
   OPTED_OUT: "Opted out",

@@ -362,6 +362,15 @@ model CareAssignment {
   @@index([tenantId, leaderId])
 }
 
+/// A first-timer's status set by hand on the Follow Up board. Integrated and opted out are not here: they have their own flows.
+enum FirstTimerStatusOverride {
+  FIRST_TIMER
+  SECOND_TIMER
+  THIRD_TIMER
+  FOURTH_TIMER
+  AWAY
+}
+
 enum FollowUpStage {
   UNASSIGNED
   ASSIGNED
@@ -2799,6 +2808,10 @@ model Visitor {
   possibleReturnVisitorId  String?
   possibleReturnMemberId   String?
   possibleReturnResolvedAt DateTime?
+  /// Where the team put them by hand. While set it wins over their visits; null follows the visits.
+  statusOverride           FirstTimerStatusOverride?
+  statusOverrideAt         DateTime?                 @db.Timestamptz(3)
+  statusOverrideById       String?
   Tenant                   Tenant            @relation(fields: [tenantId], references: [id])
   Service                  Service?          @relation(fields: [serviceId], references: [id])
   FollowUpEntry            FollowUpEntry[]

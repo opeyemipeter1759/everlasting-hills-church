@@ -3,10 +3,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 
-/** Where a first-timer stands, worked out by the API from their stage and visits. */
-export type PipelineStatus = "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "INTEGRATED" | "OPTED_OUT";
+/** Where a first-timer stands: from their stage and visits, or as the team set it by hand. */
+export type PipelineStatus = "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "AWAY" | "INTEGRATED" | "OPTED_OUT";
 
-export const PIPELINE_STATUSES: PipelineStatus[] = ["FIRST_TIMER", "SECOND_TIMER", "THIRD_TIMER", "INTEGRATED", "OPTED_OUT"];
+export const PIPELINE_STATUSES: PipelineStatus[] = ["FIRST_TIMER", "SECOND_TIMER", "THIRD_TIMER", "FOURTH_TIMER", "AWAY", "INTEGRATED", "OPTED_OUT"];
+
+/** What the board may set by hand; Integrated and Opted out keep their own flows. */
+export type OverrideStatus = "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "AWAY";
 
 export interface PipelineRow {
   visitorId: string;
@@ -37,6 +40,8 @@ export interface PipelineRow {
   heardFromOther: string | null;
   isStudent: boolean | null;
   possibleReturn: boolean;
+  /** Set by hand, winning over their visits; null while they follow their visits. */
+  statusOverride?: OverrideStatus | null;
 }
 
 export type StatusCounts = Record<PipelineStatus, number>;
