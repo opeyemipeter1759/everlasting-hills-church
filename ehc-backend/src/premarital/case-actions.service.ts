@@ -12,6 +12,7 @@ import type { CounsellingEmailEvent } from '../notifications/templates/counselli
 import { PrismaService } from '../prisma/prisma.service';
 import { CaseAccess, notFound, requireCan } from './case-access';
 import { counsellingAudit } from './counselling-audit';
+import { REQUIREMENT_KINDS } from './documents/document-rules';
 import { CounsellingNotifier } from './counselling-notifier';
 import { DocumentsConfigService } from './documents/documents-config';
 import {
@@ -71,7 +72,7 @@ export class CaseActionsService {
     return { status: to };
   }
 
-  /** Whether moving into this status needs all three documents accepted, and whether they are. */
+  /** Whether moving into this status needs all four documents accepted, and whether they are. */
   private async documentsGate(applicationId: string, to: CounsellingStatus) {
     const settings = await this.documents.values();
     if (to !== settings.documentsRequiredBefore)
@@ -79,7 +80,7 @@ export class CaseActionsService {
     const verified = await this.prisma.counsellingDocumentRequirement.count({
       where: { tenantId: this.tenantId, applicationId, status: 'VERIFIED' },
     });
-    return { blocked: verified < 3, reasons: settings.overrideReasons };
+    return { blocked: verified < REQUIREMENT_KINDS.length, reasons: settings.overrideReasons };
   }
 
   /** Asks the couple for more: only from Under review, and the email never carries the reason. */

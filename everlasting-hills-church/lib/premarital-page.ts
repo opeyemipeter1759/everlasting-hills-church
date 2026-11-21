@@ -1,6 +1,6 @@
 import { getBackendBaseUrl } from "@/lib/api/backend-url";
 
-/** What the public page may show: approved policy values only, the privacy notice, and the active curriculum. */
+/** What the public page may show: approved policy values only, and the privacy notice. */
 export interface PremaritalPageData {
   policy: {
     eligibility: string | null;
@@ -10,7 +10,6 @@ export interface PremaritalPageData {
     retention: string | null;
     privacyNotice: string;
   };
-  modules: { id: string; title: string; description: string | null; scriptureRefs: string[]; objectives: string[]; approvalState: "PROPOSED" | "APPROVED" }[];
 }
 
 /** Used when the API cannot be reached: nothing invented, just the privacy wording the form needs. */
@@ -24,7 +23,6 @@ export const PAGE_FALLBACK: PremaritalPageData = {
     privacyNotice:
       "Only the pastors, the marriage ministry team and the counsellor assigned to you can see your application. You can ask to see, correct or delete your information at any time by contacting the church office. We handle your information in line with the Nigeria Data Protection Act 2023.",
   },
-  modules: [],
 };
 
 /** Server only. Refreshed every five minutes. */

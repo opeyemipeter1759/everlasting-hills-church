@@ -11,6 +11,7 @@ export type CounsellingEntity =
   | 'CounsellingSettings'
   | 'CounsellingDocument'
   | 'CounsellingDocumentTemplate'
+  | 'CounsellingParticipant'
   | 'WeddingApproval';
 
 /**

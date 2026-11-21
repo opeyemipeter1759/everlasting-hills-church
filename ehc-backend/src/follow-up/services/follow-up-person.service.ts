@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PipelineRepository } from '../../pipeline/pipeline.repository';
 import type { Env } from '../../config/env.validation';
 import type { FollowUpPerson } from './follow-up-person.types';
 import { memberInclude, toMemberPerson, toVisitorPerson, visitorInclude } from './person-mapper.util';
@@ -23,6 +24,7 @@ export class FollowUpPersonService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly status: FollowUpStatusService,
+    private readonly pipeline: PipelineRepository,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -32,7 +34,7 @@ export class FollowUpPersonService {
     // A link to a first-timer who has since become a member opens the member.
     const { kind, id } = await currentSubject(this.prisma, this.tenantId, { kind: requestedKind, id: requestedId });
     const person = kind === 'VISITOR' ? await this.visitor(id) : await this.member(id);
-    const [agreed, waiting, moves] = await Promise.all([
+    const [agreed, waiting, moves, stage] = await Promise.all([
       this.status.approvedFor(kind, [id]),
       this.status.pendingFor(kind, [id]),
       this.prisma.followUpStatusChange.findMany({
@@ -40,17 +42,29 @@ export class FollowUpPersonService {
         orderBy: { decidedAt: 'asc' },
         select: { toStatus: true, decidedAt: true, requestedAt: true },
       }),
+      this.pipelineStatus(kind, id),
     ]);
     return unassignedIfOptedOut({
       ...person,
       // A deactivated or opted-out account reads OPTED_OUT whatever was agreed on the list.
-      status: person.status === 'OPTED_OUT' ? person.status : agreed.get(id)?.status ?? person.status,
+      // Opted out from any side stays opted out. Otherwise anyone who came through the
+      // first-timer form reads the pipeline's status (visits and approvals), as the lists do.
+      status: [person.status, agreed.get(id)?.status, stage].includes('OPTED_OUT') ? 'OPTED_OUT' : stage ?? agreed.get(id)?.status ?? person.status,
       statusAwaitingApproval: waiting.get(id)?.status ?? null,
       milestones: moves.map((m) => ({
         status: m.toStatus as 'INTEGRATED' | 'OPTED_OUT',
         at: (m.decidedAt ?? m.requestedAt).toISOString(),
       })),
     });
+  }
+
+  /** Where the pipeline has them, for anyone with a first-timer form; null for a member who never filled one. */
+  private async pipelineStatus(kind: string, id: string) {
+    const visitorId =
+      kind === 'VISITOR'
+        ? id
+        : (await this.prisma.visitor.findFirst({ where: { tenantId: this.tenantId, convertedToMemberId: id }, select: { id: true } }))?.id;
+    return visitorId ? ((await this.pipeline.one(visitorId))?.status ?? null) : null;
   }
 
   private async visitor(id: string): Promise<FollowUpPerson> {

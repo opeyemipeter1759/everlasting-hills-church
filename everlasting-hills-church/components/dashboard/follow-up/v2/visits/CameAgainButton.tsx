@@ -23,15 +23,17 @@ export function CameAgainButton({
 }: {
   visitorId: string;
   firstName: string;
-  firstVisitDate: string;
+  /** Read from their visits when the caller doesn't have it. */
+  firstVisitDate?: string;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState("");
   const visits = useFirstTimerVisits(visitorId, open);
   const cameAgain = useCameAgain(visitorId);
+  const first = firstVisitDate ?? visits.data?.firstVisitDate ?? "";
   const day = picked || visits.data?.latestServiceDate || "";
-  const error = day ? (visitDayError(day) ?? (day < firstVisitDate ? `That is before their first visit on ${shortDate(firstVisitDate)}` : null)) : null;
+  const error = day ? (visitDayError(day) ?? (first && day < first ? `That is before their first visit on ${shortDate(first)}` : null)) : null;
 
   function close() {
     setOpen(false);
@@ -87,7 +89,7 @@ export function CameAgainButton({
         {visits.isLoading && !picked ? (
           <div className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-white/[0.05]" aria-label="Loading the latest service" />
         ) : (
-          <VisitDayField label="Which day did they come?" value={day} onChange={setPicked} min={firstVisitDate} error={error} />
+          <VisitDayField label="Which day did they come?" value={day} onChange={setPicked} min={first} error={error} />
         )}
       </FormModal>
     </>

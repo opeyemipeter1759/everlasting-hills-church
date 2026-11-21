@@ -8,7 +8,7 @@ import {
   STATUS_WORDS,
   uploadDocument,
   type CoupleDocument,
-} from "@/lib/api/premarital-documents";
+} from "@/lib/api/couple";
 
 const ACCEPT = "application/pdf,image/jpeg,image/png";
 const TONE: Record<CoupleDocument["status"], string> = {
@@ -20,7 +20,20 @@ const TONE: Record<CoupleDocument["status"], string> = {
 };
 
 /** One document: its status, the reason if it needs doing again, and upload or replace. Never a preview. */
-export function DocumentCard({ doc, consentWording, maxMb, onChanged }: { doc: CoupleDocument; consentWording: string; maxMb: number; onChanged: () => void }) {
+export function DocumentCard({
+  doc,
+  consentWording,
+  maxMb,
+  note,
+  onChanged,
+}: {
+  doc: CoupleDocument;
+  consentWording: string;
+  maxMb: number;
+  /** A line under the title, e.g. who uploads it. */
+  note?: string;
+  onChanged: () => void;
+}) {
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const [consented, setConsented] = useState(false);
@@ -56,18 +69,19 @@ export function DocumentCard({ doc, consentWording, maxMb, onChanged }: { doc: C
   const busy = progress !== null;
   const replace = doc.status === "UPLOADED";
   return (
-    <section aria-labelledby={`${id}-title`} className="rounded-2xl border border-gray-200 bg-white p-5 text-gray-900 sm:p-6">
+    <section aria-labelledby={`${id}-title`} className="rounded-2xl border border-[#E7CDD3]/70 bg-white p-5 text-gray-900 dark:border-white/[0.09] dark:bg-white/[0.04] dark:text-white sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h2 id={`${id}-title`} className="text-base font-bold sm:text-lg">{doc.label}</h2>
         <span className={`rounded-full px-3 py-1 text-sm font-semibold ${TONE[doc.status]}`}>{STATUS_WORDS[doc.status]}</span>
       </div>
-      {doc.status === "NEEDS_REUPLOAD" && doc.reuploadReason && <p className="mt-2 text-sm text-red-800">{REASON_WORDS[doc.reuploadReason]}</p>}
-      {doc.status === "VERIFIED" && <p className="mt-2 text-sm text-gray-600">This document has been accepted. If it needs replacing, please contact the church office.</p>}
+      {note && <p className="mt-1 text-sm text-[#7A6A6F] dark:text-white/60">{note}</p>}
+      {doc.status === "NEEDS_REUPLOAD" && doc.reuploadReason && <p className="mt-2 text-sm text-red-800 dark:text-red-300">{REASON_WORDS[doc.reuploadReason]}</p>}
+      {doc.status === "VERIFIED" && <p className="mt-2 text-sm text-gray-600 dark:text-white/60">This document has been accepted. If it needs replacing, please contact the church office.</p>}
 
       {doc.canUpload && (
         <div className="mt-4 space-y-3">
           {doc.needsConsent && (
-            <label className="flex items-start gap-3 text-sm text-gray-800">
+            <label className="flex items-start gap-3 text-sm text-gray-800 dark:text-white/85">
               <input type="checkbox" checked={consented} onChange={(e) => setConsented(e.target.checked)} className="mt-0.5 h-5 w-5 flex-shrink-0 accent-church-maroon" />
               <span>{consentWording}</span>
             </label>
@@ -76,13 +90,13 @@ export function DocumentCard({ doc, consentWording, maxMb, onChanged }: { doc: C
             <button type="button" disabled={busy || needsTick} onClick={() => fileInput.current?.click()} className="min-h-11 rounded-xl bg-church-maroon px-5 font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-church-maroon/40 focus-visible:ring-offset-2 disabled:opacity-50">
               {replace ? "Replace with a file" : "Choose a file"}
             </button>
-            <button type="button" disabled={busy || needsTick} onClick={() => cameraInput.current?.click()} className="min-h-11 rounded-xl border-2 border-gray-300 px-5 font-semibold text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-church-maroon/40 disabled:opacity-50">
+            <button type="button" disabled={busy || needsTick} onClick={() => cameraInput.current?.click()} className="min-h-11 rounded-xl border-2 border-gray-300 px-5 font-semibold text-gray-800 dark:border-white/20 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-church-maroon/40 disabled:opacity-50">
               Take a photo
             </button>
           </div>
           <input ref={fileInput} type="file" accept={ACCEPT} className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => send(e.target.files?.[0])} />
           <input ref={cameraInput} type="file" accept="image/jpeg,image/png" capture="environment" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => send(e.target.files?.[0])} />
-          {needsTick && <p className="text-sm text-gray-600">Please tick the consent box to upload your medical certificate.</p>}
+          {needsTick && <p className="text-sm text-gray-600 dark:text-white/60">Please tick the consent box to upload your medical certificate.</p>}
         </div>
       )}
 
@@ -95,8 +109,8 @@ export function DocumentCard({ doc, consentWording, maxMb, onChanged }: { doc: C
             </div>
           </div>
         )}
-        {done && !busy && <p className="text-emerald-800">Thank you. We have received it, and the pastoral team will review it.</p>}
-        {problem && <p role="alert" className="text-red-700">{problem}</p>}
+        {done && !busy && <p className="text-emerald-800 dark:text-emerald-300">Thank you. We have received it, and the pastoral team will review it.</p>}
+        {problem && <p role="alert" className="text-red-700 dark:text-red-300">{problem}</p>}
       </div>
     </section>
   );

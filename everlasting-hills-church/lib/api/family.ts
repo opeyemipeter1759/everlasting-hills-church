@@ -38,7 +38,7 @@ export interface FamilyDirectoryPage {
 
 type DayMonth = { day: number; month: number };
 
-/** A member's profile as the church family sees it: no phone, email or address. */
+/** A member's profile as the church family sees it: phone and email only where shared, never the address. */
 export interface FamilyProfile {
   id: string;
   firstName: string;
@@ -106,11 +106,7 @@ export interface RestrictedProfile {
 }
 
 /** One thing a member does: "CEO" at "sparkpayhq", shown as CEO @sparkpayhq. */
-export interface ProfileRole {
-  title: string;
-  org: string | null;
-  url: string | null;
-}
+export interface ProfileRole { title: string; org: string | null; url: string | null }
 
 export type OpenTo = "PRAYER_PARTNER" | "MENTOR" | "MENTEE" | "FELLOWSHIP" | "NETWORKING" | "VOLUNTEERING";
 export type Visible = "MEMBERS" | "PRIVATE";

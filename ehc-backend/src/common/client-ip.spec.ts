@@ -4,7 +4,6 @@ import { Test } from '@nestjs/testing';
 import { ThrottlerModule } from '@nestjs/throttler';
 import request from 'supertest';
 import { AccountAwareThrottlerGuard } from '../auth/guards/account-aware-throttler.guard';
-import { ModulesService } from '../premarital/modules.service';
 import { PolicyService } from '../premarital/policy';
 import { PublicApplicationsService } from '../premarital/public-applications.service';
 import { PublicPremaritalController } from '../premarital/public-premarital.controller';
@@ -51,7 +50,6 @@ describe('rate limits on the public application form, per signed visitor', () =>
       controllers: [PublicPremaritalController],
       providers: [
         { provide: PublicApplicationsService, useValue: { submit } },
-        { provide: ModulesService, useValue: { listPublic: jest.fn(async () => []) } },
         { provide: PolicyService, useValue: { publicView: jest.fn(async () => ({})) } },
         { provide: APP_GUARD, useClass: AccountAwareThrottlerGuard },
       ],

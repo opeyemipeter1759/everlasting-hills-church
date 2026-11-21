@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useFirstTimerProfile, useRefreshFollowUp } from "@/lib/api/first-timer-profile";
 import { StatusChip } from "../StatusChip";
@@ -22,6 +21,10 @@ export default function FirstTimerProfile() {
   const { visitorId } = useParams<{ visitorId: string }>();
   const query = useFirstTimerProfile(visitorId);
   const refresh = useRefreshFollowUp();
+  const router = useRouter();
+  // Back to wherever they opened this from (the Master list, a month, approvals);
+  // a profile opened fresh, from an email link say, has nowhere to go back to.
+  const back = () => (window.history.length > 1 ? router.back() : router.push("/dashboard/follow-up/overview"));
 
   if (query.isLoading) return <div className="mx-auto h-80 max-w-3xl animate-pulse rounded-2xl bg-gray-100 dark:bg-white/[0.05]" aria-label="Loading" />;
   if (!query.data) {
@@ -37,9 +40,9 @@ export default function FirstTimerProfile() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 px-4 py-5 sm:px-0">
-      <Link href="/dashboard/follow-up/overview" className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-[#111] dark:text-white/55 dark:hover:text-white">
-        <ArrowLeft size={15} aria-hidden="true" /> Overview
-      </Link>
+      <button type="button" onClick={back} className="inline-flex min-h-9 items-center gap-1 text-sm font-medium text-gray-500 hover:text-[#111] dark:text-white/55 dark:hover:text-white">
+        <ArrowLeft size={15} aria-hidden="true" /> Back
+      </button>
       <header className="flex items-start gap-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
         <PersonAvatar row={person} size={64} />
         <div className="min-w-0 flex-1">

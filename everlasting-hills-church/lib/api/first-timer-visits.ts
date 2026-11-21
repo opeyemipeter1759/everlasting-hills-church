@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
-import type { PipelineRow } from "@/lib/api/pipeline";
+import type { OverrideStatus, PipelineRow } from "@/lib/api/pipeline";
 import { useRefreshFollowUp } from "@/lib/api/first-timer-profile";
 
 /** How a visit was recorded. Dates from check-ins have no row and so no source. */
@@ -37,6 +37,15 @@ export function useCameAgain(visitorId: string) {
   const refresh = useRefreshFollowUp();
   return useMutation({
     mutationFn: (date?: string) => api.post<{ added: boolean; date: string; person: PipelineRow }>(`${base(visitorId)}/visits`, date ? { date } : {}),
+    onSuccess: () => refresh(),
+  });
+}
+
+/** Set their status by hand (it wins over their visits), or null to follow their visits again. */
+export function useSetFirstTimerStatus(visitorId: string) {
+  const refresh = useRefreshFollowUp();
+  return useMutation({
+    mutationFn: (status: OverrideStatus | null) => api.patch<PipelineRow>(`${base(visitorId)}/status`, { status }),
     onSuccess: () => refresh(),
   });
 }

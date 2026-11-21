@@ -422,13 +422,7 @@ export function useSendServiceReport() {
 
 // ── Master list: every church member, with their follow-up status ────────────
 
-export type MasterListStatus =
-  | "FIRST_TIMER"
-  | "SECOND_TIMER"
-  | "THIRD_TIMER"
-  | "INTEGRATED"
-  | "AWAY"
-  | "OPTED_OUT";
+export type MasterListStatus = "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "INTEGRATED" | "AWAY" | "OPTED_OUT";
 
 export interface MasterListRow {
   /** A status asked for but not yet approved by a leader. */

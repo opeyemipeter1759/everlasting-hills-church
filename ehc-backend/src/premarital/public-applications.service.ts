@@ -5,8 +5,8 @@ import { parseSchema } from '../common/zod-parse.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { CaseAccess } from './case-access';
 import { counsellingAudit } from './counselling-audit';
+import { CoupleAccountsService } from './couple/couple-accounts.service';
 import { DocumentDispatchService } from './documents/document-dispatch.service';
-import { DocumentsConfigService } from './documents/documents-config';
 import {
   publicApplicationSchema,
   type PublicApplicationInput,
@@ -57,7 +57,7 @@ export class PublicApplicationsService {
     private readonly prisma: PrismaService,
     private readonly access: CaseAccess,
     private readonly dispatch: DocumentDispatchService,
-    private readonly documents: DocumentsConfigService,
+    private readonly accounts: CoupleAccountsService,
   ) {}
 
   async submit(raw: unknown): Promise<{ referenceCode: string }> {
@@ -74,11 +74,10 @@ export class PublicApplicationsService {
       hash,
     );
     if (existing) return { referenceCode: existing };
-    const settings = await this.documents.values();
 
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const { app, links } = await this.prisma.$transaction(async (tx) => {
+        const app = await this.prisma.$transaction(async (tx) => {
           const created = await tx.counsellingApplication.create({
             data: {
               id: randomUUID(),
@@ -92,8 +91,8 @@ export class PublicApplicationsService {
               applicantPhone: input.applicantPhone,
               partnerFirstName: input.partnerFirstName,
               partnerLastName: input.partnerLastName,
-              partnerEmail: input.partnerEmail ?? null,
-              partnerPhone: input.partnerPhone ?? null,
+              partnerEmail: input.partnerEmail,
+              partnerPhone: input.partnerPhone,
               partnerConsentToContact: true,
               membership: input.membership,
               weddingDate: input.weddingDate
@@ -122,15 +121,17 @@ export class PublicApplicationsService {
             entity: 'CounsellingApplication',
             entityId: created.id,
           });
-          // The document checklist and the secure link, with the application.
-          const issued = await this.dispatch.prepare(tx, created, settings, null);
-          return { app: created, links: issued };
+          // The document checklist, with the application.
+          await this.dispatch.prepare(tx, created);
+          return created;
         });
-        // One email: thanks, the two letters and the link. If the letters
-        // cannot be built, a plain acknowledgement goes instead.
-        await this.dispatch
-          .send(app, links, { requestedById: null, acknowledgeOnFailure: true })
-          .catch(() => undefined);
+        // After the application is safe: each partner's dashboard sign-in,
+        // then one email each (the applicant's carries the two letters).
+        // Neither can fail the application; the office can resend both.
+        await this.accounts
+          .provision(app)
+          .then((plans) => this.dispatch.welcome(app, plans))
+          .catch((err: Error) => this.logger.error(`Welcome emails for counselling application ${app.id} failed: ${err.message}`));
         return { referenceCode: app.referenceCode };
       } catch (err) {
         if (!isUniqueViolation(err)) throw err;

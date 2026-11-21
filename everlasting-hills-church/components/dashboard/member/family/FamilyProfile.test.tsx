@@ -9,8 +9,7 @@ const state = vi.hoisted(() => ({
   asked: undefined as string | undefined,
   comments: { items: [], total: 0, page: 1, pageSize: 20 } as ProfileCommentsPage,
 }));
-const like = vi.hoisted(() => vi.fn());
-const addComment = vi.hoisted(() => vi.fn());
+const [like, addComment] = vi.hoisted(() => [vi.fn(), vi.fn()]);
 vi.mock("@/lib/api/family", () => ({
   useFamilyProfile: (id: string | undefined) => {
     state.asked = id;

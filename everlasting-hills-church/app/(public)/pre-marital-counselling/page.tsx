@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import PremaritalForm from "@/components/pre-marital/PremaritalForm";
-import { Hero, WhoCanApply, WhyItMatters } from "@/components/pre-marital/sections/Intro";
-import { CounsellingTeam, Curriculum, Faq, HowItWorks } from "@/components/pre-marital/sections/Journey";
+import { Hero, WhyItMatters } from "@/components/pre-marital/sections/Intro";
+import { CounsellingTeam } from "@/components/pre-marital/sections/Journey";
 import { getPremaritalPage } from "@/lib/premarital-page";
 
 export const metadata: Metadata = {
@@ -14,34 +14,47 @@ export const revalidate = 300;
 
 /** A server-rendered page; the application form is the only part that runs in the browser. */
 export default async function PreMaritalCounsellingPage() {
-  const { policy, modules } = await getPremaritalPage();
+  const { policy } = await getPremaritalPage();
   return (
     <main className="min-h-screen overflow-x-hidden bg-church-dark px-4 pb-24 text-white selection:bg-church-maroon sm:px-6">
       <div className="mx-auto w-full max-w-4xl">
         <Hero />
         <WhyItMatters />
-        <WhoCanApply policy={policy} />
-        <Curriculum modules={modules} />
-        <HowItWorks />
         <CounsellingTeam counsellors={policy.counsellors} />
-        <Faq />
 
-        <section id="apply" aria-labelledby="apply-heading" className="mt-20 scroll-mt-24">
-          <h2 id="apply-heading" className="font-display text-2xl font-bold text-white sm:text-3xl">Apply for counselling</h2>
+        <section
+          id="apply"
+          aria-labelledby="apply-heading"
+          className="mt-20 scroll-mt-24"
+        >
+          <h2
+            id="apply-heading"
+            className="font-display text-2xl font-bold text-white sm:text-3xl"
+          >
+            Apply for counselling
+          </h2>
           <p className="mt-2 max-w-2xl text-white/75">
-            One of you can apply for both. The pastoral team will review your application and contact you about next steps. Applying does not book
+            One of you can apply for both. The pastoral team will review your
+            application and contact you about next steps. Applying does not book
             a session yet.
           </p>
           <div className="mt-6">
-            <PremaritalForm privacyNotice={policy.privacyNotice} retention={policy.retention} />
+            <PremaritalForm />
           </div>
         </section>
 
-        <section aria-label="Encouragement" className="mt-20 rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-center sm:p-10">
-          <p className="font-display text-2xl text-white">&ldquo;Unless the Lord builds the house, the builders labour in vain.&rdquo;</p>
+        <section
+          aria-label="Encouragement"
+          className="mt-20 rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-center sm:p-10"
+        >
+          <p className="font-display text-2xl text-white">
+            &ldquo;Unless the Lord builds the house, the builders labour in
+            vain.&rdquo;
+          </p>
           <p className="mt-2 text-sm text-[#FFB3C1]">Psalm 127:1</p>
           <p className="mx-auto mt-4 max-w-xl text-white/75">
-            However far along you are, we would love to walk with you as you prepare. We are praying for you both.
+            However far along you are, we would love to walk with you as you
+            prepare. We are praying for you both.
           </p>
         </section>
       </div>

@@ -10,7 +10,7 @@ import { counsellingAudit } from '../counselling-audit';
 import { PENDING } from '../policy';
 
 /**
- * The documents settings (letters, upload page, gate). Every value starts as
+ * The documents settings (letters, dashboard uploads, gate). Every value starts as
  * PENDING_PASTORAL_APPROVAL with the defaults the pastors were given, and the
  * system runs on whatever is saved, approved or not, until a Pastor changes it.
  * Stored under `documents` in CounsellingSettings.content, next to the policy.
@@ -49,10 +49,9 @@ export const documentsConfigSchema = z.object({
   recommendedLabs: entry(z.array(lab).max(10)),
   certReturnInstructions: entry(z.string().trim().min(1).max(1000)),
   consentReturnInstructions: entry(z.string().trim().min(1).max(1000)),
-  documentLinkValidDays: entry(z.number().int().min(1).max(365)),
-  documentPageOtp: entry(z.boolean()),
   maxUploadMb: entry(z.number().int().min(1).max(20)),
-  sendDocumentsToPartner: entry(z.boolean()),
+  /** How long a couple account's temporary password (their phone number) works before it must be renewed. */
+  tempPasswordValidDays: entry(z.number().int().min(1).max(60)),
   documentsRequiredBefore: entry(z.enum(GATE_STATUSES)),
   overrideReasons: entry(z.array(reason).min(1).max(10)),
   medicalConsentWording: entry(z.string().trim().min(1).max(1000)),
@@ -80,15 +79,13 @@ export const DEFAULT_DOCUMENTS_CONFIG: DocumentsConfig = {
     { name: 'Total Care Medical Diagnostics', address: '', phone: '' },
   ]),
   certReturnInstructions: pending(
-    'Each of you should upload your medical certificate using the secure link in your email, or bring the original to the church office. Please do not send medical results by email or WhatsApp.',
+    'Please upload your medical certificate on your counselling dashboard at everlastinghills.church. Do not send medical results by email or WhatsApp.',
   ),
   consentReturnInstructions: pending(
-    'Once signed, upload a clear photo or scan of the consent letter using the secure link in your email, or bring it to the church office.',
+    'Once it is signed, please upload a clear photo or scan of this letter on your counselling dashboard at everlastinghills.church.',
   ),
-  documentLinkValidDays: pending(60),
-  documentPageOtp: pending(true),
   maxUploadMb: pending(10),
-  sendDocumentsToPartner: pending(false),
+  tempPasswordValidDays: pending(7),
   documentsRequiredBefore: pending('FINAL_REVIEW' as const),
   overrideReasons: pending([
     { code: 'DOCUMENTS_SEEN_OUTSIDE_SYSTEM', label: 'Documents seen outside the system' },
@@ -139,7 +136,7 @@ export class DocumentsConfigService {
 
   /** For the Policy page: everyone on the marriage team may read, only a Pastor may change. */
   async forStaff(actor: AuthUser) {
-    const tier = this.access.requireStaff(actor, 'curriculum');
+    const tier = this.access.requireStaff(actor, 'policy');
     return { config: await this.get(), canEdit: tier === 'PASTOR' };
   }
 

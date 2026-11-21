@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -21,19 +20,15 @@ import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
-import { ModulesService } from './modules.service';
 import { SessionsService } from './sessions.service';
 
-/** Sessions, progress and the curriculum. Access is decided per case in CaseAccess (404 otherwise). */
+/** Sessions. Access is decided per case in CaseAccess (404 otherwise). */
 @ApiTags('premarital')
 @Controller('premarital')
 @Roles(Role.MEMBER)
 @ApiBearerAuth('access-token')
 export class PremaritalSessionsController {
-  constructor(
-    private readonly sessions: SessionsService,
-    private readonly modules: ModulesService,
-  ) {}
+  constructor(private readonly sessions: SessionsService) {}
 
   @Get('sessions')
   @ApiOperation({
@@ -95,66 +90,5 @@ export class PremaritalSessionsController {
     @Body() body: unknown,
   ) {
     return this.sessions.attendance(actor, id, body);
-  }
-
-  @Put('applications/:id/progress/:moduleId')
-  @ApiOperation({ summary: 'Mark a curriculum module done for a case' })
-  done(
-    @CurrentUser() actor: AuthUser,
-    @Param('id') id: string,
-    @Param('moduleId') moduleId: string,
-  ) {
-    return this.sessions.setProgress(actor, id, moduleId, true);
-  }
-
-  @Delete('applications/:id/progress/:moduleId')
-  @ApiOperation({ summary: 'Mark a curriculum module not done' })
-  undone(
-    @CurrentUser() actor: AuthUser,
-    @Param('id') id: string,
-    @Param('moduleId') moduleId: string,
-  ) {
-    return this.sessions.setProgress(actor, id, moduleId, false);
-  }
-
-  @Get('modules')
-  @ApiOperation({
-    summary:
-      'The curriculum: every module for staff, the active ones for a counsellor',
-  })
-  listModules(@CurrentUser() actor: AuthUser) {
-    return this.modules.list(actor);
-  }
-
-  @Post('modules')
-  @ApiOperation({ summary: 'Add a curriculum module (staff)' })
-  createModule(@CurrentUser() actor: AuthUser, @Body() body: unknown) {
-    return this.modules.create(actor, body);
-  }
-
-  @Put('modules/order')
-  @ApiOperation({ summary: 'Reorder the curriculum (staff)' })
-  reorder(@CurrentUser() actor: AuthUser, @Body() body: unknown) {
-    return this.modules.reorder(actor, body);
-  }
-
-  @Patch('modules/:id')
-  @ApiOperation({
-    summary:
-      'Edit a module or switch it on or off; editing an approved module sends it back for approval (staff)',
-  })
-  updateModule(
-    @CurrentUser() actor: AuthUser,
-    @Param('id') id: string,
-    @Body() body: unknown,
-  ) {
-    return this.modules.update(actor, id, body);
-  }
-
-  @Post('modules/:id/approve')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Approve a curriculum module (pastors)' })
-  approve(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
-    return this.modules.approve(actor, id);
   }
 }

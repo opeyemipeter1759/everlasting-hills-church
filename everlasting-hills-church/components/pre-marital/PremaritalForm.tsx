@@ -25,7 +25,7 @@ function newKey(): string {
  * answer and nothing typed is lost. Saved before the thank-you appears, and a
  * double click or a retry sends the same key, so the team gets one application.
  */
-export default function PremaritalForm({ privacyNotice, retention }: { privacyNotice: string; retention: string | null }) {
+export default function PremaritalForm() {
   const [submissionKey] = useState(newKey);
   const [done, setDone] = useState<{ names: string; referenceCode: string } | null>(null);
   const [problem, setProblem] = useState("");
@@ -86,7 +86,7 @@ export default function PremaritalForm({ privacyNotice, retention }: { privacyNo
       </div>
       <ApplicantFields register={register} errors={errors} role={role} />
       <PartnerFields register={register} errors={errors} role={role} />
-      <DetailsFields register={register} errors={errors} privacyNotice={privacyNotice} retention={retention} />
+      <DetailsFields register={register} errors={errors} />
       {problem && (
         <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
           {problem}

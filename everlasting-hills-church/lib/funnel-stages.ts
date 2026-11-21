@@ -4,10 +4,10 @@ import type { PipelineStatus } from "@/lib/api/pipeline";
 export const FUNNEL_BASE = "/dashboard/admin/first-timers/funnel";
 
 /**
- * The newcomer's journey in order (first visit, second, third, settled in),
- * then the way it can stop, which is worth seeing rather than leaving off the
- * chart. These are the first-timer pipeline's five statuses, so the funnel's
- * counts are the same ones the Follow Up page shows.
+ * The newcomer's journey in order (first visit to fourth, settled in), then
+ * the ways it can pause or stop, which are worth seeing rather than leaving
+ * off the chart. These are the first-timer pipeline's seven statuses, so the
+ * funnel's counts are the same ones the Follow Up page shows.
  */
 export const FUNNEL_STAGES: {
   status: PipelineStatus;
@@ -33,9 +33,16 @@ export const FUNNEL_STAGES: {
   {
     status: "THIRD_TIMER",
     label: "Third timer",
-    note: "Three visits or more, not yet integrated",
+    note: "Came a third time",
     swatch: "bg-sky-500",
     bar: "bg-gradient-to-r from-sky-500 to-sky-400",
+  },
+  {
+    status: "FOURTH_TIMER",
+    label: "Fourth timer",
+    note: "Four visits or more, put forward to be integrated",
+    swatch: "bg-cyan-500",
+    bar: "bg-gradient-to-r from-cyan-500 to-cyan-400",
   },
   {
     status: "INTEGRATED",
@@ -43,6 +50,13 @@ export const FUNNEL_STAGES: {
     note: "Settled in, and approved by their unit lead",
     swatch: "bg-emerald-500",
     bar: "bg-gradient-to-r from-emerald-500 to-emerald-400",
+  },
+  {
+    status: "AWAY",
+    label: "Away",
+    note: "Marked away by the Follow Up team",
+    swatch: "bg-amber-500",
+    bar: "bg-gradient-to-r from-amber-500 to-amber-400",
   },
   {
     status: "OPTED_OUT",

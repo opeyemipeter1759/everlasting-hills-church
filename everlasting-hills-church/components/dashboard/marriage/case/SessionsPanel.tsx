@@ -45,7 +45,7 @@ function SessionRow({ s, canManage }: { s: Session; canManage: boolean }) {
         <div className="text-sm text-[#111] dark:text-white/90">
           <p className="font-semibold">{lagosDateTime(s.scheduledAt)}</p>
           <p className="text-gray-600 dark:text-white/60">
-            {s.format === "ONLINE" ? "Online" : s.location} · {s.durationMinutes} min{s.module ? ` · ${s.module.title}` : ""}
+            {s.format === "ONLINE" ? "Online" : s.location} · {s.durationMinutes} min
             {s.counsellorName ? ` · ${s.counsellorName}` : ""}
           </p>
         </div>

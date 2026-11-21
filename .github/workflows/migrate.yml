@@ -29,6 +29,8 @@ jobs:
       DIRECT_URL: ${{ secrets.DIRECT_URL }}
     steps:
       - name: Require explicit operator confirmation
+        # Runs before checkout, so not in ehc-backend (which does not exist yet).
+        working-directory: ${{ github.workspace }}
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
         run: test "$CONFIRMATION" = "BASELINE_RECORDED_AND_BACKUP_VERIFIED"
@@ -38,7 +40,9 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: ehc-backend/package-lock.json
-      - run: npm ci
+      # NODE_ENV=production would skip devDependencies, and the Prisma CLI and
+      # ts-node (used by the baseline check) are devDependencies.
+      - run: npm ci --include=dev
       - name: Validate checked-in Prisma schema
         run: npx prisma validate
       - name: Verify production baseline (read-only)

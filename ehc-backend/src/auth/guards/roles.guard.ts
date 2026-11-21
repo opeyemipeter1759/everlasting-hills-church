@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
+import { ALLOW_COUPLE_ACCOUNT_KEY } from '../decorators/couple-account.decorator';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import type { AuthUser } from '../types/auth-user';
 
@@ -84,6 +85,18 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+
+    // A sign-in with no Profile is a couple dashboard account (or a broken
+    // leftover). It reaches only routes marked @AllowCoupleAccount, never the
+    // many routes that check nothing beyond "signed in".
+    const signedIn = context.switchToHttp().getRequest<{ user?: AuthUser }>().user;
+    if (signedIn && !signedIn.profileId) {
+      const allowed = this.reflector.getAllAndOverride<boolean | undefined>(ALLOW_COUPLE_ACCOUNT_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]);
+      if (!allowed) throw new ForbiddenException('This account can only open the pre-marital counselling dashboard.');
+    }
 
     if (!required || required.length === 0) {
       // No @Roles() on this route — auth alone is enough.

@@ -6,9 +6,10 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { parseSchema } from '../../common/zod-parse.util';
 import { FollowUpAuthService } from '../services/follow-up-auth.service';
+import { ApprovalsService } from '../approvals/approvals.service';
 import { FirstTimerVisitsService } from './first-timer-visits.service';
 import { PossibleReturnService } from './possible-return.service';
-import { cameAgainSchema, firstVisitSchema } from './visit-day.schema';
+import { cameAgainSchema, firstVisitSchema, setStatusSchema } from './visit-day.schema';
 
 /**
  * A first-timer's visits ("Came again", undo, the first visit date) and the
@@ -23,7 +24,13 @@ export class FirstTimerVisitsController {
     private readonly visits: FirstTimerVisitsService,
     private readonly returns: PossibleReturnService,
     private readonly auth: FollowUpAuthService,
+    private readonly approvals: ApprovalsService,
   ) {}
+
+  /** A fourth visit asks the team leads to integrate them. A failure there never undoes the visit. */
+  private async integrateIfDue(visitorId: string | null) {
+    if (visitorId) await this.approvals.requestAtFourVisits([visitorId]).catch(() => 0);
+  }
 
   @Get('visits')
   @ApiOperation({ summary: 'Their visits, how each was recorded, and the latest service day' })
@@ -36,7 +43,9 @@ export class FirstTimerVisitsController {
   @ApiOperation({ summary: 'Came again: a visit on a Lagos date (default: the latest service held). The same date twice is one visit.' })
   async cameAgain(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string, @Body() body: unknown) {
     await this.auth.requireAccess(actor);
-    return this.visits.cameAgain(actor, visitorId, parseSchema(cameAgainSchema, body ?? {}).date);
+    const result = await this.visits.cameAgain(actor, visitorId, parseSchema(cameAgainSchema, body ?? {}).date);
+    if (result.added) await this.integrateIfDue(visitorId);
+    return result;
   }
 
   @Delete('visits/:date')
@@ -53,6 +62,15 @@ export class FirstTimerVisitsController {
     return this.visits.correctFirstVisit(actor, visitorId, parseSchema(firstVisitSchema, body).date);
   }
 
+  @Patch('status')
+  @ApiOperation({ summary: 'Set their status by hand (wins over visits), or null to follow their visits again. Fourth timer asks for integration.' })
+  async setStatus(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string, @Body() body: unknown) {
+    await this.auth.requireAccess(actor);
+    const person = await this.visits.setStatus(actor, visitorId, parseSchema(setStatusSchema, body).status);
+    await this.integrateIfDue(visitorId);
+    return person;
+  }
+
   @Get('possible-return')
   @ApiOperation({ summary: 'Who a form flagged as a possible return visit may be' })
   async possibleReturn(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string) {
@@ -65,7 +83,9 @@ export class FirstTimerVisitsController {
   @ApiOperation({ summary: 'Same person: a return visit on the original record, and this form archived. Never merges.' })
   async confirm(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string) {
     await this.auth.requireAccess(actor);
-    return this.returns.confirm(actor, visitorId);
+    const result = await this.returns.confirm(actor, visitorId);
+    await this.integrateIfDue(result.originalVisitorId);
+    return result;
   }
 
   @Post('possible-return/dismiss')

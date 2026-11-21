@@ -47,7 +47,7 @@ export class OpeningQueueService {
       WITH ${pipelineCte(this.tenantId)}
       SELECT pl."visitorId" FROM pipeline pl
        WHERE ${pipelineWhere({ notContacted: true })}
-         AND pl.status IN ('FIRST_TIMER', 'SECOND_TIMER', 'THIRD_TIMER')
+         AND pl.status IN ('FIRST_TIMER', 'SECOND_TIMER', 'THIRD_TIMER', 'FOURTH_TIMER')
          AND pl."firstVisitDate" >= ${since}::date
        ORDER BY ${pipelineOrder('oldest')}, pl."visitorId"
        LIMIT ${QUEUE_MAX}`);

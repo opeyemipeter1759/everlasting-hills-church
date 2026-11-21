@@ -10,7 +10,9 @@ export type Attendance = "UNMARKED" | "BOTH_PRESENT" | "ONE_PRESENT" | "ABSENT";
 export interface MarriageAccess {
   tier: StaffTier | null;
   counsellor: boolean;
-  can: { triage: boolean; assign: boolean; curriculum: boolean; settings: boolean; wedding: boolean };
+  /** This person has a pre-marital application of their own (the Pre-marital menu item). */
+  couple: boolean;
+  can: { triage: boolean; assign: boolean; policy: boolean; settings: boolean; wedding: boolean };
 }
 
 export interface Overview {
@@ -28,7 +30,7 @@ export interface CaseSummary {
 export interface Session {
   id: string; applicationId: string; counsellorProfileId: string; counsellorName: string | null; scheduledAt: string; durationMinutes: number;
   format: "PHYSICAL" | "ONLINE"; location: string | null; meetingLink: string | null; status: "SCHEDULED" | "COMPLETED" | "CANCELLED" | "RESCHEDULED";
-  attendance: Attendance; module: { id: string; title: string } | null; moduleId: string | null;
+  attendance: Attendance;
   Application?: { id: string; referenceCode: string; applicantFirstName: string; applicantLastName: string; partnerFirstName: string; partnerLastName: string };
 }
 
@@ -38,17 +40,11 @@ export interface CaseDetail extends Omit<CaseSummary, "counsellors"> {
   adminNote?: string | null; archivedAt: string | null; member: { id: string; name: string } | null;
   assignments: { id: string; counsellorProfileId: string; name: string | null; isLead: boolean; active: boolean; assignedAt: string; endedAt: string | null }[];
   sessions: Session[];
-  Progress: { moduleId: string; completedAt: string }[];
   timeline: { id: string; from: CaseStatus | null; to: CaseStatus; reason: string | null; at: string; by: string | null }[];
   WeddingApproval: { approvedAt: string; note: string | null } | null;
   tier: StaffTier | "COUNSELLOR";
-  can: { transitions: CaseStatus[]; requestInfo: boolean; admin: boolean; assign: boolean; archive: boolean; safeguarding: boolean; wedding: boolean; sessions: boolean; progress: boolean };
+  can: { transitions: CaseStatus[]; requestInfo: boolean; admin: boolean; assign: boolean; archive: boolean; safeguarding: boolean; wedding: boolean; sessions: boolean };
   documentsGate: { status: CaseStatus; satisfied: boolean; canOverride: boolean; reasons: { code: string; label: string }[] };
-}
-
-export interface CounsellingModule {
-  id: string; title: string; description: string | null; scriptureRefs: string[]; objectives: string[];
-  resources: { label: string; url: string }[]; sortOrder: number; active: boolean; approvalState: "PROPOSED" | "APPROVED";
 }
 
 export type PolicyKey = "eligibility" | "duration" | "fees" | "counsellors" | "retention" | "privacyNotice";
@@ -81,7 +77,6 @@ export function useSessions(q: { from?: string; to?: string }) {
   return useQuery({ queryKey: [...K, "sessions", params], queryFn: () => api.get<Session[]>("/premarital/sessions", params) });
 }
 
-export const useModules = () => useQuery({ queryKey: [...K, "modules"], queryFn: () => api.get<CounsellingModule[]>("/premarital/modules") });
 export const usePolicy = () => useQuery({ queryKey: [...K, "policy"], queryFn: () => api.get<{ policy: Policy; canEdit: boolean }>("/premarital/settings") });
 
 /** Any change in the Marriage section: send it, then refresh what it touched. */

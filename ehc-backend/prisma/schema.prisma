@@ -362,6 +362,15 @@ model CareAssignment {
   @@index([tenantId, leaderId])
 }
 
+/// A first-timer's status set by hand on the Follow Up board. Integrated and opted out are not here: they have their own flows.
+enum FirstTimerStatusOverride {
+  FIRST_TIMER
+  SECOND_TIMER
+  THIRD_TIMER
+  FOURTH_TIMER
+  AWAY
+}
+
 enum FollowUpStage {
   UNASSIGNED
   ASSIGNED
@@ -838,10 +847,12 @@ enum CounsellingTemplateState {
   APPROVED
 }
 
+/// Each partner's own two documents: a consent letter signed by one of their parents (or a guardian), and their medical certificate.
 enum CounsellingRequirementKind {
-  PARENTAL_CONSENT
+  PARENTAL_CONSENT_GROOM
   MEDICAL_CERT_GROOM
   MEDICAL_CERT_BRIDE
+  PARENTAL_CONSENT_BRIDE
 }
 
 enum CounsellingRequirementStatus {
@@ -861,10 +872,16 @@ enum CounsellingReuploadReason {
   OTHER
 }
 
-enum CounsellingTokenScope {
-  ALL
-  GROOM
-  BRIDE
+/// Which person on the application an account belongs to.
+enum CounsellingParticipantSide {
+  APPLICANT
+  PARTNER
+}
+
+/// MEMBER: their usual church account. COUPLE: a sign-in made only for the couple dashboard (no Profile).
+enum CounsellingAccountKind {
+  MEMBER
+  COUPLE
 }
 
 enum CounsellingDispatchStatus {
@@ -932,7 +949,7 @@ model CounsellingApplication {
   WeddingApproval         WeddingApproval?
   Notifications           CounsellingNotificationLog[]
   DocumentRequirements    CounsellingDocumentRequirement[]
-  AccessTokens            CounsellingAccessToken[]
+  Participants            CounsellingParticipant[]
   DocumentDispatches      CounsellingDocumentDispatch[]
 
   @@unique([tenantId, submissionKey])
@@ -1113,42 +1130,29 @@ model CounsellingDocumentTemplate {
   @@unique([tenantId, kind, version])
 }
 
-/// The couple's secure upload link. Only the sha256 of the token is stored.
-model CounsellingAccessToken {
-  id            String                    @id
+/// Each partner's sign-in for the couple dashboard. A member uses their usual
+/// account; anyone else gets a COUPLE account (a Supabase sign-in with no
+/// Profile, which the API fences off from everything but the dashboard).
+model CounsellingParticipant {
+  id            String                     @id
   tenantId      String
   applicationId String
-  tokenHash     String                    @unique @db.Char(64)
-  scope         CounsellingTokenScope
-  expiresAt     DateTime                  @db.Timestamptz(3)
-  revokedAt     DateTime?                 @db.Timestamptz(3)
-  lastUsedAt    DateTime?                 @db.Timestamptz(3)
-  /// Null when it was made with the application itself.
-  createdById   String?
-  createdAt     DateTime                  @default(now()) @db.Timestamptz(3)
-  Tenant        Tenant                    @relation(fields: [tenantId], references: [id])
-  Application   CounsellingApplication    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  Otps          CounsellingOtp[]
-  Files         CounsellingDocumentFile[]
+  side          CounsellingParticipantSide
+  /// The Supabase auth user id (Profile.userId for a member).
+  authUserId    String
+  accountKind   CounsellingAccountKind
+  /// When the sign-in details were last emailed.
+  signInSentAt  DateTime?                  @db.Timestamptz(3)
+  createdAt     DateTime                   @default(now()) @db.Timestamptz(3)
+  Tenant        Tenant                     @relation(fields: [tenantId], references: [id])
+  Application   CounsellingApplication     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  Uploads       CounsellingDocumentFile[]
+
+  @@unique([applicationId, side])
+  @@index([tenantId, authUserId])
 }
 
-/// Six-digit email codes for the upload page, stored as a peppered HMAC.
-model CounsellingOtp {
-  id         String                 @id
-  tenantId   String
-  tokenId    String
-  codeHash   String                 @db.Char(64)
-  expiresAt  DateTime               @db.Timestamptz(3)
-  attempts   Int                    @default(0) @db.SmallInt
-  consumedAt DateTime?              @db.Timestamptz(3)
-  createdAt  DateTime               @default(now()) @db.Timestamptz(3)
-  Tenant     Tenant                 @relation(fields: [tenantId], references: [id])
-  Token      CounsellingAccessToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId, tokenId, createdAt])
-}
-
-/// The document checklist: three rows per application. No result values, ever.
+/// The document checklist: four rows per application, two per partner. No result values, ever.
 model CounsellingDocumentRequirement {
   id                 String                       @id
   tenantId           String
@@ -1179,23 +1183,23 @@ model CounsellingDocumentRequirement {
 /// allows one current file per requirement. Files are kept: an object is only
 /// deleted when the couple replaces it or a Pastor deletes a closed case's files.
 model CounsellingDocumentFile {
-  id                   String                         @id
-  tenantId             String
-  requirementId        String
-  storageKey           String                         @unique
-  mimeType             String
-  sizeBytes            Int
-  sha256               String                         @db.Char(64)
-  encryptionKeyVersion Int
-  wrappedDataKey       Bytes
-  uploadedAt           DateTime                       @default(now()) @db.Timestamptz(3)
-  uploadedViaTokenId   String?
-  supersededAt         DateTime?                      @db.Timestamptz(3)
-  purgedAt             DateTime?                      @db.Timestamptz(3)
-  Tenant               Tenant                         @relation(fields: [tenantId], references: [id])
-  Requirement          CounsellingDocumentRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
-  UploadedVia          CounsellingAccessToken?        @relation(fields: [uploadedViaTokenId], references: [id], onDelete: SetNull)
-  ViewTokens           CounsellingDocumentViewToken[]
+  id                      String                         @id
+  tenantId                String
+  requirementId           String
+  storageKey              String                         @unique
+  mimeType                String
+  sizeBytes               Int
+  sha256                  String                         @db.Char(64)
+  encryptionKeyVersion    Int
+  wrappedDataKey          Bytes
+  uploadedAt              DateTime                       @default(now()) @db.Timestamptz(3)
+  uploadedByParticipantId String?
+  supersededAt            DateTime?                      @db.Timestamptz(3)
+  purgedAt                DateTime?                      @db.Timestamptz(3)
+  Tenant                  Tenant                         @relation(fields: [tenantId], references: [id])
+  Requirement             CounsellingDocumentRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  UploadedBy              CounsellingParticipant?        @relation(fields: [uploadedByParticipantId], references: [id], onDelete: SetNull)
+  ViewTokens              CounsellingDocumentViewToken[]
 
   @@index([tenantId, purgedAt, supersededAt])
 }
@@ -1942,8 +1946,7 @@ model Tenant {
   CounsellingNotificationLog     CounsellingNotificationLog[]
   CounsellingSettings            CounsellingSettings?
   CounsellingDocumentTemplate    CounsellingDocumentTemplate[]
-  CounsellingAccessToken         CounsellingAccessToken[]
-  CounsellingOtp                 CounsellingOtp[]
+  CounsellingParticipant         CounsellingParticipant[]
   CounsellingDocumentRequirement CounsellingDocumentRequirement[]
   CounsellingDocumentFile        CounsellingDocumentFile[]
   CounsellingDocumentViewToken   CounsellingDocumentViewToken[]
@@ -2807,6 +2810,10 @@ model Visitor {
   possibleReturnVisitorId  String?
   possibleReturnMemberId   String?
   possibleReturnResolvedAt DateTime?
+  /// Where the team put them by hand. While set it wins over their visits; null follows the visits.
+  statusOverride           FirstTimerStatusOverride?
+  statusOverrideAt         DateTime?                 @db.Timestamptz(3)
+  statusOverrideById       String?
   Tenant                   Tenant            @relation(fields: [tenantId], references: [id])
   Service                  Service?          @relation(fields: [serviceId], references: [id])
   FollowUpEntry            FollowUpEntry[]

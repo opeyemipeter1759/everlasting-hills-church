@@ -21,7 +21,7 @@ const base = {
   applicantRole: "GROOM",
   documentsGate: { status: "FINAL_REVIEW", satisfied: false, canOverride: false, reasons: [] },
 };
-const noDocs = { applicantRole: "GROOM", validFrom: "2026-10-19", requirements: [], links: [], dispatches: [], storedFiles: 0, can: { setRole: false, send: false, reissueLink: false, downloadLetters: false, deleteStored: false } };
+const noDocs = { applicantRole: "GROOM", validFrom: "2026-10-19", requirements: [], accounts: [], dispatches: [], storedFiles: 0, can: { setRole: false, send: false, resendSignIn: false, downloadLetters: false, deleteStored: false } };
 const docsOr = (url: unknown, other: unknown) => (String(url).includes("/documents") ? noDocs : String(url).includes("/modules") ? [] : other);
 const none = { transitions: [], requestInfo: false, admin: false, assign: false, archive: false, safeguarding: false, wedding: false, sessions: false, progress: false };
 

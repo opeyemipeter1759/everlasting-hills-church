@@ -9,10 +9,9 @@ import { downloadLetter, useCaseDocuments } from "@/lib/api/marriage-documents";
 import type { CaseDetail } from "@/lib/api/premarital";
 import { card, lagosDate, secondary, useRun } from "../ui";
 import { DocumentRow } from "./DocumentRow";
+import { SignInsLine } from "./SignInsLine";
 
-const LINK_STATE = { ACTIVE: "Active", EXPIRED: "Expired", REVOKED: "Revoked" } as const;
-
-/** The consent letter and medical certificates for this case: status, review, the couple's link and the letters. */
+/** The consent letter and medical certificates for this case: status, review, the couple's dashboard sign-ins and the letters. */
 export function DocumentsPanel({ c }: { c: CaseDetail }) {
   const q = useCaseDocuments(c.id);
   const qc = useQueryClient();
@@ -20,9 +19,9 @@ export function DocumentsPanel({ c }: { c: CaseDetail }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const d = q.data;
   if (!d) return null;
-  const link = d.links[0];
   const lastSend = d.dispatches[0];
-  const letter = (which: "consent" | "medical") => downloadLetter(c.id, which).catch((e: ApiError) => showToast.error(e.message || "The letter could not be made."));
+  const letter = (which: "consent" | "medical", person: "groom" | "bride") =>
+    downloadLetter(c.id, which, person).catch((e: ApiError) => showToast.error(e.message || "The letter could not be made."));
 
   return (
     <section aria-labelledby="documents-heading" className={card}>
@@ -50,27 +49,29 @@ export function DocumentsPanel({ c }: { c: CaseDetail }) {
           ))}
         </ul>
       )}
-      {(link || lastSend) && (
-        <p className="mt-2 text-xs text-gray-600 dark:text-white/55">
-          {link && `Secure link: ${LINK_STATE[link.state]}${link.state === "ACTIVE" ? `, until ${lagosDate(link.expiresAt)}` : ""}${link.lastUsedAt ? `, last opened ${lagosDate(link.lastUsedAt)}` : ", not opened yet"}. `}
-          {lastSend && `Letters email ${lastSend.status === "SENT" ? "sent" : lastSend.status === "FAILED" ? "failed" : "held back by today's email limit"} on ${lagosDate(lastSend.sentAt)}.`}
+      <SignInsLine accounts={d.accounts} />
+      {lastSend && (
+        <p className="mt-1 text-xs text-gray-600 dark:text-white/55">
+          {`Letters email ${lastSend.status === "SENT" ? "sent" : lastSend.status === "FAILED" ? "failed" : "held back by today's email limit"} on ${lagosDate(lastSend.sentAt)}.`}
         </p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
         {d.can.send && (
-          <button type="button" className={secondary} disabled={pending} onClick={() => run("post", `/premarital/applications/${c.id}/documents/send`, {}, "Letters and a new link sent")}>
+          <button type="button" className={secondary} disabled={pending} onClick={() => run("post", `/premarital/applications/${c.id}/documents/send`, {}, "Letters sent")}>
             {d.dispatches.length ? "Resend documents" : "Send documents"}
           </button>
         )}
-        {d.can.reissueLink && (
-          <button type="button" className={secondary} disabled={pending} onClick={() => run("post", `/premarital/applications/${c.id}/documents/link`, {}, "Old link revoked, new link sent")}>
-            Revoke and reissue link
+        {d.can.resendSignIn && (
+          <button type="button" className={secondary} disabled={pending} onClick={() => run("post", `/premarital/applications/${c.id}/sign-in`, {}, "Sign-in details sent to both partners")}>
+            Resend sign-in details
           </button>
         )}
         {d.can.downloadLetters && (
           <>
-            <button type="button" className={secondary} onClick={() => letter("consent")}>Consent letter</button>
-            <button type="button" className={secondary} onClick={() => letter("medical")}>Medical letter</button>
+            <button type="button" className={secondary} onClick={() => letter("consent", "groom")}>{"Groom's consent letter"}</button>
+            <button type="button" className={secondary} onClick={() => letter("medical", "groom")}>{"Groom's medical letter"}</button>
+            <button type="button" className={secondary} onClick={() => letter("consent", "bride")}>{"Bride's consent letter"}</button>
+            <button type="button" className={secondary} onClick={() => letter("medical", "bride")}>{"Bride's medical letter"}</button>
           </>
         )}
         {d.can.deleteStored && (

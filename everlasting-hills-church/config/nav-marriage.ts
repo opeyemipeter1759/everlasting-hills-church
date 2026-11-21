@@ -1,5 +1,8 @@
-import { BookHeart, CalendarClock, ClipboardList, LayoutGrid, Settings2 } from "lucide-react";
-import type { NavGroup } from "./config";
+import { CalendarClock, ClipboardList, HeartHandshake, LayoutGrid, Settings2 } from "lucide-react";
+import type { NavGroup, NavItem } from "./config";
+
+/** A member's own pre-marital application (Member section), shown only to someone who has one. */
+export const COUPLE_NAV_ITEM: NavItem = { label: "Pre-marital", href: "/dashboard/pre-marital", icon: HeartHandshake, minRole: "MEMBER", requiresAccess: "couple" };
 
 /**
  * Marriage: pre-marital counselling. Shown to the pastors, Super Admins and
@@ -12,7 +15,6 @@ export const MARRIAGE_NAV: NavGroup = {
     { label: "Overview", href: "/dashboard/marriage", icon: LayoutGrid, minRole: "MEMBER", requiresAccess: "marriage" },
     { label: "Applications", href: "/dashboard/marriage/applications", icon: ClipboardList, minRole: "MEMBER", requiresAccess: "marriage" },
     { label: "Sessions", href: "/dashboard/marriage/sessions", icon: CalendarClock, minRole: "MEMBER", requiresAccess: "marriage" },
-    { label: "Curriculum", href: "/dashboard/marriage/curriculum", icon: BookHeart, minRole: "MEMBER", requiresAccess: "marriageStaff" },
     { label: "Policy", href: "/dashboard/marriage/settings", icon: Settings2, minRole: "MEMBER", requiresAccess: "marriageStaff" },
   ],
 };

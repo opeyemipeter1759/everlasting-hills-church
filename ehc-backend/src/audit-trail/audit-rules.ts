@@ -39,6 +39,8 @@ const SKIP: RegExp[] = [
   /^\/giving\/webhook$/,
   /^\/email\/unsubscribe$/,
   /^\/public\//,
+  // The couple dashboard writes its own counselling audit events, with no field values.
+  /^\/counselling\/me\//,
   /^\/pledges\/:campaign\/(public|track)/,
   /^\/events\/:slug\/rsvp/,
   /^\/prayer-watch\/signup$/,

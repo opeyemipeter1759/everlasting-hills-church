@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CaseDetail } from "@/lib/api/premarital";
@@ -12,14 +12,18 @@ vi.mock("@/lib/api/request", () => ({ api: { get: (...a: unknown[]) => get(...a)
 vi.mock("@/components/ui/toast/toast", () => ({ showToast: { success: vi.fn(), error: vi.fn() } }));
 
 const wrap = (node: ReactNode) => <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{node}</QueryClientProvider>;
-const can = { view: false, receive: false, verify: false, reupload: false, reopen: false };
+const can = { view: false, verify: false, reupload: false, reopen: false };
 const row = (kind: string, extra: object = {}) => ({
-  id: `r-${kind}`, kind, status: "UPLOADED", uploadedAt: "2026-11-19T09:00:00.000Z", receivedInPersonAt: null, receivedBy: null, verifiedAt: null, verifiedBy: null,
+  id: `r-${kind}`, kind, status: "UPLOADED", uploadedAt: "2026-11-19T09:00:00.000Z", verifiedAt: null, verifiedBy: null,
   testDate: null, reuploadReason: null, storageConsentGiven: true, newUpload: true, hasFile: true, fileType: null, can, ...extra,
 });
 const docs = (requirements: object[], more: object = {}) => ({
-  applicantRole: "GROOM", validFrom: "2026-10-19", requirements, links: [], dispatches: [], storedFiles: 3,
-  can: { setRole: false, send: true, reissueLink: true, downloadLetters: true, deleteStored: false }, ...more,
+  applicantRole: "GROOM", validFrom: "2026-10-19", requirements, dispatches: [], storedFiles: 3,
+  accounts: [
+    { side: "APPLICANT", role: "GROOM", firstName: "Tunde", kind: "COUPLE", signInSentAt: "2026-11-20T10:00:00.000Z" },
+    { side: "PARTNER", role: "BRIDE", firstName: "Ada", kind: null, signInSentAt: null },
+  ],
+  can: { setRole: false, send: true, resendSignIn: true, downloadLetters: true, deleteStored: false }, ...more,
 });
 const c = { id: "c1", applicantFirstName: "Tunde", status: "IN_COUNSELLING" } as unknown as CaseDetail;
 
@@ -33,7 +37,7 @@ describe("the documents panel", () => {
   it("offers View and Accept on a medical certificate only to someone allowed (the API says so per row)", async () => {
     get.mockResolvedValue(
       docs([
-        row("PARENTAL_CONSENT", { can: { ...can, view: true, verify: true } }),
+        row("PARENTAL_CONSENT_GROOM", { can: { ...can, view: true, verify: true } }),
         row("MEDICAL_CERT_GROOM"),
         row("MEDICAL_CERT_BRIDE", { status: "PENDING", hasFile: false, newUpload: false }),
       ]),
@@ -45,6 +49,19 @@ describe("the documents panel", () => {
     expect(screen.getAllByText("New upload")).toHaveLength(2);
     expect(screen.getByRole("button", { name: "Send documents" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Delete stored documents" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /received in person/i })).toBeNull();
+    for (const name of ["Groom's consent letter", "Groom's medical letter", "Bride's consent letter", "Bride's medical letter"])
+      expect(screen.getByRole("button", { name })).toBeTruthy();
+  });
+
+  it("shows each partner's dashboard sign-in, and resends the details to both", async () => {
+    get.mockResolvedValue(docs([row("PARENTAL_CONSENT_BRIDE")]));
+    post.mockResolvedValue({ email: "SENT" });
+    render(wrap(<DocumentsPanel c={c} />));
+    expect(await screen.findByText(/Tunde \(groom\): own sign-in, details sent 20 Nov/)).toBeTruthy();
+    expect(screen.getByText(/Ada \(bride\): no sign-in yet/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Resend sign-in details" }));
+    await waitFor(() => expect(post).toHaveBeenCalledWith("/premarital/applications/c1/sign-in", {}));
   });
 
   it("asks for the test date when a Pastor accepts a medical certificate, and warns when it is outside the window", async () => {
@@ -58,7 +75,7 @@ describe("the documents panel", () => {
   });
 
   it("asks who applied when an older application has no role, and offers deletion only when the API allows it", async () => {
-    get.mockResolvedValue(docs([], { applicantRole: null, can: { setRole: true, send: false, reissueLink: false, downloadLetters: false, deleteStored: true } }));
+    get.mockResolvedValue(docs([], { applicantRole: null, can: { setRole: true, send: false, resendSignIn: false, downloadLetters: false, deleteStored: true } }));
     render(wrap(<DocumentsPanel c={c} />));
     expect(await screen.findByText("Role not set: who applied?")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Tunde is the intending bride" })).toBeTruthy();

@@ -4,9 +4,9 @@ import sharp from 'sharp';
 import { PDFDocument } from 'pdf-lib';
 import { DEFAULT_DOCUMENTS_CONFIG, readDocumentsConfig, valuesOf } from './documents-config';
 import { DocumentCrypto } from './document-crypto';
-import { coupleOf, kindsFor, letterRef, letterVars, longDate, mayOpen, mayReview, maySeeRow, validFrom } from './document-rules';
+import { coupleOf, isMedical, kindsOf, letterRef, letterVars, longDate, mayOpen, mayReview, maySeeRow, mayUpload, REQUIREMENT_KINDS, roleOf, validFrom } from './document-rules';
 import { SAMPLE_VARS } from './document-letters.service';
-import { blocksSchema, fill, placeholderProblems, SEED_BODIES, textsOf } from './letter-blocks';
+import { blocksSchema, fill, placeholderProblems, SEED_BODIES, SEED_BODIES_V1, textsOf } from './letter-blocks';
 import { LetterRenderer, SAFE } from './letter-renderer';
 import { detectType, UploadInspector } from './upload-inspector';
 
@@ -37,8 +37,23 @@ describe('counselling letters', () => {
     expect(DEFAULT_DOCUMENTS_CONFIG.medicalConsentWording.state).toBe('PENDING_PASTORAL_APPROVAL');
   });
 
+  it('makes one letter per partner, with their name, needing one parent or guardian signature', () => {
+    const consent = SEED_BODIES.PARENTAL_CONSENT;
+    const text = textsOf(consent).join(' ');
+    expect(text).toContain('{personName}');
+    expect(text).toContain('{partnerName}');
+    expect(text).toContain('the father, the mother or a recognised guardian');
+    expect(text.toLowerCase()).not.toContain('church office');
+    const signatures = consent.find((b) => b.type === 'signatureColumns');
+    expect(signatures && signatures.type === 'signatureColumns' && signatures.columns).toHaveLength(1);
+    expect(textsOf(SEED_BODIES.MEDICAL_SCREENING)).toContain('Dear {personName},');
+    // The old shared letter is kept only to recognise an untouched v1 seed.
+    expect(textsOf(SEED_BODIES_V1.PARENTAL_CONSENT).join(' ')).toContain('{groomName}');
+    for (const v of Object.values(DEFAULT_DOCUMENTS_CONFIG)) expect(String(v.value).toLowerCase()).not.toContain('church office');
+  });
+
   it('refuses unknown placeholders when saving, and never sends a half-filled letter', () => {
-    expect(placeholderProblems('Dear {groomName} and {partnerName}')).toEqual(['{partnerName}']);
+    expect(placeholderProblems('Dear {groomName} and {nickname}')).toEqual(['{nickname}']);
     expect(blocksSchema.safeParse([{ type: 'paragraph', text: 'Hello {nope}' }]).success).toBe(false);
     expect(() => fill('Dear {groomName}', { ...SAMPLE_VARS, groomName: '{brideName}' })).toThrow();
     expect(fill('Ref {applicationRef}', SAMPLE_VARS)).toBe('Ref 7K4QH2');
@@ -66,7 +81,7 @@ describe('counselling letters', () => {
 
   it('wraps a very long name cleanly and still fits the consent letter on one page', async () => {
     const long = 'Oluwaseyifunmilayo Adebayo-Ogunleye Babatunde Akinwunmi Ọlọ́runfẹ́mi';
-    const out = await render('PARENTAL_CONSENT', { ...SAMPLE_VARS, groomName: long, brideName: long });
+    const out = await render('PARENTAL_CONSENT', { ...SAMPLE_VARS, personName: long, partnerName: long, groomName: long, brideName: long });
     expect(out.pageCount).toBe(1);
     expect(out.bounds.right).toBeLessThanOrEqual(SAFE.right + 0.01);
     expect(out.bounds.bottom).toBeLessThanOrEqual(SAFE.bottom);
@@ -88,16 +103,19 @@ describe('document rules', () => {
   it('fills the letter values: reference without PMC-, Lagos dates, and the window counted back from the application', () => {
     const vars = letterVars(
       { ...base, applicantRole: 'BRIDE', referenceCode: 'PMC-7K4QH2', submittedAt: new Date('2026-11-20T09:00:00Z') },
-      { issueDay: '2026-11-21', validityDays: 30, returnInstructions: 'Bring it in.' },
+      { issueDay: '2026-11-21', validityDays: 30, returnInstructions: 'Upload it.', person: 'GROOM' },
     );
     expect(vars).toEqual({
       applicationRef: '7K4QH2',
       issueDate: '21 November 2026',
+      personName: 'Tunde Adeyemi',
+      personRole: 'intending groom',
+      partnerName: 'Ada Eze',
       groomName: 'Tunde Adeyemi',
       brideName: 'Ada Eze',
       applicationDate: '20 November 2026',
       validFromDate: '21 October 2026',
-      returnInstructions: 'Bring it in.',
+      returnInstructions: 'Upload it.',
     });
     expect(letterRef('PMC-ABC123')).toBe('ABC123');
     expect(longDate('2026-01-05')).toBe('5 January 2026');
@@ -114,21 +132,38 @@ describe('document rules', () => {
       }
       expect(maySeeRow('COUNSELLOR', k)).toBe(false);
     }
-    expect(mayOpen('COUNSELLOR', 'PARENTAL_CONSENT')).toBe(true);
-    expect(mayReview('COUNSELLOR', 'PARENTAL_CONSENT')).toBe(false);
-    expect(mayReview('MINISTRY', 'PARENTAL_CONSENT')).toBe(true);
+    for (const k of ['PARENTAL_CONSENT_GROOM', 'PARENTAL_CONSENT_BRIDE'] as const) {
+      expect(mayOpen('COUNSELLOR', k)).toBe(true);
+      expect(maySeeRow('COUNSELLOR', k)).toBe(true);
+      expect(mayReview('COUNSELLOR', k)).toBe(false);
+      expect(mayReview('MINISTRY', k)).toBe(true);
+    }
   });
 
-  it('gives each link only its own slots', () => {
-    expect(kindsFor('GROOM')).toEqual(['PARENTAL_CONSENT', 'MEDICAL_CERT_GROOM']);
-    expect(kindsFor('BRIDE')).toEqual(['PARENTAL_CONSENT', 'MEDICAL_CERT_BRIDE']);
-    expect(kindsFor('ALL')).toHaveLength(3);
+  it('gives each partner two documents of their own, and lets them upload only those', () => {
+    expect(roleOf('BRIDE', 'APPLICANT')).toBe('BRIDE');
+    expect(roleOf('BRIDE', 'PARTNER')).toBe('GROOM');
+    expect(roleOf('GROOM', 'PARTNER')).toBe('BRIDE');
+    expect(roleOf(null, 'APPLICANT')).toBeNull();
+    expect(REQUIREMENT_KINDS).toHaveLength(4);
+    expect(kindsOf('GROOM')).toEqual(['PARENTAL_CONSENT_GROOM', 'MEDICAL_CERT_GROOM']);
+    expect(kindsOf('BRIDE')).toEqual(['PARENTAL_CONSENT_BRIDE', 'MEDICAL_CERT_BRIDE']);
+    expect(mayUpload('GROOM', 'PARENTAL_CONSENT_GROOM')).toBe(true);
+    expect(mayUpload('GROOM', 'MEDICAL_CERT_GROOM')).toBe(true);
+    expect(mayUpload('GROOM', 'PARENTAL_CONSENT_BRIDE')).toBe(false);
+    expect(mayUpload('GROOM', 'MEDICAL_CERT_BRIDE')).toBe(false);
+    expect(mayUpload('BRIDE', 'PARENTAL_CONSENT_BRIDE')).toBe(true);
+    expect(mayUpload(null, 'MEDICAL_CERT_BRIDE')).toBe(false);
+    expect(isMedical('PARENTAL_CONSENT_BRIDE')).toBe(false);
+    expect(isMedical('MEDICAL_CERT_BRIDE')).toBe(true);
   });
 
   it('falls back to the default for any saved setting that is missing or invalid', () => {
-    const c = readDocumentsConfig({ documents: { maxUploadMb: { value: 5, state: 'APPROVED' }, documentPageOtp: { value: 'yes', state: 'APPROVED' } } });
+    const c = readDocumentsConfig({ documents: { maxUploadMb: { value: 5, state: 'APPROVED' }, screeningValidityDays: { value: 'soon', state: 'APPROVED' }, documentPageOtp: { value: true, state: 'APPROVED' } } });
     expect(c.maxUploadMb).toEqual({ value: 5, state: 'APPROVED' });
-    expect(c.documentPageOtp).toEqual(DEFAULT_DOCUMENTS_CONFIG.documentPageOtp);
+    expect(c.screeningValidityDays).toEqual(DEFAULT_DOCUMENTS_CONFIG.screeningValidityDays);
+    // Settings from the old link page are ignored.
+    expect(c).not.toHaveProperty('documentPageOtp');
     expect(Object.keys(DEFAULT_DOCUMENTS_CONFIG)).not.toEqual(expect.arrayContaining(['deleteMedicalFilesAfterVerification']));
     expect(Object.keys(DEFAULT_DOCUMENTS_CONFIG).join(' ')).not.toMatch(/grace|retentionDays|delete/i);
     expect(DEFAULT_DOCUMENTS_CONFIG.documentRetentionPolicy).toEqual({ value: '', state: 'PENDING_PASTORAL_APPROVAL' });
@@ -208,10 +243,11 @@ describe('upload checks', () => {
 describe('no automatic deletion', () => {
   it('has no scheduled job or timer that touches counselling documents', () => {
     const dir = __dirname;
-    for (const f of readdirSync(dir).filter((n) => n.endsWith('.ts') && !n.endsWith('.spec.ts'))) {
-      const src = readFileSync(join(dir, f), 'utf8');
-      expect(src).not.toMatch(/@Cron|@Interval|setInterval\(|ScheduleModule/);
-    }
+    for (const d of [dir, join(dir, '..', 'couple')])
+      for (const f of readdirSync(d).filter((n) => n.endsWith('.ts') && !n.endsWith('.spec.ts'))) {
+        const src = readFileSync(join(d, f), 'utf8');
+        expect(src).not.toMatch(/@Cron|@Interval|setInterval\(|ScheduleModule/);
+      }
     const runner = readFileSync(join(dir, '..', '..', 'scheduling', 'jobs-runner.service.ts'), 'utf8');
     expect(runner).not.toMatch(/document/i);
     const script = readFileSync(join(dir, '..', '..', '..', 'scripts', 'cloud-scheduler-jobs.sh'), 'utf8');

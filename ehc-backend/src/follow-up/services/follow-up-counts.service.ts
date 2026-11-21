@@ -36,7 +36,7 @@ export interface FollowUpCounts {
 }
 
 /** The statuses that still need the team; integrated and opted out do not. */
-const inFollowUp = (c: StatusCounts) => c.FIRST_TIMER + c.SECOND_TIMER + c.THIRD_TIMER;
+const inFollowUp = (c: StatusCounts) => c.FIRST_TIMER + c.SECOND_TIMER + c.THIRD_TIMER + c.FOURTH_TIMER + c.AWAY;
 
 /**
  * The figures on the Follow Up page, every one of them read from the pipeline

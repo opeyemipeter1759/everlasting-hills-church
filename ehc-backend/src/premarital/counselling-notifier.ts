@@ -11,10 +11,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { lagosLabel } from './lagos-time';
 
 /**
- * Sends the couple's emails (to the applicant only; one partner's details are
- * never sent to the other). Each email takes one of the day's shared allowance
- * first, and is logged without its content or address. A failed email is
- * logged and never fails the change that caused it. Web push can hook in here.
+ * Sends the couple's emails: one to each partner, addressed to them alone, so
+ * neither sees the other's address. (Applications from before partner
+ * details were required reach the applicant only.) Each email takes one of
+ * the day's shared allowance first, and is logged without its content or
+ * address. A failed email is logged and never fails the change that caused
+ * it. Web push can hook in here.
  */
 @Injectable()
 export class CounsellingNotifier {
@@ -32,13 +34,28 @@ export class CounsellingNotifier {
       'https://www.everlastinghills.church';
   }
 
+  /** Answers with the applicant's outcome; the partner's email is best effort. */
   async send(
     app: {
       id: string;
       tenantId: string;
       applicantFirstName: string;
       applicantEmail: string;
+      partnerFirstName?: string;
+      partnerEmail?: string | null;
     },
+    event: CounsellingEmailEvent,
+    at?: Date | null,
+  ): Promise<'SENT' | 'SKIPPED' | 'FAILED'> {
+    const result = await this.sendOne(app, { firstName: app.applicantFirstName, email: app.applicantEmail }, event, at);
+    if (app.partnerEmail && app.partnerFirstName)
+      await this.sendOne(app, { firstName: app.partnerFirstName, email: app.partnerEmail }, event, at);
+    return result;
+  }
+
+  private async sendOne(
+    app: { id: string; tenantId: string },
+    to: { firstName: string; email: string },
     event: CounsellingEmailEvent,
     at?: Date | null,
   ): Promise<'SENT' | 'SKIPPED' | 'FAILED'> {
@@ -51,8 +68,8 @@ export class CounsellingNotifier {
       });
       if (!logId) return 'SKIPPED';
       const payload = buildCounsellingEmail({
-        firstName: app.applicantFirstName,
-        email: app.applicantEmail,
+        firstName: to.firstName,
+        email: to.email,
         event,
         when: at ? lagosLabel(at) : null,
         appUrl: this.appUrl,

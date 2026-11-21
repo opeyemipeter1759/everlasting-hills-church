@@ -38,7 +38,7 @@ export class PremaritalDocumentsController {
   ) {}
 
   @Get('applications/:id/documents')
-  @ApiOperation({ summary: 'The document checklist, link state and email log for a case' })
+  @ApiOperation({ summary: "The document checklist, the partners' sign-ins and the email log for a case" })
   list(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.admin.list(user, id);
   }
@@ -56,12 +56,6 @@ export class PremaritalDocumentsController {
     const { ticket } = parseSchema(z.object({ ticket: z.string().min(20).max(100) }), body);
     const { data, mimeType } = await this.admin.view(user, ticket);
     sendFile(res, data, mimeType, 'inline', mimeType === 'application/pdf' ? 'document.pdf' : 'document');
-  }
-
-  @Post('documents/:requirementId/received-in-person')
-  @ApiOperation({ summary: 'Mark a document as received at the church office' })
-  received(@CurrentUser() user: AuthUser, @Param('requirementId') requirementId: string) {
-    return this.admin.receivedInPerson(user, requirementId);
   }
 
   @Post('documents/:requirementId/verify')
@@ -83,15 +77,15 @@ export class PremaritalDocumentsController {
   }
 
   @Post('applications/:id/documents/send')
-  @ApiOperation({ summary: 'Send or resend the letters with a new link' })
+  @ApiOperation({ summary: 'Send or resend the letters, with how to sign in to the dashboard' })
   send(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.admin.send(user, id);
   }
 
-  @Post('applications/:id/documents/link')
-  @ApiOperation({ summary: 'Revoke the link and email a new one' })
-  reissue(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.admin.reissueLink(user, id);
+  @Post('applications/:id/sign-in')
+  @ApiOperation({ summary: "Make any missing dashboard sign-in and email both partners how to sign in" })
+  resendSignIn(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.admin.resendSignIn(user, id);
   }
 
   @Post('applications/:id/documents/delete-stored')
@@ -101,12 +95,14 @@ export class PremaritalDocumentsController {
     return this.admin.deleteStored(user, id);
   }
 
-  @Get('applications/:id/documents/letters/:kind')
-  @ApiOperation({ summary: 'Download a letter, rebuilt as it was sent' })
-  async letter(@CurrentUser() user: AuthUser, @Param('id') id: string, @Param('kind') kind: string, @Res() res: Response) {
+  @Get('applications/:id/documents/letters/:kind/:person')
+  @ApiOperation({ summary: "Download one partner's letter (consent or medical), rebuilt as it was sent" })
+  async letter(@CurrentUser() user: AuthUser, @Param('id') id: string, @Param('kind') kind: string, @Param('person') person: string, @Res() res: Response) {
     const which = parseSchema(z.enum(['consent', 'medical']), kind);
-    const pdf = await this.admin.letter(user, id, which);
-    sendFile(res, pdf, 'application/pdf', 'attachment', which === 'consent' ? 'Parental-Consent.pdf' : 'Medical-Screening-Requirement.pdf');
+    const whose = parseSchema(z.enum(['groom', 'bride']), person);
+    const pdf = await this.admin.letter(user, id, which, whose === 'groom' ? 'GROOM' : 'BRIDE');
+    const name = `${which === 'consent' ? 'Parental-Consent' : 'Medical-Screening-Requirement'}-${whose === 'groom' ? 'Groom' : 'Bride'}.pdf`;
+    sendFile(res, pdf, 'application/pdf', 'attachment', name);
   }
 
   @Patch('applications/:id/role')

@@ -2,7 +2,6 @@ import { CounsellingStatus } from '@prisma/client';
 import { lagosLabel, lagosParts, lagosToUtc } from './lagos-time';
 import {
   adminPatchSchema,
-  modulePatchSchema,
   publicApplicationSchema,
   sessionPatchSchema,
   STATUSES,
@@ -64,7 +63,7 @@ describe('the public application rules', () => {
   it('accepts a complete application and tidies it', () => {
     const r = publicApplicationSchema.parse(validApplication());
     expect(r.applicantEmail).toBe('tunde@example.com');
-    expect(r.partnerEmail).toBeNull();
+    expect(r.partnerEmail).toBe('ada@example.com');
   });
 
   it('names each problem under its own answer', () => {
@@ -82,9 +81,18 @@ describe('the public application rules', () => {
     });
   });
 
-  it('needs a way to reach the partner, and refuses a past date and an over-long note', () => {
+  it("needs the partner's own email and phone (their dashboard sign-in), and refuses a past date and an over-long note", () => {
     expect(first({ ...validApplication(), partnerPhone: '' })).toEqual({
-      partnerPhone: 'Give a phone number or email address for your partner',
+      partnerPhone: "Enter your partner's phone number",
+    });
+    expect(first({ ...validApplication(), partnerEmail: '' })).toEqual({
+      partnerEmail: "Enter your partner's email address",
+    });
+    expect(first({ ...validApplication(), partnerEmail: 'TUNDE@example.com' })).toEqual({
+      partnerEmail: "Use your partner's own email address. Each of you signs in separately.",
+    });
+    expect(first({ ...validApplication(), partnerPhone: '08031234567' })).toEqual({
+      partnerPhone: "Use your partner's own phone number.",
     });
     expect(first({ ...validApplication(), weddingDate: '2020-01-01' })).toEqual(
       { weddingDate: 'The wedding date cannot be in the past' },
@@ -104,7 +112,6 @@ describe('PATCH shapes leave out what is not sent (the Gatherings .partial() bug
       { durationMinutes: 90 },
       ['durationMinutes'],
     ],
-    ['module', modulePatchSchema, { active: false }, ['active']],
   ] as const)('%s', (_name, schema, input, keys) => {
     expect(Object.keys(schema.parse(input))).toEqual(keys);
   });

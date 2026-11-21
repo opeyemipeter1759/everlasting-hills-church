@@ -8,7 +8,7 @@ import {
   REFRESH_TOKEN_COOKIE,
 } from "@/lib/auth/session-constants";
 import { isUnsafeCrossSiteRequest } from "@/lib/api/csrf";
-import { addProxyHeaders, passCoupleCookie } from "@/lib/server/proxy-extras";
+import { addProxyHeaders } from "@/lib/server/proxy-extras";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -48,12 +48,11 @@ function forwardHeaders(request: NextRequest, accessToken?: string | null): Head
   return headers;
 }
 
-function responseHeaders(upstream: Response, request?: NextRequest): Headers {
+function responseHeaders(upstream: Response): Headers {
   const headers = new Headers();
   upstream.headers.forEach((value, name) => {
     if (SAFE_RESPONSE_HEADERS.has(name.toLowerCase())) headers.set(name, value);
   });
-  if (request) passCoupleCookie(request, upstream, headers);
   return headers;
 }
 
@@ -241,7 +240,7 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
 
   const response = new NextResponse(upstream.body, {
     status: upstream.status,
-    headers: responseHeaders(upstream, request),
+    headers: responseHeaders(upstream),
   });
   if (refreshedSession) setSessionCookies(response, refreshedSession);
   if (suppressPendingSession || refreshFailed || upstream.status === 401 || isLogout) {

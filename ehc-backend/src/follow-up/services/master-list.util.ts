@@ -15,6 +15,7 @@ export type MasterListStatus =
   | 'FIRST_TIMER'
   | 'SECOND_TIMER'
   | 'THIRD_TIMER'
+  | 'FOURTH_TIMER'
   | 'INTEGRATED'
   | 'AWAY'
   | 'OPTED_OUT';

@@ -138,7 +138,7 @@ export function TestimonySection({ p }: { p: FamilyProfile }) {
   );
 }
 
-/** Prayer focus, and a phone number if they chose to share it. */
+/** Prayer focus, and a phone number or email where they share it. */
 export function ConnectSide({ p }: { p: FamilyProfile }) {
   if (!p.prayerFocus && !p.phone && !p.email) return null;
   return (
@@ -152,21 +152,13 @@ export function ConnectSide({ p }: { p: FamilyProfile }) {
           <p className="mt-1 text-sm font-semibold text-[#111] dark:text-white">{p.prayerFocus}</p>
         </div>
       )}
-      {p.phone && (
-        <a
-          href={`tel:${p.phone.replace(/\s+/g, "")}`}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#E7CDD3] px-4 text-sm font-semibold text-[#87102C] hover:bg-[#FFF4F6] dark:border-white/[0.14] dark:text-[#FFB3C1]"
-        >
-          <Phone size={14} aria-hidden="true" /> {p.phone}
-        </a>
-      )}
-      {p.email && (
-        <a
-          href={`mailto:${p.email}`}
-          className="flex min-h-11 max-w-full items-center gap-2 rounded-full border border-[#E7CDD3] px-4 text-sm font-semibold text-[#87102C] hover:bg-[#FFF4F6] dark:border-white/[0.14] dark:text-[#FFB3C1]"
-        >
-          <Mail size={14} className="shrink-0" aria-hidden="true" /> <span className="truncate">{p.email}</span>
-        </a>
+      {[p.phone && { href: `tel:${p.phone.replace(/\s+/g, "")}`, Icon: Phone, text: p.phone }, p.email && { href: `mailto:${p.email}`, Icon: Mail, text: p.email }].map(
+        (c) =>
+          c && (
+            <a key={c.href} href={c.href} className="flex min-h-11 w-fit max-w-full items-center gap-2 rounded-full border border-[#E7CDD3] px-4 text-sm font-semibold text-[#87102C] hover:bg-[#FFF4F6] dark:border-white/[0.14] dark:text-[#FFB3C1]">
+              <c.Icon size={14} className="shrink-0" aria-hidden="true" /> <span className="truncate">{c.text}</span>
+            </a>
+          ),
       )}
     </section>
   );

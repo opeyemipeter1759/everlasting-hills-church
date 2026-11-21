@@ -1,7 +1,7 @@
 import type { PipelineStatus } from "@/lib/api/pipeline";
 
 /**
- * The five first-timer statuses, with the exact labels and one colour each,
+ * The seven first-timer statuses, with the exact labels and one colour each,
  * used everywhere a first-timer appears. Colour always sits beside the label,
  * never instead of it.
  */
@@ -20,6 +20,16 @@ export const STATUS_META: Record<PipelineStatus, { label: string; chip: string; 
     label: "Third timer",
     chip: "bg-sky-50 text-sky-700 ring-sky-600/15 dark:bg-sky-500/10 dark:text-sky-300",
     dot: "bg-sky-500",
+  },
+  FOURTH_TIMER: {
+    label: "Fourth timer",
+    chip: "bg-cyan-50 text-cyan-700 ring-cyan-600/15 dark:bg-cyan-500/10 dark:text-cyan-300",
+    dot: "bg-cyan-500",
+  },
+  AWAY: {
+    label: "Away",
+    chip: "bg-amber-50 text-amber-700 ring-amber-600/15 dark:bg-amber-500/10 dark:text-amber-300",
+    dot: "bg-amber-500",
   },
   INTEGRATED: {
     label: "Integrated",

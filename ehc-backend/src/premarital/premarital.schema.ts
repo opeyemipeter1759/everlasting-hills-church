@@ -76,8 +76,9 @@ export const publicApplicationSchema = z
     applicantPhone: phone('your'),
     partnerFirstName: name("your partner's first name"),
     partnerLastName: name("your partner's last name"),
-    partnerEmail: z.preprocess(blankToNull, email("your partner's").nullish()),
-    partnerPhone: z.preprocess(blankToNull, phone("your partner's").nullish()),
+    /** Required: each partner gets their own dashboard sign-in (email, with the phone number as the first password). */
+    partnerEmail: email("your partner's"),
+    partnerPhone: phone("your partner's"),
     partnerConsentToContact: z.literal(true, {
       error: 'Confirm your partner is happy for us to contact them',
     }),
@@ -105,11 +106,18 @@ export const publicApplicationSchema = z
     }),
   })
   .superRefine((v, ctx) => {
-    if (!v.partnerEmail && !v.partnerPhone) {
+    if (v.partnerEmail === v.applicantEmail) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['partnerEmail'],
+        message: "Use your partner's own email address. Each of you signs in separately.",
+      });
+    }
+    if (v.partnerPhone.replace(/\D/g, '') === v.applicantPhone.replace(/\D/g, '')) {
       ctx.addIssue({
         code: 'custom',
         path: ['partnerPhone'],
-        message: 'Give a phone number or email address for your partner',
+        message: "Use your partner's own phone number.",
       });
     }
   });
@@ -190,7 +198,6 @@ export const sessionCreateSchema = z
     time: z.string().regex(TIME, 'Pick a time'),
     durationMinutes: z.number().int().min(15).max(240).optional(),
     ...sessionWhere,
-    moduleId: z.string().min(1).max(64).nullish(),
     counsellorProfileId: z.string().min(1).max(64).optional(),
   })
   .superRefine((v, ctx) => {
@@ -214,7 +221,6 @@ export const sessionPatchSchema = z.object({
   format: sessionWhere.format.optional(),
   location: sessionWhere.location.optional(),
   meetingLink: sessionWhere.meetingLink.optional(),
-  moduleId: z.string().min(1).max(64).nullable().optional(),
 });
 
 export const rescheduleSchema = z.object({
@@ -229,31 +235,4 @@ export const sessionsQuerySchema = z.object({
   to: day('Use a date like 2026-11-20').optional(),
 });
 
-const moduleFields = {
-  title: z.string().trim().min(3, 'Give the module a title').max(120),
-  description: z.string().trim().max(2000).nullable(),
-  scriptureRefs: z.array(z.string().trim().min(1).max(120)).max(20),
-  objectives: z.array(z.string().trim().min(1).max(300)).max(20),
-  resources: z
-    .array(
-      z.object({
-        label: z.string().trim().min(1).max(120),
-        url: z.string().trim().url().max(500),
-      }),
-    )
-    .max(20),
-  active: z.boolean(),
-};
-export const moduleCreateSchema = z.object({
-  ...moduleFields,
-  description: moduleFields.description.optional(),
-  scriptureRefs: moduleFields.scriptureRefs.optional(),
-  objectives: moduleFields.objectives.optional(),
-  resources: moduleFields.resources.optional(),
-  active: moduleFields.active.optional(),
-});
-/** A key that is left out is left alone. */
-export const modulePatchSchema = z.object(moduleFields).partial();
-export const reorderSchema = z.object({
-  ids: z.array(z.string().min(1).max(64)).min(1).max(200),
-});
+

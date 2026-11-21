@@ -63,7 +63,7 @@ function OverviewYearInner() {
       {query.data && (
         <>
           <YearStrip year={year} total={query.data.total} />
-          <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label={`Months of ${year}`}>
+          <ol className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4" aria-label={`Months of ${year}`}>
             {query.data.months.map((m, i) => {
               const future = isFutureMonth(year, i + 1);
               return (
@@ -86,7 +86,7 @@ function OverviewSkeleton() {
   return (
     <div className="space-y-3" aria-label="Loading the overview">
       <div className="h-36 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/[0.05]" />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, i) => (
           <div key={i} className="h-52 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/[0.05]" />
         ))}

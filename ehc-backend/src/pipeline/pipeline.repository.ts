@@ -12,12 +12,11 @@ import {
   type PipelineRow,
   type PipelineStatus,
   type StatusCounts,
-  type YearSummary,
-} from './pipeline.types';
+  type YearSummary, type OverrideStatus } from './pipeline.types';
 
 const MAX_TAKE = 200;
 
-const emptyCounts = (): StatusCounts => ({ FIRST_TIMER: 0, SECOND_TIMER: 0, THIRD_TIMER: 0, INTEGRATED: 0, OPTED_OUT: 0 });
+const emptyCounts = (): StatusCounts => Object.fromEntries(PIPELINE_STATUSES.map((s) => [s, 0])) as StatusCounts;
 
 /**
  * Prisma keeps timestamps as UTC in columns without a time zone, so json_agg
@@ -101,6 +100,8 @@ export class PipelineRepository {
              COUNT(pl."visitorId") FILTER (WHERE pl.status = 'FIRST_TIMER')::int AS "FIRST_TIMER",
              COUNT(pl."visitorId") FILTER (WHERE pl.status = 'SECOND_TIMER')::int AS "SECOND_TIMER",
              COUNT(pl."visitorId") FILTER (WHERE pl.status = 'THIRD_TIMER')::int AS "THIRD_TIMER",
+             COUNT(pl."visitorId") FILTER (WHERE pl.status = 'FOURTH_TIMER')::int AS "FOURTH_TIMER",
+             COUNT(pl."visitorId") FILTER (WHERE pl.status = 'AWAY')::int AS "AWAY",
              COUNT(pl."visitorId") FILTER (WHERE pl.status = 'INTEGRATED')::int AS "INTEGRATED",
              COUNT(pl."visitorId") FILTER (WHERE pl.status = 'OPTED_OUT')::int AS "OPTED_OUT",
              COUNT(pl."visitorId") FILTER (
@@ -188,6 +189,7 @@ export class PipelineRepository {
       heardFromOther: (r.heardFromOther as string | null) ?? null,
       isStudent: (r.isStudent as boolean | null) ?? null,
       possibleReturn: Boolean(r.possibleReturn),
+      statusOverride: (r.statusOverride as OverrideStatus | null) ?? null,
     };
   }
 }

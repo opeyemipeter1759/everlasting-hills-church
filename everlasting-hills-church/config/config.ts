@@ -146,7 +146,7 @@ import {
   Clock, Filter,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { MARRIAGE_NAV } from "./nav-marriage";
+import { COUPLE_NAV_ITEM, MARRIAGE_NAV } from "./nav-marriage";
 
 export type NavItem = {
   label: string;
@@ -155,7 +155,7 @@ export type NavItem = {
   minRole: UserRole;
   maxRole?: UserRole;
   /** firstTimerApprovals: only people who decide first-timer approvals (admins, pastors, the team leads of units that take first-timers). */
-  requiresAccess?: "unitLead" | "unitMember" | "audioProduction" | "firstTimerApprovals" | "marriage" | "marriageStaff";
+  requiresAccess?: "unitLead" | "unitMember" | "audioProduction" | "firstTimerApprovals" | "marriage" | "marriageStaff" | "couple";
   dynamicUnits?: "lead" | "member";
 };
 
@@ -265,7 +265,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Family",      href: "/dashboard/family",          icon: UsersRound,          minRole: "MEMBER" },
       { label: "Bible Plan",          href: "/dashboard/reading",            icon: BookMarked,          minRole: "MEMBER" },
       { label: "Prayer Watch",        href: "/dashboard/prayer-watch",       icon: Clock,            minRole: "MEMBER" },
-      { label: "One-on-One",          href: "/dashboard/one-on-one",         icon: CalendarHeart,       minRole: "MEMBER" },
+      { label: "One-on-One",          href: "/dashboard/one-on-one",         icon: CalendarHeart,       minRole: "MEMBER" }, COUPLE_NAV_ITEM,
       { label: "Articles",            href: "/dashboard/articles",           icon: Newspaper,           minRole: "MEMBER" },
       { label: "Books",                href: "/dashboard/books",             icon: Library,             minRole: "MEMBER" },
       { label: "My Classes",          href: "/dashboard/classes",            icon: School,              minRole: "MEMBER" },

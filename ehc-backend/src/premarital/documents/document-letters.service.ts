@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import type { CounsellingDocumentTemplate, CounsellingLetterKind, Prisma } from '@prisma/client';
+import type { CounsellingApplicantRole, CounsellingDocumentTemplate, CounsellingLetterKind, Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import type { AuthUser } from '../../auth/types/auth-user';
@@ -8,8 +8,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CaseAccess, notFound } from '../case-access';
 import { counsellingAudit } from '../counselling-audit';
 import { DocumentsConfigService, type DocumentsSettings } from './documents-config';
-import { letterVars } from './document-rules';
-import { blocksSchema, SEED_BODIES, type Block, type LetterVars } from './letter-blocks';
+import { lagosDay, letterVars } from './document-rules';
+import { blocksSchema, SEED_BODIES, SEED_BODIES_V1, type Block, type LetterVars } from './letter-blocks';
 import { LetterRenderer } from './letter-renderer';
 
 export const LETTER_KINDS: readonly CounsellingLetterKind[] = ['PARENTAL_CONSENT', 'MEDICAL_SCREENING'];
@@ -18,10 +18,13 @@ const TITLES: Record<CounsellingLetterKind, string> = {
   MEDICAL_SCREENING: 'Pre-marital medical screening requirement',
 };
 
-/** Made-up details for previews and samples. */
+/** Made-up details for previews and samples (a letter for the groom). */
 export const SAMPLE_VARS: LetterVars = {
   applicationRef: '7K4QH2',
   issueDate: '20 November 2026',
+  personName: 'Tunde Adeyemi',
+  personRole: 'intending groom',
+  partnerName: 'Ada Eze',
   groomName: 'Tunde Adeyemi',
   brideName: 'Ada Eze',
   applicationDate: '20 November 2026',
@@ -30,6 +33,17 @@ export const SAMPLE_VARS: LetterVars = {
 };
 
 type LetterApp = Parameters<typeof letterVars>[0];
+
+/** The same JSON whatever order its keys come back in (jsonb sorts them). */
+function canonical(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
+  if (v && typeof v === 'object')
+    return `{${Object.keys(v as object)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${canonical((v as Record<string, unknown>)[k])}`)
+      .join(',')}}`;
+  return JSON.stringify(v);
+}
 
 /**
  * The two letters: their versioned wording, and turning an application into
@@ -60,7 +74,10 @@ export class DocumentLettersService implements OnModuleInit {
   async seed(tenantId = this.access.tenantId) {
     for (const kind of LETTER_KINDS) {
       const any = await this.prisma.counsellingDocumentTemplate.findFirst({ where: { tenantId, kind }, select: { id: true } });
-      if (any) continue;
+      if (any) {
+        await this.upgradeSeed(tenantId, kind);
+        continue;
+      }
       await this.prisma.counsellingDocumentTemplate
         .create({
           data: {
@@ -76,6 +93,27 @@ export class DocumentLettersService implements OnModuleInit {
     }
   }
 
+  /**
+   * The shared v1 letter became one letter per partner (2026-11-21). Where the
+   * active version is still the untouched, unapproved v1 seed, the new wording
+   * is added as the next version and sent from now on (still a draft for a
+   * Pastor to approve). Anything a person wrote or approved is left alone.
+   */
+  private async upgradeSeed(tenantId: string, kind: CounsellingLetterKind) {
+    const active = await this.prisma.counsellingDocumentTemplate.findFirst({ where: { tenantId, kind, active: true } });
+    if (!active || active.approvalState !== 'DRAFT' || canonical(active.body) !== canonical(SEED_BODIES_V1[kind])) return;
+    await this.prisma
+      .$transaction(async (tx) => {
+        const last = await tx.counsellingDocumentTemplate.findFirst({ where: { tenantId, kind }, orderBy: { version: 'desc' }, select: { version: true } });
+        await tx.counsellingDocumentTemplate.updateMany({ where: { tenantId, kind, active: true }, data: { active: false } });
+        const row = await tx.counsellingDocumentTemplate.create({
+          data: { id: randomUUID(), tenantId, kind, version: (last?.version ?? 0) + 1, body: SEED_BODIES[kind] as unknown as Prisma.InputJsonValue, active: true },
+        });
+        await counsellingAudit(tx, { tenantId, actor: null, action: 'COUNSELLING_LETTER_VERSION_SAVED', entity: 'CounsellingDocumentTemplate', entityId: row.id });
+      })
+      .catch(() => undefined); // another instance upgraded it first
+  }
+
   async active(kind: CounsellingLetterKind): Promise<CounsellingDocumentTemplate> {
     const tenantId = this.access.tenantId;
     let row = await this.prisma.counsellingDocumentTemplate.findFirst({ where: { tenantId, kind, active: true } });
@@ -87,19 +125,21 @@ export class DocumentLettersService implements OnModuleInit {
     return row;
   }
 
-  /** Both letters for one application, from the given template versions (default: the active ones). */
+  /** One partner's two letters, with their name, from the given template versions (default: the active ones). */
   async lettersFor(
     app: LetterApp,
-    o: { issueDay: string; consentTemplateId?: string | null; medicalTemplateId?: string | null },
+    o: { issueDay: string; person: CounsellingApplicantRole; consentTemplateId?: string | null; medicalTemplateId?: string | null },
   ) {
     const settings = await this.config.values();
     const [consentT, medicalT] = await Promise.all([
       this.templateOrActive('PARENTAL_CONSENT', o.consentTemplateId),
       this.templateOrActive('MEDICAL_SCREENING', o.medicalTemplateId),
     ]);
+    const vars = (returnInstructions: string) =>
+      letterVars(app, { issueDay: o.issueDay, validityDays: settings.screeningValidityDays, returnInstructions, person: o.person });
     const [consent, medical] = await Promise.all([
-      this.renderer.render(this.input('PARENTAL_CONSENT', consentT.body, letterVars(app, { issueDay: o.issueDay, validityDays: settings.screeningValidityDays, returnInstructions: settings.consentReturnInstructions }), settings)),
-      this.renderer.render(this.input('MEDICAL_SCREENING', medicalT.body, letterVars(app, { issueDay: o.issueDay, validityDays: settings.screeningValidityDays, returnInstructions: settings.certReturnInstructions }), settings)),
+      this.renderer.render(this.input('PARENTAL_CONSENT', consentT.body, vars(settings.consentReturnInstructions), settings)),
+      this.renderer.render(this.input('MEDICAL_SCREENING', medicalT.body, vars(settings.certReturnInstructions), settings)),
     ]);
     return {
       consent: Buffer.from(consent.bytes),
@@ -107,6 +147,20 @@ export class DocumentLettersService implements OnModuleInit {
       consentTemplateId: consentT.id,
       medicalTemplateId: medicalT.id,
     };
+  }
+
+  /** One partner's letters as last sent (same template versions and issue date), or as they would be sent today. */
+  async lastSent(app: LetterApp & { id: string }, person: CounsellingApplicantRole) {
+    const last = await this.prisma.counsellingDocumentDispatch.findFirst({
+      where: { tenantId: this.access.tenantId, applicationId: app.id, consentTemplateId: { not: null } },
+      orderBy: { sentAt: 'desc' },
+    });
+    return this.lettersFor(app, {
+      person,
+      issueDay: last ? last.issueDate.toISOString().slice(0, 10) : lagosDay(new Date()),
+      consentTemplateId: last?.consentTemplateId,
+      medicalTemplateId: last?.medicalTemplateId,
+    });
   }
 
   private async templateOrActive(kind: CounsellingLetterKind, id?: string | null) {
@@ -124,7 +178,7 @@ export class DocumentLettersService implements OnModuleInit {
   // ---- The Letters tab on Marriage > Policy ----
 
   async list(actor: AuthUser) {
-    const tier = this.access.requireStaff(actor, 'curriculum');
+    const tier = this.access.requireStaff(actor, 'policy');
     const rows = await this.prisma.counsellingDocumentTemplate.findMany({
       where: { tenantId: this.access.tenantId },
       orderBy: [{ kind: 'asc' }, { version: 'desc' }],
@@ -147,7 +201,7 @@ export class DocumentLettersService implements OnModuleInit {
 
   /** Saves new wording as the next version (a draft; sending is unchanged until a Pastor approves it). */
   async saveVersion(actor: AuthUser, kind: CounsellingLetterKind, raw: unknown) {
-    this.access.requireStaff(actor, 'curriculum');
+    this.access.requireStaff(actor, 'policy');
     const { blocks } = parseSchema(z.object({ blocks: blocksSchema }), raw);
     const tenantId = this.access.tenantId;
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -193,7 +247,7 @@ export class DocumentLettersService implements OnModuleInit {
 
   /** The wording on the letterhead with made-up names, for checking before saving. */
   async preview(actor: AuthUser, kind: CounsellingLetterKind, raw: unknown): Promise<Buffer> {
-    this.access.requireStaff(actor, 'curriculum');
+    this.access.requireStaff(actor, 'policy');
     const { blocks } = parseSchema(z.object({ blocks: blocksSchema }), raw);
     const s = await this.config.values();
     const vars = { ...SAMPLE_VARS, returnInstructions: kind === 'PARENTAL_CONSENT' ? s.consentReturnInstructions : s.certReturnInstructions };

@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApprovalRequest, ApprovalStatus, Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
@@ -15,6 +15,7 @@ import { OVERRIDE_ROLES, authorityFor, decidersFor, decidersForUnit, type Author
 import { FIRST_TIMER_ASSIGNMENT, ROUTING_REQUESTER, assignmentPayload } from './assignment-approval';
 import { MEMBER_ACCOUNT } from './account-approval';
 import { decideApprovalSchema, requestApprovalSchema } from './approvals.schema';
+import type { ApprovalSubject } from './approval-kinds';
 import type { ApprovalView, PendingDecision, QueueItem, SubjectApproval } from './approvals.types';
 import { WORKFLOW_TX } from '../workflow-tx';
 
@@ -30,6 +31,7 @@ const QUEUE_LIMIT = 200;
  */
 @Injectable()
 export class ApprovalsService {
+  private readonly logger = new Logger(ApprovalsService.name);
   private readonly tenantId: string;
 
   constructor(
@@ -47,28 +49,67 @@ export class ApprovalsService {
     const input = parseSchema(requestApprovalSchema, raw);
     if (!actor.profileId) throw new ForbiddenException('No profile linked to this account');
     await this.auth.requireAccess(actor);
+    await this.raiseIntegration(input.visitorId, actor.profileId, input.note || null, (subject) => {
+      if (!firstTimerIntegration.canRequest(actor, subject)) throw new ForbiddenException('Only their assignee or an admin can ask for approval');
+    });
+    return this.forSubject(actor, input.visitorId);
+  }
+
+  /**
+   * A Fourth timer (a fourth visit, or put there by hand) is put forward for
+   * integration by itself: the same request as Request approval, asked on
+   * their assignee's behalf, so the team leads decide it as usual. Only ever
+   * once per person: after any request (pending, approved or sent back for
+   * changes) it is the team's call. Someone with nobody assigned yet is left
+   * for when they are. Returns how many were raised.
+   */
+  async requestAtFourVisits(visitorIds?: string[]): Promise<number> {
+    let raised = 0;
+    for (let skip = 0; ; skip += 200) {
+      const page = await this.pipeline.list({ status: 'FOURTH_TIMER', visitorIds, take: 200, skip });
+      const ready = page.rows.filter((r) => r.assigneeId);
+      const asked = new Set(
+        (await this.prisma.approvalRequest.findMany({
+          where: { tenantId: this.tenantId, kind: firstTimerIntegration.kind, subjectId: { in: ready.map((r) => r.visitorId) } },
+          select: { subjectId: true },
+        })).map((r) => r.subjectId),
+      );
+      for (const row of ready.filter((r) => !asked.has(r.visitorId))) {
+        const assignee = await this.prisma.member.findFirst({ where: { id: row.assigneeId!, tenantId: this.tenantId }, select: { profileId: true } });
+        if (!assignee) continue;
+        try {
+          await this.raiseIntegration(row.visitorId, assignee.profileId, row.statusOverride === 'FOURTH_TIMER' ? 'Set to Fourth timer' : `Came ${row.visits} times`);
+          raised++;
+        } catch (err) {
+          // Not ready after all (opted out, already asked a moment ago): leave them to the team.
+          if (!(err instanceof BadRequestException || err instanceof ConflictException || err instanceof NotFoundException)) throw err;
+          this.logger.log(`Integration not raised for first-timer ${row.visitorId}: ${err.message}`);
+        }
+      }
+      if (skip + 200 >= page.total) return raised;
+    }
+  }
+
+  /** The integration request itself, for whoever asks (or is asked on behalf of). */
+  private async raiseIntegration(visitorId: string, requesterId: string, note: string | null, check?: (subject: ApprovalSubject) => void) {
     const handler = firstTimerIntegration;
     const tenantId = this.tenantId;
-
     let eventId: string;
     try {
       eventId = await this.prisma.$transaction(async (tx) => {
-        const subject = await handler.subject(tx, tenantId, input.visitorId);
-        if (!handler.canRequest(actor, subject)) throw new ForbiddenException('Only their assignee or an admin can ask for approval');
+        const subject = await handler.subject(tx, tenantId, visitorId);
+        check?.(subject);
         if (subject.blocked) throw new BadRequestException(subject.blocked);
         const id = randomUUID();
         await tx.approvalRequest.create({
-          data: {
-            id, tenantId, kind: handler.kind, subjectType: handler.subjectType, subjectId: subject.subjectId,
-            unitId: subject.unitId, requesterId: actor.profileId!, note: input.note || null,
-          },
+          data: { id, tenantId, kind: handler.kind, subjectType: handler.subjectType, subjectId: subject.subjectId, unitId: subject.unitId, requesterId, note },
         });
-        await handler.onRequested(tx, { tenantId, subjectId: subject.subjectId, actorId: actor.profileId });
+        await handler.onRequested(tx, { tenantId, subjectId: subject.subjectId, actorId: requesterId });
         const payload: ApprovalRequestedPayload = {
           approvalId: id, kind: handler.kind, visitorId: subject.subjectId, firstName: subject.firstName,
-          unitId: subject.unitId, requesterId: actor.profileId!,
+          unitId: subject.unitId, requesterId,
         };
-        return this.outbox.record(tx, { tenantId, type: FollowUpEvent.ApprovalRequested, payload: { ...payload }, actorId: actor.profileId });
+        return this.outbox.record(tx, { tenantId, type: FollowUpEvent.ApprovalRequested, payload: { ...payload }, actorId: requesterId });
       }, WORKFLOW_TX);
     } catch (err) {
       // The partial unique index allows one pending request per subject.
@@ -78,7 +119,6 @@ export class ApprovalsService {
       throw err;
     }
     await this.outbox.dispatchNow([eventId]);
-    return this.forSubject(actor, input.visitorId);
   }
 
   /** Approve, or ask for changes. Authority is read from the assignment rows inside the transaction. */

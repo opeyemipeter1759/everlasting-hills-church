@@ -62,16 +62,17 @@ const nextConfig = {
       // Keep old bookmarks/search results working after the beliefs → cultures rename.
       { source: "/beliefs", destination: "/cultures", permanent: true },
       { source: "/marriage/pre-marital-counselling", destination: "/pre-marital-counselling", permanent: false },
+      // The old emailed upload page; couples now upload on their dashboard.
+      { source: "/pre-marital-counselling/documents", destination: "/login", permanent: false },
     ];
   },
 
-  // The couple's documents page: no referrer, never cached, never indexed.
+  // The couple dashboard: never cached, never indexed.
   async headers() {
     return [
       {
-        source: "/pre-marital-counselling/documents",
+        source: "/couple-dashboard/:path*",
         headers: [
-          { key: "Referrer-Policy", value: "no-referrer" },
           { key: "Cache-Control", value: "no-store" },
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],

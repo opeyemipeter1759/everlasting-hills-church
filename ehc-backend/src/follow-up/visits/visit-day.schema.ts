@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { OVERRIDE_STATUSES } from '../../pipeline/pipeline.types';
 
 /**
  * The bodies of the visit forms. The frontend checks the same rules
@@ -13,3 +14,6 @@ export const cameAgainSchema = z.object({ date: day.optional() }).strict();
 
 /** A staff correction of the first visit date. */
 export const firstVisitSchema = z.object({ date: day }).strict();
+
+/** A status set by hand on the board, or null to follow their visits again. */
+export const setStatusSchema = z.object({ status: z.enum(OVERRIDE_STATUSES).nullable() }).strict();

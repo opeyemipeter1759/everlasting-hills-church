@@ -13,10 +13,11 @@ things it needs, plus the website's rate-limit secret:
 
 There are no scheduled jobs. Nothing deletes documents automatically.
 
-Until the key and bucket are configured, the site stays safe but limited:
+Until the key, bucket and approval switch are configured, the site stays safe but limited:
 
 - the letters email still goes out;
-- without the master key, secure couple links and document viewing answer "not set up yet";
+- couples can sign in and prepare their documents, but cannot upload them;
+- staff file viewing remains unavailable without the master key;
 - rate limits stay shared.
 
 Even after storage is configured, couple uploads remain closed until
@@ -235,14 +236,9 @@ gcloud run services describe "$BACKEND" --region="$REGION" --format=json | \
 
 The five names are listed: `COUNSELLING_DOC_KEK_V1`, `CLIENT_IP_SIGNING_SECRET`, `COUNSELLING_DOC_KEK_CURRENT`, `COUNSELLING_DOCS_BUCKET` and `DOCUMENT_UPLOADS_ENABLED`.
 
-**Check 2.** The upload page now answers "link not working" for a made-up link, instead of "not set up yet":
+**Check 2.** Sign in to a test couple dashboard (see Step 9). While `DOCUMENT_UPLOADS_ENABLED=false`, the yellow "Uploading opens shortly" note stays visible and upload controls are hidden. After the Pastor approves and the switch is enabled, the note disappears and each document has a **Choose a file** button.
 
-```bash
-curl -s -X POST https://everlastinghills.church/api/backend/public/premarital/documents/access \
-  -H 'content-type: application/json' -d '{"token":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}'
-```
-
-The reply contains `This link isn't working`. If it says `not set up`, the key did not mount: re-check steps 2, 4 and 7.
+**Careful later:** a `gcloud run services update` that uses `--set-secrets` replaces every mounted secret. Use `--update-secrets` to add one, or the key mount disappears and uploads close again (this happened once on 2026-11-20).
 
 ---
 
@@ -278,10 +274,10 @@ gcloud run services update "$BACKEND" --region="$REGION" \
 This makes a new backend revision. If approval has not been given, leave the
 switch false and stop here; do not send couples upload links.
 
-1. Apply on https://www.everlastinghills.church/pre-marital-counselling with your own email address.
-2. Open the email. Check that both letters are attached and that the link opens the documents page.
-3. Ask for a code, enter it, tick the consent box, and upload a photo.
-4. In the dashboard, on that application, the medical certificate shows "New upload". Only an account with the Pastor role sees **View**.
+1. Apply on https://www.everlastinghills.church/pre-marital-counselling with two email addresses you can read (one for each partner) and two different phone numbers.
+2. Open both emails. Each has that partner's own two letters attached and explains how to sign in.
+3. Sign in as one partner with the phone number (digits only), choose a new password, then on the dashboard tick the consent box and upload a photo of a certificate and the signed consent letter.
+4. In the office dashboard, on that application, those documents show "New upload". Only an account with the Pastor role sees **View** on a medical certificate.
 5. Close the test application, then use **Delete stored documents** (Pastor only) to remove its files.
 
 ---

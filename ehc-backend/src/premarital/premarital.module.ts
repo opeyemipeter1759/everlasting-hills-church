@@ -6,16 +6,15 @@ import { CaseAccess } from './case-access';
 import { CaseActionsService } from './case-actions.service';
 import { CaseReadsService } from './case-reads.service';
 import { CounsellingNotifier } from './counselling-notifier';
-import { ModulesService } from './modules.service';
 import { PolicyService } from './policy';
 import { PremaritalController } from './premarital.controller';
 import { PublicApplicationsService } from './public-applications.service';
 import { PublicPremaritalController } from './public-premarital.controller';
 import { PremaritalSessionsController } from './sessions.controller';
 import { SessionsService } from './sessions.service';
-import { CoupleAccessService } from './documents/couple-access.service';
-import { CoupleDocumentsController } from './documents/couple-documents.controller';
-import { CoupleDocumentsService } from './documents/couple-documents.service';
+import { CoupleAccountsService } from './couple/couple-accounts.service';
+import { CoupleController } from './couple/couple.controller';
+import { CoupleDashboardService } from './couple/couple-dashboard.service';
 import { DocumentCrypto } from './documents/document-crypto';
 import { DocumentDispatchService } from './documents/document-dispatch.service';
 import { DocumentLettersService } from './documents/document-letters.service';
@@ -38,14 +37,13 @@ import { UploadInspector } from './documents/upload-inspector';
     PublicPremaritalController,
     PremaritalController,
     PremaritalSessionsController,
-    CoupleDocumentsController,
+    CoupleController,
     PremaritalDocumentsController,
   ],
   providers: [
     CaseAccess,
     CounsellingNotifier,
     PolicyService,
-    ModulesService,
     PublicApplicationsService,
     CaseReadsService,
     CaseActionsService,
@@ -57,8 +55,8 @@ import { UploadInspector } from './documents/upload-inspector';
     UploadInspector,
     DocumentMailer,
     DocumentLettersService,
-    CoupleAccessService,
-    CoupleDocumentsService,
+    CoupleAccountsService,
+    CoupleDashboardService,
     DocumentDispatchService,
     DocumentsAdminService,
   ],

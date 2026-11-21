@@ -66,12 +66,13 @@ describe('FollowUpCountsService', () => {
     const { service } = makeService(people);
     const counts = await service.summary(viewer);
 
-    expect(counts.byStatus).toEqual({ FIRST_TIMER: 2, SECOND_TIMER: 1, THIRD_TIMER: 1, INTEGRATED: 1, OPTED_OUT: 1 });
+    expect(counts.byStatus).toEqual({ FIRST_TIMER: 2, SECOND_TIMER: 1, THIRD_TIMER: 1, FOURTH_TIMER: 0, AWAY: 0, INTEGRATED: 1, OPTED_OUT: 1 });
     expect(counts.total).toBe(6);
     expect(counts.total).toBe(PIPELINE_STATUSES.reduce((n, s) => n + counts.byStatus[s], 0));
     expect(counts.visitors).toBe(counts.total);
     expect(counts.followingUp).toBe(4);
-    expect(Object.keys(counts.byStatus)).not.toContain('AWAY');
+    // Away is back as a status the board sets by hand, so it is counted like the rest.
+    expect(counts.byStatus.AWAY).toBe(0);
   });
 
   it('gives each tab badge the total of the very list that tab opens', async () => {

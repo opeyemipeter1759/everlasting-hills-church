@@ -6,11 +6,14 @@ import { MessagesSquare } from "lucide-react";
 import { useFollowUpPerson, type MasterListRow } from "@/lib/api/follow-up-pipeline";
 import type { PipelineRow } from "@/lib/api/pipeline";
 
+/** A person in the drawer; first-timers also carry their form, so Came again works there. */
+export type DrawerPerson = MasterListRow & { visitorId?: string; firstVisitDate?: string };
+
 /**
  * A pipeline row as the team conversation drawer reads it. The conversation
  * lives on the account once one was made from the form, else on the form.
  */
-export function drawerPerson(row: PipelineRow): MasterListRow {
+export function drawerPerson(row: PipelineRow): DrawerPerson {
   return {
     id: row.memberId ?? row.visitorId,
     kind: row.memberId ? "MEMBER" : "VISITOR",
@@ -20,20 +23,22 @@ export function drawerPerson(row: PipelineRow): MasterListRow {
     status: row.status,
     hasAccount: !!row.memberId,
     attended: row.visits,
+    visitorId: row.visitorId,
+    firstVisitDate: row.firstVisitDate,
   };
 }
 
 /** Opens the team's conversation about one person, from a list row. */
-export function NotesButton({ row, onOpen }: { row: PipelineRow; onOpen: (person: MasterListRow) => void }) {
+export function NotesButton({ row, onOpen }: { row: PipelineRow; onOpen: (person: DrawerPerson) => void }) {
   return (
     <button
       type="button"
       onClick={() => onOpen(drawerPerson(row))}
-      aria-label={`Team notes on ${row.firstName}`}
-      className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-[#87102C] hover:bg-[#FFE8ED] dark:text-[#FFB3C1] dark:hover:bg-white/10"
+      aria-label={`Team feedback on ${row.firstName}`}
+      className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold text-[#87102C] hover:bg-[#FFE8ED] dark:text-[#FFB3C1] dark:hover:bg-white/10"
     >
-      <MessagesSquare size={14} aria-hidden="true" />
-      Notes
+      <MessagesSquare size={15} strokeWidth={2.25} aria-hidden="true" />
+      Feedback
     </button>
   );
 }
