@@ -75,6 +75,11 @@ export function uploadDocument(kind: RequirementKind, file: File, onProgress: (p
   body.append("file", file);
   return apiClient
     .post(`${BASE}/documents/${kind}/upload`, body, {
+      // The client defaults to JSON, and axios would then send the form as JSON with the file
+      // left out. Clearing it lets the browser send a real file upload with its boundary.
+      headers: { "Content-Type": undefined as unknown as string },
+      // Up to the size limit over a slow phone connection.
+      timeout: 120_000,
       onUploadProgress: (e) => e.total && onProgress(Math.round((e.loaded / e.total) * 100)),
     })
     .then(() => undefined);
