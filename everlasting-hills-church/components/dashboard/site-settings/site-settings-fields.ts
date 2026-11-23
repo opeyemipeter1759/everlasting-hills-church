@@ -1,6 +1,6 @@
 import type { FieldDef } from "@/components/dashboard/admin/cms/structured/StructuredForm";
 import type { SiteSectionName } from "@/lib/site-settings";
-import { cta, directions, setman } from "./site-settings-fields-extra";
+import { cta, directions } from "./site-settings-fields-extra";
 
 /**
  * Field definitions for each homepage section, mirroring lib/site-settings.ts's
@@ -263,7 +263,6 @@ const carousel: FieldDef[] = [
 
 export const SITE_SETTINGS_FIELDS: Record<SiteSectionName, FieldDef[]> = {
   HERO: hero,
-  SETMAN: setman,
   ABOUT: about,
   CULTURE: culture,
   SCRIPTURE: scripture,

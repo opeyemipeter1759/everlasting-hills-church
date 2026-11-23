@@ -8,7 +8,8 @@ import HeroSection from "@/components/home/HeroSection";
 import SermonsSection from "@/components/home/SermonsSection";
 import AttendanceSection from "@/components/home/AttendanceSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
-import { getAllSiteSettings, type SermonsContent } from "@/lib/site-settings";
+import { getAllSiteSettings, SETMAN_FALLBACK, type SermonsContent, type SetmanContent } from "@/lib/site-settings";
+import { getStructuredContent } from "@/lib/cms-page";
 import { getTelegramSermons } from "@/lib/telegram-sermons";
 import EventSection from "@/components/home/EventSection";
 import BirthdayTeaserSection from "@/components/home/BirthdayTeaserSection";
@@ -34,15 +35,38 @@ async function TelegramSermons({ content }: { content: SermonsContent }) {
   );
 }
 
-export default async function HomePage() {
+interface HomeContent {
+  setman: SetmanContent;
+}
+
+function isValidHomeContent(c: unknown): c is HomeContent {
+  const setman = (c as { setman?: SetmanContent } | null)?.setman;
+  return Boolean(setman && Array.isArray(setman.paragraphs) && typeof setman.name === "string");
+}
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: { preview?: string };
+}) {
   const settings = await getAllSiteSettings();
+  const home = await getStructuredContent<HomeContent>("home", {
+    preview: searchParams.preview,
+    fallback: { setman: SETMAN_FALLBACK },
+    valid: isValidHomeContent,
+  });
 
   return (
     <main className="min-h-screen flex overflow-x-hidden flex-col bg-church-dark">
+      {searchParams.preview && (
+        <div className="bg-[#87102C] py-2 text-center text-xs font-semibold text-white">
+          PREVIEW — draft, not published
+        </div>
+      )}
       <HeroSection content={settings.HERO} />
       {/* <PublicDailyScriptureSection />
       <WordOfTheDaySection /> */}
-      <SetmanSection content={settings.SETMAN} />
+      <SetmanSection content={home.setman} />
         <Suspense fallback={null}>
         <EventSectionFade />
       </Suspense>

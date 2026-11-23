@@ -12,6 +12,7 @@ import {
   LegalSchema, DEFAULT_PRIVACY, DEFAULT_TERMS,
   GiveSchema, DEFAULT_GIVE,
   ContactSchema, DEFAULT_CONTACT,
+  HomeSchema, DEFAULT_HOME,
 } from './schemas/structured/pages.schema';
 
 /**
@@ -29,6 +30,7 @@ export interface ContentType {
 }
 
 export const CONTENT_TYPES: Record<string, ContentType> = {
+  home: { schema: HomeSchema, default: DEFAULT_HOME },
   beliefs: { schema: BeliefsSchema, default: DEFAULT_BELIEFS },
   cultures: { schema: CulturesSchema, default: DEFAULT_CULTURES },
   about: { schema: AboutSchema, default: DEFAULT_ABOUT },

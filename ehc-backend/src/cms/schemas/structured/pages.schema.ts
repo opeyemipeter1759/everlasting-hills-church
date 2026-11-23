@@ -20,6 +20,36 @@ const imageUrlSchema = z
 /** Optional+nullable hero background image — null falls back to the plain dark hero. */
 const heroImageField = imageUrlSchema.nullable().optional();
 
+// ── Homepage ─────────────────────────────────────────────────────────────────
+const SetmanSchema = z.object({
+  visible: z.boolean(),
+  label: t(80),
+  headline: t(120),
+  headlineAccent: t(120),
+  paragraphs: z.array(t(1000)).min(1).max(5),
+  name: t(120),
+  title: t(120),
+  photo: imageUrlSchema.nullable().optional(),
+  cta: z.object({ label: t(80), href: t(300) }),
+});
+export const HomeSchema = z.object({ setman: SetmanSchema });
+export const DEFAULT_HOME: z.infer<typeof HomeSchema> = {
+  setman: {
+    visible: true,
+    label: 'A Word From Our Set Man',
+    headline: 'You were made for more',
+    headlineAccent: 'than just a Sunday.',
+    paragraphs: [
+      'Welcome to Everlasting Hills Church. Whether this is your first visit or you have walked with us for years, I am glad you are here.',
+      'Our prayer is simple: that every person who comes through these doors would meet the living God, grow deep in His Word, and discover the inheritance He has prepared for them. You are not a visitor here. You are family.',
+    ],
+    name: 'Pastor [Lead Name]',
+    title: 'Set Man, Everlasting Hills Church',
+    photo: null,
+    cta: { label: 'Meet our pastors', href: '/Pastor' },
+  },
+};
+
 // ── Intro (wrapper copy over module-driven content: sermons, events) ───────────
 export const IntroSchema = z.object({
   eyebrow: t(60),

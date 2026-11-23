@@ -26,7 +26,7 @@ export interface PageDef {
 }
 
 export const PAGE_REGISTRY: PageDef[] = [
-  { key: 'home', title: 'Homepage', route: '/', group: 'Homepage', highImpact: true },
+  { key: 'home', title: 'Homepage', route: '/', group: 'Homepage', highImpact: true, editor: 'structured', contentType: 'home' },
 
   { key: 'about', title: 'About', route: '/about', group: 'About', editor: 'structured', contentType: 'about' },
   // Replaced "What We Believe" (about/beliefs, /beliefs now redirects here). Its saved rows stay in the database.

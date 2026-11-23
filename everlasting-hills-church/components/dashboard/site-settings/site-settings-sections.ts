@@ -1,5 +1,4 @@
 import {
-  CircleUserRound,
   Globe,
   HelpingHand,
   Images,
@@ -18,7 +17,6 @@ import type { SiteSectionName } from "@/lib/site-settings";
 /** Tab label and icon for each homepage section in the editor. */
 export const SECTION_META: Record<SiteSectionName, { label: string; icon: LucideIcon }> = {
   HERO: { label: "Hero", icon: Play },
-  SETMAN: { label: "Set Man's Message", icon: CircleUserRound },
   ABOUT: { label: "About", icon: Sparkles },
   CULTURE: { label: "Culture", icon: Mountain },
   SCRIPTURE: { label: "Scripture", icon: Quote },
@@ -35,7 +33,6 @@ export const SECTION_META: Record<SiteSectionName, { label: string; icon: Lucide
 /** Tab order: roughly the order the sections appear on the site. */
 export const SECTION_ORDER: SiteSectionName[] = [
   "HERO",
-  "SETMAN",
   "ABOUT",
   "CULTURE",
   "SCRIPTURE",

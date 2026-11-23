@@ -8,7 +8,7 @@ import { PAGE_REGISTRY, decodeCmsKey, pageDef } from './page-registry';
  */
 describe('CMS page registry', () => {
   it('serves every key the public site reads', () => {
-    for (const key of ['about', 'about/cultures', 'ministries', 'ministries/mens', 'ministries/womens', 'ministries/teens',
+    for (const key of ['home', 'about', 'about/cultures', 'ministries', 'ministries/mens', 'ministries/womens', 'ministries/teens',
       'ministries/couples', 'events', 'visit', 'contact', 'give', 'privacy', 'terms']) {
       expect(pageDef(key)).toBeDefined();
     }

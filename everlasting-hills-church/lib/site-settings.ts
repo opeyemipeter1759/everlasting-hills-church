@@ -177,7 +177,6 @@ export interface SiteSettingsMap {
   CONTACT: ContactContent;
   CAROUSEL: CarouselContent;
   DIRECTIONS: DirectionsContent;
-  SETMAN: SetmanContent;
 }
 
 export type SiteSectionName = keyof SiteSettingsMap;
@@ -484,7 +483,6 @@ const FALLBACKS: SiteSettingsMap = {
   CONTACT: CONTACT_FALLBACK,
   CAROUSEL: CAROUSEL_FALLBACK,
   DIRECTIONS: DIRECTIONS_FALLBACK,
-  SETMAN: SETMAN_FALLBACK,
 };
 
 /* ── Fetcher ─────────────────────────────────────────────────────────────── */

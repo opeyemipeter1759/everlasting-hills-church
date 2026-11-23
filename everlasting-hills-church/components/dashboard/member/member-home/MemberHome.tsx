@@ -88,20 +88,20 @@ export default function MemberHome(props: MemberHomePropsOptional) {
       <DashboardColumns>
         <MainColumn>
           <Tile order={1}><PledgeAppeal member={member} userEmail={userEmail} /></Tile>
-          <Tile order={3}><DailyScriptureCard /></Tile>
-          <Tile order={6}><TodayReadingCard /></Tile>
-          <Tile order={9}><AnnouncementsPanel announcements={announcements} /></Tile>
-          <Tile order={12}><LatestSermonSummary compact /></Tile>
-          {featuredSermon && <Tile order={14}><FeaturedSermonCard sermon={featuredSermon} /></Tile>}
-          <Tile order={15}><GatheringsPanel /></Tile>
+          <Tile order={4}><DailyScriptureCard /></Tile>
+          <Tile order={7}><TodayReadingCard /></Tile>
+          <Tile order={10}><AnnouncementsPanel announcements={announcements} /></Tile>
+          <Tile order={13}><LatestSermonSummary compact /></Tile>
+          {featuredSermon && <Tile order={15}><FeaturedSermonCard sermon={featuredSermon} /></Tile>}
+          <Tile order={16}><GatheringsPanel /></Tile>
         </MainColumn>
 
         <SideColumn>
-          <Tile order={2}>
+          <Tile order={3}>
             <CheckInPanel todayService={todayService} hasCheckedInToday={hasCheckedInToday} nextService={nextService} />
           </Tile>
-          <Tile order={16}><GiftExchangeCard /></Tile>
-          <Tile order={4}>
+          <Tile order={2}><GiftExchangeCard /></Tile>
+          <Tile order={5}>
             <WarmStreakStat
               memberDisplayId={memberDisplayId}
               streak={streak}
@@ -111,8 +111,8 @@ export default function MemberHome(props: MemberHomePropsOptional) {
               ministryUnit={ministryUnit}
             />
           </Tile>
-          <Tile order={5}><PrayerWatchCard /></Tile>
-          <Tile order={7}>
+          <Tile order={6}><PrayerWatchCard /></Tile>
+          <Tile order={8}>
             <WarmAttendanceStat
               attendanceRate={attendanceRate}
               attendanceCount={attendanceCount}
@@ -121,12 +121,12 @@ export default function MemberHome(props: MemberHomePropsOptional) {
               recentServices={recentServices}
             />
           </Tile>
-          <Tile order={8}><ContinueListeningCard listenHistory={listenHistory} /></Tile>
-          <Tile order={10}>
+          <Tile order={9}><ContinueListeningCard listenHistory={listenHistory} /></Tile>
+          <Tile order={11}>
             <BirthdayCard memberId={member?.id ?? null} birthdayDaysUntil={birthdayDaysUntil} communityBirthdays={communityBirthdays} />
           </Tile>
-          <Tile order={11}><OneOnOneCard /></Tile>
-          <Tile order={13}><EvangelismTallyCard /></Tile>
+          <Tile order={12}><OneOnOneCard /></Tile>
+          <Tile order={14}><EvangelismTallyCard /></Tile>
         </SideColumn>
       </DashboardColumns>
     </div>

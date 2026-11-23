@@ -13,7 +13,7 @@ describe("dashboard CMS editor", () => {
   const types = Array.from(block.matchAll(/^\s{2}(\w+): \{ schema:/gm), (m) => m[1]);
 
   it("reads the backend's content types", () => {
-    expect(types).toEqual(expect.arrayContaining(["about", "cultures", "eventsIntro", "give", "contact"]));
+    expect(types).toEqual(expect.arrayContaining(["home", "about", "cultures", "eventsIntro", "give", "contact"]));
   });
 
   it.each(types)("has a form for %s", (type) => {
