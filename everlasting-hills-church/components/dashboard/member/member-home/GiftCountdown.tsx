@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { kicker } from "./tokens";
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -36,6 +38,7 @@ export function GiftCountdown({ targetDate, clockOffsetMs }: { targetDate: strin
   const target = Date.parse(targetDate);
   const [now, setNow] = useState(() => Date.now() + clockOffsetMs);
   const done = now >= target;
+  const still = useReducedMotion() ?? false;
 
   useEffect(() => {
     setNow(Date.now() + clockOffsetMs);
@@ -50,26 +53,45 @@ export function GiftCountdown({ targetDate, clockOffsetMs }: { targetDate: strin
 
   if (done) {
     return (
-      <p className="rounded-xl border border-[#87102C]/20 bg-[#87102C]/[0.05] px-4 py-3 text-center text-sm font-semibold text-[#87102C] dark:border-[#FFB3C1]/30 dark:text-[#FFB3C1]">
+      <motion.p
+        className="rounded-xl bg-gradient-to-r from-[#87102C] to-[#A3153A] px-4 py-3 text-center text-sm font-semibold text-white shadow-sm shadow-[#87102C]/25"
+        initial={still ? false : { scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 16 }}
+      >
         It&apos;s today. See you there!
-      </p>
+      </motion.p>
     );
   }
 
   const left = remaining(target - now);
-  const units = [["days", left.days], ["hours", left.hours], ["minutes", left.minutes], ["seconds", left.seconds]] as const;
+  const units = [["days", left.days], ["hrs", left.hours], ["mins", left.minutes], ["secs", left.seconds]] as const;
   return (
     <div>
-      <p className="mb-2 text-xs font-medium text-gray-500 dark:text-white/50">Starts in</p>
+      <p className={`mb-2 ${kicker}`}>Starts in</p>
       <div
-        className="grid grid-cols-4 divide-x divide-gray-200 rounded-xl border border-gray-200 dark:divide-white/10 dark:border-white/10"
+        className="grid grid-cols-4 gap-2"
         role="timer"
         aria-label={`${left.days} days, ${left.hours} hours, ${left.minutes} minutes left`}
       >
         {units.map(([label, value]) => (
-          <div key={label} className="py-2.5 text-center">
-            <p className="text-xl font-bold leading-none tabular-nums text-[#111] dark:text-white">{String(value).padStart(2, "0")}</p>
-            <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-white/45">{label}</p>
+          <div key={label} className="overflow-hidden rounded-xl bg-gradient-to-b from-[#A3153A] to-[#6E0C24] py-2.5 text-center text-white shadow-sm shadow-[#87102C]/25">
+            {/* Each new number rolls up into place. */}
+            <div className="relative h-5">
+              <AnimatePresence initial={false} mode="popLayout">
+                <motion.p
+                  key={value}
+                  className="absolute inset-x-0 text-xl font-bold leading-5 tabular-nums"
+                  initial={still ? false : { y: "100%", opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={still ? { opacity: 0 } : { y: "-100%", opacity: 0 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                >
+                  {String(value).padStart(2, "0")}
+                </motion.p>
+              </AnimatePresence>
+            </div>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-[#f5d49a]">{label}</p>
           </div>
         ))}
       </div>

@@ -28,12 +28,15 @@ afterEach(() => {
 });
 
 describe("the gift exchange & picnic card", () => {
-  it("says when it is and lets a member pick either or both, with no count or countdown yet", () => {
+  it("says when it is and lets a member register for either or both from a modal, with no count or countdown yet", () => {
     state = base;
     render(<GiftExchangeCard />);
     expect(screen.getByText("Sunday, 6 December")).toBeInTheDocument();
     expect(screen.queryByText(/12/)).not.toBeInTheDocument();
     expect(screen.queryByRole("timer")).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Register" }));
+    expect(screen.getByRole("dialog", { name: "Register for the fellowship" })).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /Gift exchange/ })).toBeChecked();
     fireEvent.click(screen.getByRole("checkbox", { name: /Picnic/ }));
     fireEvent.click(screen.getByRole("button", { name: "Count me in" }));
@@ -43,6 +46,7 @@ describe("the gift exchange & picnic card", () => {
   it("won't sign up with nothing ticked", () => {
     state = base;
     render(<GiftExchangeCard />);
+    fireEvent.click(screen.getByRole("button", { name: "Register" }));
     fireEvent.click(screen.getByRole("checkbox", { name: /Gift exchange/ }));
     expect(screen.getByRole("button", { name: "Count me in" })).toBeDisabled();
     expect(screen.getByText("Tick at least one to sign up.")).toBeInTheDocument();
