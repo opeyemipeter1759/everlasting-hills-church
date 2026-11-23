@@ -16,9 +16,9 @@ export class GiftExchangeAdminController {
   constructor(private readonly admin: GiftExchangeAdminService) {}
 
   @Get('entries')
-  @ApiOperation({ summary: 'Everyone who showed interest, newest first, with counts per status; optional status filter' })
+  @ApiOperation({ summary: 'Everyone who signed up, newest first, with counts per status and per activity; optional status and activity filters' })
   list(@Query() query: ListGiftEntriesQueryDto) {
-    return this.admin.list(query.status);
+    return this.admin.list(query.status, query.activity);
   }
 
   @Patch('entries/:id/reject')

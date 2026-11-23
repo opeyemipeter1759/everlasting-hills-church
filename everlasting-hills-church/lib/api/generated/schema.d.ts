@@ -44,7 +44,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Everyone who showed interest, newest first, with counts per status; optional status filter */
+        /** Everyone who signed up, newest first, with counts per status and per activity; optional status and activity filters */
         get: operations["GiftExchangeAdminController_list"];
         put?: never;
         post?: never;
@@ -4758,7 +4758,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Show interest in the gift exchange (idempotent; 403 if my entry was rejected) */
+        /** Join the gift exchange, the picnic, or both, or change my choice (400 if neither; 403 if my entry was rejected) */
         post: operations["GiftExchangeController_register"];
         /** Withdraw my interest (no-op if not registered; a rejected entry is left as it is) */
         delete: operations["GiftExchangeController_withdraw"];
@@ -10182,6 +10182,12 @@ export interface components {
             email: string;
         };
         GenerateDto: Record<string, never>;
+        GiftExchangeChoiceDto: {
+            /** @description Take part in the gift exchange */
+            giftExchange: boolean;
+            /** @description Come to the picnic */
+            picnic: boolean;
+        };
         HeartbeatDto: {
             /** @description The furthest the player thinks it has played. Advisory: the server never credits from it. */
             maxWatched?: number;
@@ -11726,6 +11732,8 @@ export interface operations {
             query?: {
                 /** @description Only entries with this status */
                 status?: "INTERESTED" | "REJECTED";
+                /** @description Only members who chose this activity */
+                activity?: "GIFT_EXCHANGE" | "PICNIC";
             };
             header?: never;
             path?: never;
@@ -23256,7 +23264,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GiftExchangeChoiceDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {

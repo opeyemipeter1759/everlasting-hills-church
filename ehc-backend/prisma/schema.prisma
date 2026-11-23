@@ -4323,6 +4323,9 @@ model GiftExchangeEntry {
   tenantId        String
   memberId        String          @unique
   status          GiftEntryStatus @default(INTERESTED)
+  /// Which of the two the member wants to join; at least one is always true.
+  giftExchange    Boolean         @default(true)
+  picnic          Boolean         @default(false)
   rejectionReason String?         @db.VarChar(300)
   /// Profile.id of the admin who last rejected or reinstated the entry.
   reviewedById    String?

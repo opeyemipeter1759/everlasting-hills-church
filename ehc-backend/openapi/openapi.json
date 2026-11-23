@@ -2413,6 +2413,23 @@
         "properties": {},
         "type": "object"
       },
+      "GiftExchangeChoiceDto": {
+        "properties": {
+          "giftExchange": {
+            "description": "Take part in the gift exchange",
+            "type": "boolean"
+          },
+          "picnic": {
+            "description": "Come to the picnic",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "giftExchange",
+          "picnic"
+        ],
+        "type": "object"
+      },
       "HeartbeatDto": {
         "properties": {
           "maxWatched": {
@@ -5961,6 +5978,19 @@
               ],
               "type": "string"
             }
+          },
+          {
+            "description": "Only members who chose this activity",
+            "in": "query",
+            "name": "activity",
+            "required": false,
+            "schema": {
+              "enum": [
+                "GIFT_EXCHANGE",
+                "PICNIC"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6000,7 +6030,7 @@
             "access-token": []
           }
         ],
-        "summary": "Everyone who showed interest, newest first, with counts per status; optional status filter",
+        "summary": "Everyone who signed up, newest first, with counts per status and per activity; optional status and activity filters",
         "tags": [
           "gift-exchange"
         ]
@@ -25387,6 +25417,16 @@
       "post": {
         "operationId": "GiftExchangeController_register",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiftExchangeChoiceDto"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -25424,7 +25464,7 @@
             "access-token": []
           }
         ],
-        "summary": "Show interest in the gift exchange (idempotent; 403 if my entry was rejected)",
+        "summary": "Join the gift exchange, the picnic, or both, or change my choice (400 if neither; 403 if my entry was rejected)",
         "tags": [
           "gift-exchange"
         ]

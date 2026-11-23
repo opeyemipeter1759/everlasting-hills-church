@@ -1,14 +1,15 @@
-import { Controller, Delete, Get, Header, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, HttpCode, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { GiftExchangeService } from './gift-exchange.service';
+import { GiftExchangeChoiceDto } from './dto/gift-exchange.dto';
 
 /**
- * A member's gift exchange: one tap in, one tap out. No request bodies; the
- * member is always the signed-in person. Signed-out requests get 401 from the
+ * A member's gift exchange & picnic: choose either or both, change it, or withdraw.
+ * The member is always the signed-in person, never from the body or URL. Signed-out requests get 401 from the
  * global JwtAuthGuard.
  */
 @ApiTags('gift-exchange')
@@ -27,9 +28,9 @@ export class GiftExchangeController {
 
   @Post('register')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Show interest in the gift exchange (idempotent; 403 if my entry was rejected)' })
-  register(@CurrentUser() actor: AuthUser) {
-    return this.giftExchange.register(actor);
+  @ApiOperation({ summary: 'Join the gift exchange, the picnic, or both, or change my choice (400 if neither; 403 if my entry was rejected)' })
+  register(@CurrentUser() actor: AuthUser, @Body() body: GiftExchangeChoiceDto) {
+    return this.giftExchange.register(actor, body);
   }
 
   @Delete('register')

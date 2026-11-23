@@ -28,7 +28,7 @@ export function remaining(ms: number) {
 }
 
 /**
- * A live countdown to the gift exchange. Ticks every second on the server's
+ * A live countdown to the gift exchange & picnic. Ticks every second on the server's
  * clock: `clockOffsetMs` (server time minus this device's time, measured when
  * the API answered) corrects a phone set to the wrong time. Stops at zero.
  */
@@ -50,8 +50,8 @@ export function GiftCountdown({ targetDate, clockOffsetMs }: { targetDate: strin
 
   if (done) {
     return (
-      <p className="rounded-2xl bg-gradient-to-r from-[#F5C76B] to-[#FFE3A3] px-4 py-4 text-center text-lg font-black text-[#5A0A1E] shadow-lg shadow-black/20 motion-safe:animate-bounce [animation-iteration-count:3]">
-        The day is here! 🎁
+      <p className="rounded-xl border border-[#87102C]/20 bg-[#87102C]/[0.05] px-4 py-3 text-center text-sm font-semibold text-[#87102C] dark:border-[#FFB3C1]/30 dark:text-[#FFB3C1]">
+        It&apos;s today. See you there!
       </p>
     );
   }
@@ -60,12 +60,16 @@ export function GiftCountdown({ targetDate, clockOffsetMs }: { targetDate: strin
   const units = [["days", left.days], ["hours", left.hours], ["minutes", left.minutes], ["seconds", left.seconds]] as const;
   return (
     <div>
-      <p className="mb-2.5 text-xs font-semibold text-[#F5C76B]">Gift exchange begins {giftDayLabel(targetDate)}</p>
-      <div className="grid grid-cols-4 gap-2" role="timer" aria-label={`${left.days} days, ${left.hours} hours, ${left.minutes} minutes left`}>
+      <p className="mb-2 text-xs font-medium text-gray-500 dark:text-white/50">Starts in</p>
+      <div
+        className="grid grid-cols-4 divide-x divide-gray-200 rounded-xl border border-gray-200 dark:divide-white/10 dark:border-white/10"
+        role="timer"
+        aria-label={`${left.days} days, ${left.hours} hours, ${left.minutes} minutes left`}
+      >
         {units.map(([label, value]) => (
-          <div key={label} className="rounded-2xl bg-white/10 py-3 text-center ring-1 ring-white/15 backdrop-blur-sm">
-            <p className="text-2xl font-black leading-none tabular-nums text-white">{String(value).padStart(2, "0")}</p>
-            <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#F5C76B]/90">{label}</p>
+          <div key={label} className="py-2.5 text-center">
+            <p className="text-xl font-bold leading-none tabular-nums text-[#111] dark:text-white">{String(value).padStart(2, "0")}</p>
+            <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-white/45">{label}</p>
           </div>
         ))}
       </div>

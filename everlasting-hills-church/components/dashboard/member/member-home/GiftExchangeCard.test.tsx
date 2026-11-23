@@ -14,8 +14,11 @@ vi.mock("@/lib/api/gift-exchange", () => ({
 }));
 vi.mock("@/components/ui/toast/toast", () => ({ showToast: { success: vi.fn(), error: vi.fn() } }));
 
-const base: GiftExchangeState = { registered: false, status: null, rejectionReason: null, totalInterested: 12, targetDate: null,
-  serverTime: "2026-12-05T22:00:00.000Z", clockOffsetMs: 0 };
+const TARGET = "2026-12-06T00:00:00.000+01:00";
+const base: GiftExchangeState = { registered: false, status: null, giftExchange: false, picnic: false, rejectionReason: null,
+  totalInterested: 12, targetDate: TARGET, serverTime: "2026-12-05T22:00:00.000Z", clockOffsetMs: 0 };
+const signedUp = (over: Partial<GiftExchangeState> = {}): GiftExchangeState =>
+  ({ ...base, registered: true, status: "INTERESTED", giftExchange: true, picnic: true, ...over });
 
 beforeEach(() => vi.useFakeTimers({ now: new Date("2026-12-05T22:00:00.000Z") }));
 afterEach(() => {
@@ -24,39 +27,62 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("the gift exchange card", () => {
-  it("shows one button and no count or countdown before joining", () => {
+describe("the gift exchange & picnic card", () => {
+  it("says when it is and lets a member pick either or both, with no count or countdown yet", () => {
     state = base;
     render(<GiftExchangeCard />);
+    expect(screen.getByText("Sunday, 6 December")).toBeInTheDocument();
     expect(screen.queryByText(/12/)).not.toBeInTheDocument();
-    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(screen.queryByRole("timer")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "I'm interested" }));
-    expect(register).toHaveBeenCalled();
+    expect(screen.getByRole("checkbox", { name: /Gift exchange/ })).toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Picnic/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Count me in" }));
+    expect(register.mock.calls[0][0]).toEqual({ giftExchange: true, picnic: true });
   });
 
-  it("counts down once in, labelled from the target date, and confirms before withdrawing", () => {
-    state = { ...base, registered: true, status: "INTERESTED", targetDate: "2026-12-06T00:00:00.000+01:00" };
+  it("won't sign up with nothing ticked", () => {
+    state = base;
     render(<GiftExchangeCard />);
-    expect(screen.getByText("Gift exchange begins Sunday, 6 December")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Gift exchange/ }));
+    expect(screen.getByRole("button", { name: "Count me in" })).toBeDisabled();
+    expect(screen.getByText("Tick at least one to sign up.")).toBeInTheDocument();
+  });
+
+  it("shows what they joined, counts down, and confirms before withdrawing", () => {
+    state = signedUp({ picnic: false });
+    render(<GiftExchangeCard />);
+    expect(screen.getByText("Gift exchange")).toBeInTheDocument();
+    expect(screen.queryByText("Picnic")).not.toBeInTheDocument();
     expect(screen.getByRole("timer")).toHaveAccessibleName("0 days, 1 hours, 0 minutes left");
-    fireEvent.click(screen.getByRole("button", { name: "You're in ✓" }));
+    fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
     expect(withdraw).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: /Yes, withdraw/ }));
     expect(withdraw).toHaveBeenCalled();
   });
 
-  it("uses the server's clock, ticks every second, and says the day is here at zero", () => {
+  it("changes the choice, starting from what they picked before", () => {
+    state = signedUp({ picnic: false });
+    render(<GiftExchangeCard />);
+    fireEvent.click(screen.getByRole("button", { name: "Change" }));
+    expect(screen.getByRole("checkbox", { name: /Gift exchange/ })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /Picnic/ })).not.toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Gift exchange/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Picnic/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(register.mock.calls[0][0]).toEqual({ giftExchange: false, picnic: true });
+  });
+
+  it("uses the server's clock, ticks every second, and says it's today at zero", () => {
     // The device is 59 minutes behind the server, so only a minute is left.
-    state = { ...base, status: "INTERESTED", registered: true, targetDate: "2026-12-06T00:00:00.000+01:00", clockOffsetMs: 59 * 60_000 };
+    state = signedUp({ clockOffsetMs: 59 * 60_000 });
     render(<GiftExchangeCard />);
     expect(screen.getByRole("timer")).toHaveAccessibleName("0 days, 0 hours, 1 minutes left");
     act(() => vi.advanceTimersByTime(60_000));
-    expect(screen.getByText("The day is here! 🎁")).toBeInTheDocument();
+    expect(screen.getByText("It's today. See you there!")).toBeInTheDocument();
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it("tells a rejected member, with no button", () => {
+  it("tells a rejected member, with no buttons", () => {
     state = { ...base, registered: true, status: "REJECTED", rejectionReason: "Not yet a member" };
     render(<GiftExchangeCard />);
     expect(screen.getByText(/wasn't accepted this time: Not yet a member/)).toBeInTheDocument();

@@ -6,15 +6,19 @@ import type { GiftEntry } from "@/lib/api/gift-exchange";
 const reject = vi.fn();
 const reinstate = vi.fn();
 const entry = (id: string, name: string, over: Partial<GiftEntry> = {}): GiftEntry => ({
-  id, memberId: `m-${id}`, name, email: `${id}@mail.com`, phone: "08030000000", status: "INTERESTED", rejectionReason: null,
+  id, memberId: `m-${id}`, name, email: `${id}@mail.com`, phone: "08030000000", status: "INTERESTED", giftExchange: true, picnic: false, rejectionReason: null,
   reviewedAt: null, createdAt: "2026-11-12T10:00:00Z", ...over,
 });
-const entries = [entry("a", "Ada Obi"), entry("b", "Tunde Bello", { status: "REJECTED", rejectionReason: "Duplicate account" })];
+const entries = [entry("a", "Ada Obi", { picnic: true }), entry("b", "Tunde Bello", { status: "REJECTED", rejectionReason: "Duplicate account" })];
+const useGiftEntries = vi.fn();
 vi.mock("@/lib/api/gift-exchange", () => ({
-  useGiftEntries: () => ({
-    data: { targetDate: "2026-12-06T00:00:00.000+01:00", counts: { INTERESTED: 1, REJECTED: 1, total: 2 }, entries },
-    isLoading: false, isError: false, refetch: vi.fn(),
-  }),
+  useGiftEntries: (filter: unknown) => {
+    useGiftEntries(filter);
+    return {
+      data: { targetDate: "2026-12-06T00:00:00.000+01:00", counts: { INTERESTED: 1, REJECTED: 1, total: 2, giftExchange: 1, picnic: 1 }, entries },
+      isLoading: false, isError: false, refetch: vi.fn(),
+    };
+  },
   useRejectGiftEntry: () => ({ mutate: reject, isPending: false }),
   useReinstateGiftEntry: () => ({ mutate: reinstate, isPending: false }),
 }));
@@ -26,11 +30,18 @@ afterEach(() => {
 });
 
 describe("the gift exchange admin page", () => {
-  it("says when the exchange is and explains who will be paired", () => {
+  it("says when it is, and shows what each person signed up for", () => {
     render(<GiftExchangeAdmin />);
-    expect(screen.getByText(/Exchange day: Sunday, 6 December/)).toBeInTheDocument();
+    expect(screen.getByText("Sunday, 6 December")).toBeInTheDocument();
     expect(screen.getByText("Will be paired")).toBeInTheDocument();
+    expect(screen.getAllByText("Picnic").length).toBeGreaterThan(1); // the count tile and Ada's tag
     expect(screen.getByText(/Rejected: Duplicate account/)).toBeInTheDocument();
+  });
+
+  it("filters to the picnic list from its count", () => {
+    render(<GiftExchangeAdmin />);
+    fireEvent.click(screen.getByRole("button", { name: /Picnic/ }));
+    expect(useGiftEntries).toHaveBeenLastCalledWith({ status: "INTERESTED", activity: "PICNIC" });
   });
 
   it("rejects with a reason after confirming", () => {

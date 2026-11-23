@@ -4,14 +4,21 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { api } from "@/lib/api/request";
 
 export type GiftEntryStatus = "INTERESTED" | "REJECTED";
+export type GiftActivity = "GIFT_EXCHANGE" | "PICNIC";
+
+/** What a member signs up for: either or both. */
+export interface GiftChoice {
+  giftExchange: boolean;
+  picnic: boolean;
+}
 
 /** GET /gift-exchange/me, and what register / withdraw answer with. */
-export interface GiftExchangeMe {
+export interface GiftExchangeMe extends GiftChoice {
   registered: boolean;
   status: GiftEntryStatus | null;
   rejectionReason: string | null;
   totalInterested: number;
-  /** When the exchange begins, with its UTC offset. Only while the member is INTERESTED. */
+  /** When it begins (Lagos time, with its UTC offset). Sent even before joining; the countdown shows only once in. */
   targetDate: string | null;
   serverTime: string;
 }
@@ -19,7 +26,7 @@ export interface GiftExchangeMe {
 /** The server's answer plus how far this device's clock is behind it (ms), measured when it arrived. */
 export type GiftExchangeState = GiftExchangeMe & { clockOffsetMs: number };
 
-export interface GiftEntry {
+export interface GiftEntry extends GiftChoice {
   id: string;
   memberId: string;
   name: string;
@@ -34,7 +41,8 @@ export interface GiftEntry {
 export interface GiftEntriesResponse {
   /** When the exchange takes place, with its UTC offset. */
   targetDate: string;
-  counts: { INTERESTED: number; REJECTED: number; total: number };
+  /** giftExchange / picnic count only people still in (not rejected). */
+  counts: { INTERESTED: number; REJECTED: number; total: number; giftExchange: number; picnic: number };
   entries: GiftEntry[];
 }
 
@@ -47,11 +55,11 @@ export function useGiftExchange() {
   return useQuery({ queryKey: ME, queryFn: () => api.get<GiftExchangeMe>("/gift-exchange/me").then(withOffset) });
 }
 
-/** "I'm interested" (with no body); the answer replaces the card's state, so the countdown starts straight away. */
+/** Join, or change what you joined; the answer replaces the card's state, so the countdown starts straight away. */
 export function useRegisterGiftExchange() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.post<GiftExchangeMe>("/gift-exchange/register").then(withOffset),
+    mutationFn: (choice: GiftChoice) => api.post<GiftExchangeMe>("/gift-exchange/register", choice).then(withOffset),
     onSuccess: (state) => qc.setQueryData(ME, state),
   });
 }
@@ -66,10 +74,19 @@ export function useWithdrawGiftExchange() {
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
-export function useGiftEntries(status: GiftEntryStatus | null) {
+export interface GiftEntriesFilter {
+  status?: GiftEntryStatus;
+  activity?: GiftActivity;
+}
+
+export function useGiftEntries(filter: GiftEntriesFilter) {
   return useQuery({
-    queryKey: [...ROOT, "entries", status ?? "all"],
-    queryFn: () => api.get<GiftEntriesResponse>("/admin/gift-exchange/entries", status ? { status } : undefined),
+    queryKey: [...ROOT, "entries", filter.status ?? "any", filter.activity ?? "any"],
+    queryFn: () =>
+      api.get<GiftEntriesResponse>("/admin/gift-exchange/entries", {
+        ...(filter.status ? { status: filter.status } : {}),
+        ...(filter.activity ? { activity: filter.activity } : {}),
+      }),
     placeholderData: keepPreviousData,
   });
 }
