@@ -416,7 +416,7 @@ It prints `['CLIENT_IP_SIGNING_SECRET']`.
 1. Apply on https://www.everlastinghills.church/pre-marital-counselling with two test email addresses and two different phone numbers.
 2. Open both emails and sign in as one test partner.
 3. Confirm the dashboard's authenticated `GET /counselling/me` succeeds and shows uploads as closed.
-4. With the same signed-in test account, attempt that partner's own `POST /counselling/me/documents/:kind/upload` route while the switch is false. It should return `503` with "Online document uploads are not open yet." Do not send a file. Do not use a fabricated token or the retired `/public/premarital/documents/access` route.
+4. With the same signed-in test account, attempt that partner's own `POST /counselling/me/documents/:kind/upload` route while the switch is false. It should return `503` with "Uploading is not open yet." Do not send a file. Do not use a fabricated token or the retired `/public/premarital/documents/access` route.
 
 If either route is missing or the switch does not return the expected response,
 stop. Leave the key unmounted and do not send couples upload instructions.

@@ -21,7 +21,7 @@ import { CaseReadsService } from '../case-reads.service';
 import { CounsellingNotifier } from '../counselling-notifier';
 import { CoupleAccountsService } from '../couple/couple-accounts.service';
 import { CoupleController } from '../couple/couple.controller';
-import { CoupleDashboardService } from '../couple/couple-dashboard.service';
+import { CoupleDashboardService, UPLOADS_NOT_OPEN } from '../couple/couple-dashboard.service';
 import { PolicyService } from '../policy';
 import { PremaritalController } from '../premarital.controller';
 import { validApplication } from '../premarital.fixture-spec';
@@ -544,7 +544,8 @@ maybe('Pre-marital documents and the couple dashboard over HTTP, against Postgre
       const groom = await partner(a.id, 'APPLICANT');
       store.ready = false;
       expect((await groom.get('/counselling/me').expect(200)).body.data.documents.uploadsOpen).toBe(false);
-      await groom.upload('PARENTAL_CONSENT_GROOM', await pdf()).expect(503);
+      const refused = await groom.upload('PARENTAL_CONSENT_GROOM', await pdf()).expect(503);
+      expect(String(refused.body.error.message).toLowerCase()).not.toContain('church office');
       store.ready = true;
     });
 
@@ -564,7 +565,9 @@ maybe('Pre-marital documents and the couple dashboard over HTTP, against Postgre
           const page = (await groom.get('/counselling/me').expect(200)).body.data;
           expect(page.documents.uploadsOpen).toBe(false);
           expect(page.documents.items.every((d: { canUpload: boolean }) => !d.canUpload)).toBe(true);
-          await groom.upload('PARENTAL_CONSENT_GROOM', await pdf()).expect(503);
+          const refused = await groom.upload('PARENTAL_CONSENT_GROOM', await pdf()).expect(503);
+          expect(refused.body.error.message).toBe(UPLOADS_NOT_OPEN);
+          expect(UPLOADS_NOT_OPEN.toLowerCase()).not.toContain('church office');
           await groom.post('/counselling/me/documents/consent', { kind: 'MEDICAL_CERT_GROOM' }).expect(503);
           expect(store.ops).toHaveLength(previousOperations);
           expect((await requirement(a.id, 'PARENTAL_CONSENT_GROOM')).status).toBe('PENDING');

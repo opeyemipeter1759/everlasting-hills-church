@@ -24,7 +24,7 @@ export const MAX_KEY_VERSION = 3;
 
 export class DocumentStorageNotReady extends ServiceUnavailableException {
   constructor() {
-    super('Secure document storage is not set up on this server yet. Please bring your documents to the church office for now.');
+    super('Secure document storage is not ready yet, so documents cannot be uploaded or opened right now. Please try again later.');
   }
 }
 

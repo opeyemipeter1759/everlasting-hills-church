@@ -45,7 +45,7 @@ export function DocumentsPanel({ data, onChanged }: { data: CoupleOverview; onCh
       )}
       {!d.uploadsOpen && !a.closed && (
         <p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-500/15 dark:text-amber-100">
-          Online uploads are not open yet. Please bring your documents to the church office for now.
+          Uploading opens shortly. You can download your letters and get them ready now, and upload them here once it opens.
         </p>
       )}
       <ul className="mt-4 space-y-3">

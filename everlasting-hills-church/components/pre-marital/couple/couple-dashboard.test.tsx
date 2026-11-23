@@ -99,8 +99,10 @@ describe("the couple dashboard", () => {
   it("explains when uploads are closed and offers no upload controls", async () => {
     get.mockResolvedValue(overview({ uploadsOpen: false }));
     render(wrap(<CoupleDashboard />));
-    expect(await screen.findByText(/Online uploads are not open yet/)).toBeTruthy();
+    expect(await screen.findByText(/Uploading opens shortly/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Choose a file" })).toBeNull();
+    // Everything is submitted on the website: the closed note never sends anyone to the office.
+    expect(document.body.textContent?.toLowerCase()).not.toContain("church office");
   });
 
   it("explains plainly when this account has no application", async () => {

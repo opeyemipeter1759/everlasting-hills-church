@@ -194,7 +194,7 @@ describe('document encryption', () => {
   it('stores nothing at all without a master key', () => {
     const off = new DocumentCrypto(config({}));
     expect(off.configured).toBe(false);
-    expect(() => off.encrypt(Buffer.from('x'))).toThrow(/not set up/);
+    expect(() => off.encrypt(Buffer.from('x'))).toThrow(/not ready/);
   });
 });
 

@@ -39,6 +39,9 @@ export const KIND_LABEL: Record<CounsellingRequirementKind, string> = {
 const UPLOADS_PER_HOUR = 20;
 /** A partner may upload while a document is waiting, uploaded, or asked for again. */
 const OPEN: readonly CounsellingRequirementStatus[] = ['PENDING', 'UPLOADED', 'NEEDS_REUPLOAD'];
+/** While DOCUMENT_UPLOADS_ENABLED is off. Everything is submitted on the website, so it never sends anyone to the office. */
+export const UPLOADS_NOT_OPEN =
+  'Uploading is not open yet. You can download your letters and get them ready now, and upload them here once it opens.';
 
 /** The couple's view of where the application is. CLOSED stands apart. */
 const STAGES = [
@@ -116,9 +119,7 @@ export class CoupleDashboardService {
 
   private assertUploadsEnabled(): void {
     if (!this.uploadsEnabledByConfig) {
-      throw new ServiceUnavailableException(
-        'Online document uploads are not open yet. Please bring your documents to the church office for now.',
-      );
+      throw new ServiceUnavailableException(UPLOADS_NOT_OPEN);
     }
     if (!this.crypto.configured || !this.store.configured) throw new DocumentStorageNotReady();
   }
