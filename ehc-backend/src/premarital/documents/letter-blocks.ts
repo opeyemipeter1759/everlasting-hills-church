@@ -72,6 +72,8 @@ export const blockSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('testList') }),
   /** The recommended laboratories from the settings. */
   z.object({ type: z.literal('labList') }),
+  /** The closing, the Senior Pastors' signature image, then the lines under it (names, office). Kept on one page. */
+  z.object({ type: z.literal('signoff'), closing: text(120), lines: z.array(optionalLine).min(1).max(6) }),
   /** Signature blocks: one, or two side by side. */
   z.object({
     type: z.literal('signatureColumns'),
@@ -102,6 +104,8 @@ export function textsOf(blocks: Block[]): string[] {
         return b.items;
       case 'signatureColumns':
         return b.columns.flatMap((c) => [c.heading, c.subheading, ...c.fields]);
+      case 'signoff':
+        return [b.closing, ...b.lines];
       case 'testList':
       case 'labList':
         return [];
@@ -198,7 +202,7 @@ export const SEED_BODIES_V1: Record<CounsellingLetterKind, Block[]> = {
  * their father, mother or a recognised guardian. Everything is returned on
  * the website.
  */
-export const SEED_BODIES: Record<CounsellingLetterKind, Block[]> = {
+export const SEED_BODIES_V2: Record<CounsellingLetterKind, Block[]> = {
   PARENTAL_CONSENT: [
     REF,
     { type: 'title', text: 'PARENTAL CONSENT AND BLESSING' },
@@ -256,5 +260,71 @@ export const SEED_BODIES: Record<CounsellingLetterKind, Block[]> = {
       text: 'Your results will be treated as strictly confidential and seen only by the pastorate of Everlasting Hills Church. The church will not share your results with your partner. We encourage you to share your results with each other openly, as an act of trust. Where needed, your pastor will meet with you privately and may recommend further medical advice.',
     },
     { type: 'lines', lines: ['Yours in Christ,', '', '', '____________________', 'Marriage & Family Ministry', 'Everlasting Hills Church'] },
+  ],
+};
+
+/**
+ * Version 3 (2026-11-23): version 2's wording, signed off by the Senior
+ * Pastors with their signature, on the letterhead with the website in the footer.
+ */
+export const SEED_BODIES: Record<CounsellingLetterKind, Block[]> = {
+  PARENTAL_CONSENT: [
+    REF,
+    { type: 'title', text: 'PARENTAL CONSENT AND BLESSING' },
+    { type: 'subtitle', text: 'Marriage & Family Ministry, Pre-Marital Counselling' },
+    { type: 'lines', lines: ['To the Pastor,', 'Everlasting Hills Church'] },
+    {
+      type: 'paragraph',
+      text: 'I, the undersigned, am a parent or guardian of **{personName}**, the {personRole}. I confirm that I am aware of their intention to be joined in marriage to **{partnerName}**.',
+    },
+    {
+      type: 'paragraph',
+      text: "I give my consent and blessing to this union, and I support {personName}'s participation in the Pre-Marital Counselling programme of Everlasting Hills Church as they prepare for a marriage that honours God.",
+    },
+    {
+      type: 'signatureColumns',
+      columns: [
+        {
+          heading: 'Parent or guardian of the {personRole}',
+          subheading: '({personName})',
+          fields: ['Full name', 'Relationship (father, mother or guardian)', 'Phone', 'Signature', 'Date'],
+        },
+      ],
+    },
+    { type: 'note', text: 'One signature is enough: the father, the mother or a recognised guardian. {returnInstructions}' },
+    { type: 'signoff', closing: 'Yours in Christ,', lines: ['**Pastor Opeyemi and Faith Peter**', 'Senior Pastors', 'Everlasting Hills Church'] },
+  ],
+  MEDICAL_SCREENING: [
+    REF,
+    { type: 'title', text: 'PRE-MARITAL MEDICAL SCREENING REQUIREMENT' },
+    { type: 'paragraph', text: 'Dear {personName},' },
+    {
+      type: 'paragraph',
+      text: "Thank you for applying for Pre-Marital Counselling at Everlasting Hills Church. As part of your preparation, you are required to complete the medical screening below and upload your medical screening certificate. Your counselling cannot be completed until your certificate and your partner's have been received.",
+    },
+    { type: 'heading', text: 'Required tests' },
+    { type: 'testList' },
+    { type: 'heading', text: 'Validity' },
+    {
+      type: 'paragraph',
+      text: 'Tests must be carried out within one month of your application date ({applicationDate}). We cannot accept results dated before {validFromDate}.',
+    },
+    { type: 'heading', text: 'Where to test' },
+    {
+      type: 'paragraph',
+      text: 'You may use any licensed hospital or diagnostic laboratory. For convenience, we recommend:',
+    },
+    { type: 'labList' },
+    {
+      type: 'paragraph',
+      text: 'Everlasting Hills Church has no partnership or commercial arrangement with these facilities, and you are free to use any licensed facility of your choice.',
+    },
+    { type: 'heading', text: 'Submission and confidentiality' },
+    { type: 'paragraph', text: '{returnInstructions}' },
+    {
+      type: 'paragraph',
+      text: 'Your results will be treated as strictly confidential and seen only by the pastorate of Everlasting Hills Church. The church will not share your results with your partner. We encourage you to share your results with each other openly, as an act of trust. Where needed, your pastor will meet with you privately and may recommend further medical advice.',
+    },
+    { type: 'signoff', closing: 'Yours in Christ,', lines: ['**Pastor Opeyemi and Faith Peter**', 'Senior Pastors', 'Everlasting Hills Church'] },
   ],
 };

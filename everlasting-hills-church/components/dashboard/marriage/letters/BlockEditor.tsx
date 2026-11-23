@@ -18,6 +18,7 @@ const NAMES: Record<string, string> = {
   testList: "The screening tests",
   labList: "The recommended laboratories",
   signatureColumns: "Signature blocks",
+  signoff: "Sign-off with the Senior Pastors' signature",
 };
 const PLACEHOLDERS = "{personName} (the partner the letter is for) {personRole} {partnerName} {applicationRef} {issueDate} {groomName} {brideName} {applicationDate} {validFromDate} {returnInstructions}";
 
@@ -62,7 +63,13 @@ export function BlockEditor({ template, onDone }: { template: LetterTemplate; on
               {area(i, "right", b.right as string, 1)}
             </>
           )}
-          {b.type === "lines" && linesArea(i, "lines")}
+          {b.type === "signoff" && (
+            <>
+              {area(i, "closing", b.closing as string, 1)}
+              <p className="mt-2 text-xs text-gray-600 dark:text-white/55">The signature goes here, then these lines (one per line):</p>
+            </>
+          )}
+          {(b.type === "lines" || b.type === "signoff") && linesArea(i, "lines")}
           {b.type === "list" && linesArea(i, "items")}
           {(b.type === "testList" || b.type === "labList") && <p className="mt-1 text-xs text-gray-600 dark:text-white/55">Filled in from the documents settings.</p>}
           {b.type === "signatureColumns" && <p className="mt-1 text-xs text-gray-600 dark:text-white/55">The signature block (one, or two side by side). Its wording is fixed in this version.</p>}

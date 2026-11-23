@@ -6,7 +6,7 @@ import { DEFAULT_DOCUMENTS_CONFIG, readDocumentsConfig, valuesOf } from './docum
 import { DocumentCrypto } from './document-crypto';
 import { coupleOf, isMedical, kindsOf, letterRef, letterVars, longDate, mayOpen, mayReview, maySeeRow, mayUpload, REQUIREMENT_KINDS, roleOf, validFrom } from './document-rules';
 import { SAMPLE_VARS } from './document-letters.service';
-import { blocksSchema, fill, placeholderProblems, SEED_BODIES, SEED_BODIES_V1, textsOf } from './letter-blocks';
+import { blocksSchema, fill, placeholderProblems, SEED_BODIES, SEED_BODIES_V1, SEED_BODIES_V2, textsOf } from './letter-blocks';
 import { LetterRenderer, SAFE } from './letter-renderer';
 import { detectType, UploadInspector } from './upload-inspector';
 
@@ -85,6 +85,30 @@ describe('counselling letters', () => {
     expect(out.pageCount).toBe(1);
     expect(out.bounds.right).toBeLessThanOrEqual(SAFE.right + 0.01);
     expect(out.bounds.bottom).toBeLessThanOrEqual(SAFE.bottom);
+  });
+
+  it('signs both letters off from the Senior Pastors, with their signature, where v2 had a blank line', () => {
+    for (const kind of ['PARENTAL_CONSENT', 'MEDICAL_SCREENING'] as const) {
+      const last = SEED_BODIES[kind].at(-1);
+      expect(last).toEqual({ type: 'signoff', closing: 'Yours in Christ,', lines: ['**Pastor Opeyemi and Faith Peter**', 'Senior Pastors', 'Everlasting Hills Church'] });
+      expect(blocksSchema.safeParse(SEED_BODIES[kind]).success).toBe(true);
+      expect(SEED_BODIES_V2[kind].some((b) => b.type === 'signoff')).toBe(false);
+      // Otherwise the wording is version 2's: the same blocks, in order, before the sign-off.
+      const withoutSignoff = SEED_BODIES[kind].filter((b) => b.type !== 'signoff');
+      const v2 = SEED_BODIES_V2[kind].filter((b) => !(b.type === 'lines' && b.lines.includes('Marriage & Family Ministry')));
+      expect(withoutSignoff).toEqual(v2);
+    }
+  });
+
+  it('fits each signed letter on one page, the tests and laboratories in two columns', async () => {
+    for (const kind of ['PARENTAL_CONSENT', 'MEDICAL_SCREENING'] as const) {
+      const out = await render(kind);
+      expect(out.pageCount).toBe(1);
+      expect(out.bounds.bottom).toBeLessThanOrEqual(SAFE.bottom);
+    }
+    // Six tests take three rows: the tests block is no taller than three list lines.
+    const tests = await renderer.render({ title: 'Letter', blocks: [{ type: 'testList' }], vars: SAMPLE_VARS, tests: s.screeningTests, labs: s.recommendedLabs });
+    expect(tests.bounds.bottom - tests.bounds.top).toBeLessThan(3 * 10.5 * 1.45 + 6);
   });
 });
 

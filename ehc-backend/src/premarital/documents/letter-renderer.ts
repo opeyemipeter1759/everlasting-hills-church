@@ -10,14 +10,16 @@ import { fill, type Block, type LetterVars } from './letter-blocks';
  * Builds the letters as PDFs on the EHC letterhead with pdf-lib (no browser).
  * The letterhead is a full-page background on every page; text stays inside
  * the safe area measured from the asset (header ink ends 78 pt from the top,
- * the footer contact line starts at 725 pt), so the footer details are never
- * typed again.
+ * the footer contact line starts at 724.6 pt, with the website since
+ * 2026-11-23), so the footer details are never typed again.
  */
 export const PAGE = { width: 595.28, height: 841.89 } as const;
 /** Measured from the letterhead: points from the top-left corner. */
-export const SAFE = { top: 106, bottom: 700, left: 56, right: 595.28 - 56 } as const;
+export const SAFE = { top: 106, bottom: 714, left: 56, right: 595.28 - 56 } as const;
 
 export const DEFAULT_LETTERHEAD = 'assets/letterhead/ehc-letterhead-a4.jpg';
+/** The Senior Pastors' signature (ink on transparency), drawn by the sign-off block. */
+export const SIGNATURE = 'assets/signature/senior-pastors.png';
 const FONT_DIR = 'assets/fonts';
 
 const INK = { r: 0.12, g: 0.12, b: 0.13 };
@@ -46,6 +48,7 @@ interface Assets {
   semibold: Buffer;
   italic: Buffer;
   serif: Buffer;
+  signature: Buffer;
 }
 type Glyphs = { hasGlyphForCodePoint(cp: number): boolean };
 interface Face {
@@ -79,14 +82,15 @@ export class LetterRenderer {
 
   private load(): Promise<Assets> {
     this.assets ??= (async () => {
-      const [letterhead, regular, semibold, italic, serif] = await Promise.all([
+      const [letterhead, regular, semibold, italic, serif, signature] = await Promise.all([
         readFile(this.letterheadPath),
         readFile(resolve(`${FONT_DIR}/InstrumentSans-Regular.ttf`)),
         readFile(resolve(`${FONT_DIR}/InstrumentSans-SemiBold.ttf`)),
         readFile(resolve(`${FONT_DIR}/InstrumentSans-Italic.ttf`)),
         readFile(resolve(`${FONT_DIR}/DMSerifDisplay-Regular.ttf`)),
+        readFile(resolve(SIGNATURE)),
       ]);
-      return { letterhead, isPng: letterhead[0] === 0x89, regular, semibold, italic, serif };
+      return { letterhead, isPng: letterhead[0] === 0x89, regular, semibold, italic, serif, signature };
     })().catch((err: unknown) => {
       this.assets = null;
       throw err;
@@ -111,6 +115,7 @@ export class LetterRenderer {
       face(a.serif),
     ]);
     const background: PDFImage = a.isPng ? await doc.embedPng(a.letterhead) : await doc.embedJpg(a.letterhead);
+    const signature: PDFImage = await doc.embedPng(a.signature);
     // No personal details in the file's own metadata.
     doc.setTitle(input.title);
     doc.setAuthor('Everlasting Hills Church');
@@ -250,23 +255,71 @@ export class LetterRenderer {
       y += o.after ?? 0;
     };
 
+    /**
+     * A numbered or bulleted list. Short items (each on one line at half the
+     * width) run in two columns, first half on the left, so a list of six
+     * tests takes three lines rather than six.
+     */
     const list = (items: string[], ordered: boolean) => {
       const indent = 18;
-      items.forEach((item, i) => {
-        const marker = ordered ? `${i + 1}.` : '•';
-        ensure(15);
+      const gap = 24;
+      const half = (SAFE.right - SAFE.left - gap) / 2;
+      const short = items.length > 2 || (items.length === 2 && !ordered);
+      const twoColumns =
+        short && items.every((item) => wrap(runsOf(fill(item, input.vars), regular, semibold), 10.5, half - indent).length === 1);
+      const draw = (item: string, i: number, x: number, width: number) => {
         const top = y;
-        page.drawText(marker, {
-          x: SAFE.left + 2,
-          y: PAGE.height - (y + 10.5),
-          size: 10.5,
-          font: regular.font,
-          color: color(INK),
+        page.drawText(ordered ? `${i + 1}.` : '•', { x: x + 2, y: PAGE.height - (y + 10.5), size: 10.5, font: regular.font, color: color(INK) });
+        mark(x + 2, x + 14, top, top + 13);
+        text(item, { x: x + indent, width: width - indent, after: 2 });
+      };
+      if (twoColumns) {
+        const rows = Math.ceil(items.length / 2);
+        ensure(rows * (10.5 * 1.45 + 2));
+        const start = y;
+        items.forEach((item, i) => {
+          const col = i < rows ? 0 : 1;
+          y = start + (i % rows) * (10.5 * 1.45 + 2);
+          draw(item, i, SAFE.left + col * (half + gap), half);
         });
-        mark(SAFE.left + 2, SAFE.left + 14, top, top + 13);
-        text(item, { x: SAFE.left + indent, width: SAFE.right - SAFE.left - indent, after: 2 });
-      });
+        y = start + rows * (10.5 * 1.45 + 2);
+      } else {
+        items.forEach((item, i) => {
+          ensure(15);
+          draw(item, i, SAFE.left, SAFE.right - SAFE.left);
+        });
+      }
       y += 6;
+    };
+
+    /**
+     * "Yours in Christ," the Senior Pastors' signature over a rule, then the
+     * names. Never split across pages. The signature is drawn as large as the
+     * page allows, from 56 pt (the letterhead design) down to 38 pt.
+     */
+    const SIG = { min: 38, max: 56, rule: 190, leading: 13, space: 6 };
+    const signoffHeight = (lines: string[], height = SIG.min) => 10.5 * 1.45 + 2 + height + 6 + lines.length * SIG.leading;
+    const signoff = (closing: string, lines: string[]) => {
+      ensure(signoffHeight(lines));
+      // Whatever room is left goes first to a little space above, then to a larger signature.
+      // (Less 3 pt, for the last line's descenders, which hang below its leading.)
+      const spare = Math.max(0, SAFE.bottom - y - signoffHeight(lines) - 3);
+      const space = Math.min(SIG.space, spare);
+      const height = Math.min(SIG.max, SIG.min + spare - space);
+      y += space;
+      text(closing, { after: 2 });
+      const width = height * (signature.width / signature.height);
+      page.drawImage(signature, { x: SAFE.left, y: PAGE.height - (y + height), width, height });
+      mark(SAFE.left, SAFE.left + width, y, y + height);
+      y += height + 2;
+      page.drawLine({ start: { x: SAFE.left, y: PAGE.height - y }, end: { x: SAFE.left + SIG.rule, y: PAGE.height - y }, thickness: 0.6, color: color(RULE) });
+      mark(SAFE.left, SAFE.left + SIG.rule, y - 1, y + 1);
+      y += 4;
+      for (const line of lines) {
+        if (line === '') y += SIG.leading;
+        else text(line, { leading: SIG.leading });
+      }
+      y += 4;
     };
 
     const signatureColumns = (columns: { heading: string; subheading: string; fields: string[] }[]) => {
@@ -306,13 +359,13 @@ export class LetterRenderer {
     };
 
     /** Height of a paragraph and of a sign-off, to keep a closing paragraph and the sign-off on one page. */
-    const paragraphHeight = (raw: string) => wrap(runsOf(fill(raw, input.vars), regular, semibold), 10.5, SAFE.right - SAFE.left).length * 10.5 * 1.45 + 8;
+    const paragraphHeight = (raw: string) => wrap(runsOf(fill(raw, input.vars), regular, semibold), 10.5, SAFE.right - SAFE.left).length * 10.5 * 1.45 + 7;
     const linesHeight = (lines: string[]) => lines.reduce((h, l) => h + (l === '' ? 15 : 10.5 * 1.45), 8);
 
     input.blocks.forEach((b, i) => {
       const next = input.blocks[i + 1];
-      if (b.type === 'paragraph' && next?.type === 'lines') {
-        const together = paragraphHeight(b.text) + linesHeight(next.lines);
+      if (b.type === 'paragraph' && (next?.type === 'lines' || next?.type === 'signoff')) {
+        const together = paragraphHeight(b.text) + (next.type === 'lines' ? linesHeight(next.lines) : signoffHeight(next.lines));
         if (!fits(together) && together <= SAFE.bottom - SAFE.top) newPage();
       }
       switch (b.type) {
@@ -333,12 +386,12 @@ export class LetterRenderer {
           text(b.text, { size: 10, leading: 14, base: semibold, align: 'center', ink: SOFT, after: 14 });
           break;
         case 'heading':
-          y += 4;
+          y += 2;
           ensure(15 * 2);
           text(b.text, { base: semibold, ink: BRAND, after: 3 });
           break;
         case 'paragraph':
-          text(b.text, { after: 8 });
+          text(b.text, { after: 7 });
           break;
         case 'note':
           text(b.text, { size: 9.5, leading: 13.5, base: italic, bold: italic, ink: SOFT, after: 4 });
@@ -367,6 +420,9 @@ export class LetterRenderer {
           break;
         case 'signatureColumns':
           signatureColumns(b.columns);
+          break;
+        case 'signoff':
+          signoff(b.closing, b.lines);
           break;
       }
     });
