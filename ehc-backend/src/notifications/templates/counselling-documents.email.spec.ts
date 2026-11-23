@@ -41,6 +41,8 @@ describe('pre-marital dashboard and documents emails', () => {
     expect(welcome.text).toContain('choose your own password straight away');
     expect(welcome.text).toContain('stops working after 28 November 2026');
     expect(welcome.html).toContain('How to sign in');
+    // The button signs them in and lands on their counselling page, not the dashboard home.
+    expect(welcome.html).toContain('https://example.org/login?next=%2Fdashboard%2Fpre-marital');
   });
 
   it('attach the two letters under names with no personal details, and still welcome the couple when the letters failed', () => {

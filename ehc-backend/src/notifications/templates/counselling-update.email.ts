@@ -1,3 +1,4 @@
+import { counsellingDashboardUrl } from './counselling-documents.email';
 import type { SendEmailPayload } from '../notification-events';
 import { CHURCH_INFO } from '../church-info';
 import {
@@ -76,7 +77,7 @@ export function buildCounsellingEmail(a: {
   const { subject, line } = COPY[a.event];
   const site = a.appUrl.replace(/\/$/, '');
   const contactUrl = `${site}/contact`;
-  const dashboard = { label: 'Open your dashboard', href: `${site}/login` };
+  const dashboard = { label: 'Open your dashboard', href: counsellingDashboardUrl(a.appUrl) };
   const text = [
     greetingText(a.firstName),
     '',

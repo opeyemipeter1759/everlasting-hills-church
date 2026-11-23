@@ -19,6 +19,9 @@ export type SignIn = { mode: SignInMode; phoneEnding: string; expires?: string |
 
 const site = (appUrl: string) => appUrl.replace(/\/$/, '');
 const loginUrl = (appUrl: string) => `${site(appUrl)}/login`;
+/** The dashboard button: sign in, then straight to their pre-marital counselling page. */
+export const COUNSELLING_DASHBOARD_PATH = '/dashboard/pre-marital';
+export const counsellingDashboardUrl = (appUrl: string) => `${loginUrl(appUrl)}?next=${encodeURIComponent(COUNSELLING_DASHBOARD_PATH)}`;
 
 /** The lines that tell this person how to get into their dashboard. */
 export function signInLines(s: SignIn, email: string, appUrl: string): string[] {
@@ -104,7 +107,7 @@ const letterFiles = (consentPdf: Buffer, medicalPdf: Buffer) => [
   { filename: 'Medical-Screening-Requirement.pdf', content: medicalPdf },
 ];
 const dashboardCta = (appUrl: string, s: SignIn) =>
-  s.mode === 'FAILED' ? undefined : { label: 'Open your dashboard', href: loginUrl(appUrl) };
+  s.mode === 'FAILED' ? undefined : { label: 'Open your dashboard', href: counsellingDashboardUrl(appUrl) };
 
 /**
  * To the person who applied, right after applying: thanks, how to sign in to
@@ -191,6 +194,6 @@ export function buildDocumentReuploadEmail(a: Base): SendEmailPayload {
     paragraphs: [
       'One of your counselling documents needs to be uploaded again. Sign in to your counselling dashboard to see which one and why.',
     ],
-    cta: { label: 'Open your dashboard', href: loginUrl(a.appUrl) },
+    cta: { label: 'Open your dashboard', href: counsellingDashboardUrl(a.appUrl) },
   });
 }

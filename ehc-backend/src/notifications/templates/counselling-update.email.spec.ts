@@ -36,6 +36,8 @@ describe('counselling emails', () => {
       expect(mail.redactRecipient).toBe(true);
       expect(mail.tag).toMatch(/^counselling-/);
       expect(`${mail.subject}${mail.text}`).not.toContain(EM_DASH);
+      // Open your dashboard signs them in and lands on their counselling page, not the dashboard home.
+      expect(mail.html).toContain('https://www.everlastinghills.church/login?next=%2Fdashboard%2Fpre-marital');
     },
   );
 
