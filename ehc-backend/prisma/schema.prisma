@@ -244,6 +244,7 @@ model Member {
   UnitMessageReceived           UnitMessage[]              @relation("UnitMessageRecipient")
   ServiceAssignment             ServiceAssignment[]
   SalvationDecision             SalvationDecision[]
+  GiftExchangeEntry             GiftExchangeEntry?
 
   @@index([tenantId, status])
   @@index([tenantId, joinedAt])
@@ -2016,6 +2017,7 @@ model Tenant {
   ServiceInspection              ServiceInspection[]
   ReadinessUpdate                ReadinessUpdate[]
   ReadinessTask                  ReadinessTask[]
+  GiftExchangeEntry        GiftExchangeEntry[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -5011,4 +5013,31 @@ model FirstTimerContactAssignment {
 
   @@index([tenantId])
   @@index([userId])
+}
+
+enum GiftEntryStatus {
+  INTERESTED
+  REJECTED
+}
+
+/// A member's interest in the gift exchange: one row per member, made with a
+/// single tap. Only INTERESTED entries count, now and for pairing later.
+model GiftExchangeEntry {
+  id              String          @id
+  tenantId        String
+  memberId        String          @unique
+  status          GiftEntryStatus @default(INTERESTED)
+  /// Which of the two the member wants to join; at least one is always true.
+  giftExchange    Boolean         @default(true)
+  picnic          Boolean         @default(false)
+  rejectionReason String?         @db.VarChar(300)
+  /// Profile.id of the admin who last rejected or reinstated the entry.
+  reviewedById    String?
+  reviewedAt      DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  Tenant          Tenant          @relation(fields: [tenantId], references: [id])
+  Member          Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
 }

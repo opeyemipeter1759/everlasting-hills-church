@@ -10,10 +10,10 @@ import EventTicketCard from "./EventTicketCard";
 import EventRsvpModal from "./EventRsvpModal";
 
 /**
- * Homepage teaser for up to three upcoming events. Banner image on top, date tile +
- * title, description, then a footer with time/location and the action. Three events
- * sit three-across; one or two fill the width two-across. Cards in a row share one
- * height with aligned footers.
+ * Homepage teaser for up to three upcoming events, sized so the whole section fits
+ * on one screen. Banner image on top, date tile + title, description, then a footer
+ * with time/location and the action. Three events sit three-across; one or two fill
+ * the width two-across. Cards in a row share one height with aligned footers.
  */
 export default function EventSpotlight({ events }: { events: EventSummary[] }) {
   const [rsvpModalEvent, setRsvpModalEvent] = useState<EventSummary | null>(null);
@@ -48,7 +48,7 @@ export default function EventSpotlight({ events }: { events: EventSummary[] }) {
           </div>
         </ScrollReveal>
 
-        {/* Three events → three across on desktop. Fewer → two columns that fill the full width. */}
+        {/* Three events → three across. Fewer → two columns that fill the full width. */}
         <div
           className={`mt-10 grid grid-cols-1 gap-6 lg:gap-8 ${
             events.length >= 3 ? "md:grid-cols-2 lg:grid-cols-3" : "md:grid-cols-2"
