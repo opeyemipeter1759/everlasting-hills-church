@@ -2,84 +2,45 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import NavUserBadge, { useIsLoggedIn } from "./NavUserBadge";
-
-// Client-side nav for the mobile menu — a raw <a> would force a full page reload, which
-// unmounts the sermon player (and its <audio> element) on every tap.
-const MotionLink = motion(Link);
-
-type NavLink = {
-  label: string;
-  href: string;
-  /** Present only for items that render as a dropdown (desktop) / accordion (mobile). */
-  children?: { label: string; href: string }[];
-};
-
-const navLinks: NavLink[] = [
-  {
-    label: "About",
-    href: "/about",
-    children: [
-      { label: "About Us", href: "/about" },
-      { label: "Our Culture", href: "/cultures" },
-    ],
-  },
-  { label: "Sermons", href: "/sermons" },
-  { label: "Articles", href: "/articles" },
-  { label: "Events", href: "/events" },
-  {
-    label: "Ministries",
-    href: "/ministries",
-    children: [
-      { label: "All Ministries", href: "/ministries" },
-      { label: "Home Cell", href: "/home-cell" },
-    ],
-  },
-  { label: "Prayer Watch", href: "/prayer-watch" },
-  { label: "Visit", href: "/visit" },
-  { label: "Give", href: "/give" },
-  { label: "Pledge", href: "/pledge" },
-];
-
-// Shown last (after Give), only when signed in — jumps straight to the check-in panel on the
-// landing page instead of making members scroll down to find it.
-const ATTENDANCE_LINK: NavLink = { label: "Attendance", href: "/#attendance" };
-
-const mobileOnlyLinks: NavLink[] = [];
-
-/** Public pages that open on a light background, so the bar starts with dark text. */
-const LIGHT_PAGES = ["/articles"];
+import NavDropdown from "./navbar/NavDropdown";
+import MobileMenu from "./navbar/MobileMenu";
+import { giveLink, isLinkActive, LIGHT_PAGES, navLinks, type NavLink } from "./navbar/nav-links";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [mobileOpenDropdown, setMobileOpenDropdown] = useState<string | null>(null);
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Set when a dropdown opens on mouse hover, so the follow-up click doesn't immediately close it.
+  const openedByHover = useRef(false);
   const isLoggedIn = useIsLoggedIn(); // null on first paint (hydration-safe), then true/false
   const pathname = usePathname();
   const darkHero = !LIGHT_PAGES.some((path) => pathname === path || pathname?.startsWith(`${path}/`));
-  const effectiveNavLinks = isLoggedIn === true ? [...navLinks, ATTENDANCE_LINK] : navLinks;
+  const solid = scrolled || !darkHero;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
+    handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Matches the `lg` breakpoint where the desktop nav takes over from the hamburger.
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) setMenuOpen(false);
+      if (window.innerWidth >= 1024) setMenuOpen(false);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Close the open dropdown (About or Ministries) on an outside click, Escape, or navigation.
+  // Close the open dropdown on an outside click, Escape, or navigation.
   useEffect(() => {
     if (!openDropdown) return;
     const activeDropdown = openDropdown;
@@ -101,8 +62,63 @@ export default function Navbar() {
   useEffect(() => {
     setOpenDropdown(null);
     setMenuOpen(false);
-    setMobileOpenDropdown(null);
   }, [pathname]);
+
+  useEffect(() => () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+  }, []);
+
+  function cancelClose() {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }
+
+  function hoverOpen(id: string, e: React.PointerEvent) {
+    if (e.pointerType !== "mouse") return;
+    cancelClose();
+    if (openDropdown !== id) openedByHover.current = true;
+    setOpenDropdown(id);
+  }
+
+  function hoverClose(e: React.PointerEvent) {
+    if (e.pointerType !== "mouse") return;
+    cancelClose();
+    closeTimer.current = setTimeout(() => setOpenDropdown(null), 150);
+  }
+
+  function clickToggle(id: string) {
+    cancelClose();
+    if (openDropdown === id && openedByHover.current) {
+      // The hover already opened it; treat this click as "keep it open".
+      openedByHover.current = false;
+      return;
+    }
+    openedByHover.current = false;
+    setOpenDropdown((o) => (o === id ? null : id));
+  }
+
+  const dropdown = (link: NavLink, variant: "link" | "button") => (
+    <NavDropdown
+      key={link.id}
+      link={link}
+      variant={variant}
+      isOpen={openDropdown === link.id}
+      solid={solid}
+      pathname={pathname}
+      containerRef={(el) => {
+        dropdownRefs.current[link.id] = el;
+      }}
+      onPointerEnter={(e) => hoverOpen(link.id, e)}
+      onPointerLeave={hoverClose}
+      onToggle={() => clickToggle(link.id)}
+      onClose={() => setOpenDropdown(null)}
+    />
+  );
+
+  const textTone = (active: boolean) =>
+    active ? (solid ? "text-burgundy" : "text-white") : solid ? "text-[#333]" : "text-white/85";
 
   return (
     <>
@@ -111,32 +127,26 @@ export default function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled || !darkHero
-            ? "bg-white/95 backdrop-blur-sm shadow-[0_1px_20px_rgba(135,16,44,0.08)]"
-            : "bg-transparent"
+          solid ? "bg-white/95 backdrop-blur-sm shadow-[0_1px_20px_rgba(135,16,44,0.08)]" : "bg-transparent"
         }`}
       >
-        <div className="max-w-[1400px]  mx-auto px-4 xs:px-5 sm:px-8">
+        <div className="max-w-[1400px] mx-auto px-4 xs:px-5 sm:px-8">
           <div className="flex items-center justify-between gap-2 h-16 md:h-20">
             {/* Logo — the mark and wordmark both step down under 400px so the
                 hamburger and the signed-in avatar still fit on a 320px phone. */}
             <Link href="/" className="flex min-w-0 items-center gap-2 xs:gap-2.5 group">
-            {scrolled || !darkHero ? (
-              <Image src="/logoblack.png" alt="Everlasting Hills Church Logo" width={62} height={62} className="h-11 w-11 xs:h-[62px] xs:w-[62px] flex-shrink-0" />
-            ) : (
-              <Image src="/logo.png" alt="Everlasting Hills Church Logo" width={52} height={52} className="h-10 w-10 xs:h-[52px] xs:w-[52px] flex-shrink-0" />
-            )}
+              {solid ? (
+                <Image src="/logoblack.png" alt="Everlasting Hills Church Logo" width={62} height={62} className="h-11 w-11 xs:h-[62px] xs:w-[62px] flex-shrink-0" />
+              ) : (
+                <Image src="/logo.png" alt="Everlasting Hills Church Logo" width={52} height={52} className="h-10 w-10 xs:h-[52px] xs:w-[52px] flex-shrink-0" />
+              )}
               <div className="flex min-w-0 flex-col leading-none">
-                <span
-                  className={`truncate text-sm xs:text-base font-bold tracking-wide transition-colors duration-300 ${
-                    scrolled || !darkHero ? "text-[#111111]" : "text-white"
-                  }`}
-                >
+                <span className={`truncate text-sm xs:text-base font-bold tracking-wide transition-colors duration-300 ${solid ? "text-[#111111]" : "text-white"}`}>
                   Everlasting Hills
                 </span>
                 <span
                   className={`text-xs xs:text-sm tracking-[0.15em] uppercase font-medium transition-colors duration-300 ${
-                    scrolled || !darkHero ? "text-burgundy font-semibold" : "text-white/70"
+                    solid ? "text-burgundy font-semibold" : "text-white/70"
                   }`}
                 >
                   Church
@@ -145,99 +155,57 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden lg:flex items-center gap-6">
-              {effectiveNavLinks.map((link) =>
-                link.children ? (
-                  <div
-                    key={link.href}
-                    ref={(el) => {
-                      dropdownRefs.current[link.href] = el;
-                    }}
-                    className="relative"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setOpenDropdown((o) => (o === link.href ? null : link.href))}
-                      aria-haspopup="menu"
-                      aria-expanded={openDropdown === link.href}
-                      className={`flex items-center gap-1 text-[13px] font-medium transition-colors duration-200 hover:text-burgundy whitespace-nowrap ${
-                        scrolled || !darkHero ? "text-[#333]" : "text-white/90"
-                      }`}
-                    >
-                      {link.label}
-                      <ChevronDown
-                        size={14}
-                        className={`transition-transform duration-200 ${openDropdown === link.href ? "rotate-180" : ""}`}
-                      />
-                    </button>
-                    <AnimatePresence>
-                      {openDropdown === link.href && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -6 }}
-                          transition={{ duration: 0.15 }}
-                          role="menu"
-                          className="absolute left-0 top-full mt-3 w-44 overflow-hidden rounded-xl border border-brand-rose bg-white py-1.5 shadow-xl"
-                        >
-                          {link.children.map((child) => (
-                            <Link
-                              key={child.href}
-                              href={child.href}
-                              role="menuitem"
-                              onClick={() => setOpenDropdown(null)}
-                              className="block px-4 py-2.5 text-[13px] font-medium text-[#333] hover:bg-brand-blush hover:text-burgundy transition-colors"
-                            >
-                              {child.label}
-                            </Link>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ) : (
+            <nav className="hidden lg:flex items-center gap-7">
+              {navLinks.map((link) => {
+                if (link.children) return dropdown(link, "link");
+                const active = isLinkActive(pathname, link);
+                return (
                   <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`text-[13px] font-medium transition-colors duration-200 hover:text-burgundy whitespace-nowrap ${
-                      scrolled || !darkHero ? "text-[#333]" : "text-white/90"
-                    }`}
+                    key={link.id}
+                    href={link.href!}
+                    className={`relative py-2 text-[14px] font-medium transition-colors duration-200 hover:text-burgundy whitespace-nowrap ${textTone(active)}`}
                   >
                     {link.label}
+                    {active && (
+                      <span aria-hidden className={`absolute -bottom-0.5 left-0 right-0 h-0.5 rounded-full ${solid ? "bg-burgundy" : "bg-white"}`} />
+                    )}
                   </Link>
-                ),
-              )}
+                );
+              })}
             </nav>
+
             <div className="flex shrink-0 items-center gap-2 xs:gap-3">
+              <div className="hidden lg:block">{dropdown(giveLink, "button")}</div>
               {/* Authenticated → avatar + dropdown. Anonymous → Login + Join CTAs. */}
               {isLoggedIn === true ? (
-                <NavUserBadge scrolled={scrolled || !darkHero} />
+                <NavUserBadge scrolled={solid} />
               ) : (
                 <>
                   <Link
                     href="/login"
-                    className={`hidden lg:inline-flex px-5 py-2.5 rounded-xl border hover:bg-[#87102C] items-center text-sm font-medium transition-colors duration-200 hover:text-white hover:border-none ${
-                      scrolled || !darkHero ? "text-[#333] border-[#E7CDD3]" : "text-white/80 border-white/20"
+                    className={`hidden lg:inline-flex px-5 py-2.5 rounded-xl border hover:bg-[#87102C] items-center text-sm font-medium transition-colors duration-200 hover:text-white hover:border-[#87102C] ${
+                      solid ? "text-[#333] border-[#E7CDD3]" : "text-white/80 border-white/20"
                     }`}
                   >
                     Login
                   </Link>
-                  <a
-                    href="#services"
-                    className="hidden lg:inline-flex items-center px-5 py-2.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/20 hover:-translate-y-0.5"
+                  <Link
+                    href="/#services"
+                    className={`hidden xl:inline-flex items-center px-5 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 ${
+                      solid ? "border-[#87102C] text-[#87102C] hover:bg-[#87102C]/5" : "border-white text-white hover:bg-white/10"
+                    }`}
                   >
                     Join Us Sunday
-                  </a>
+                  </Link>
                 </>
               )}
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className={`lg:hidden shrink-0 p-1.5 xs:p-2 rounded-lg transition-colors ${
-                  scrolled || !darkHero
-                    ? "text-[#111] hover:bg-brand-blush"
-                    : "text-white hover:bg-white/10"
+                  solid ? "text-[#111] hover:bg-brand-blush" : "text-white hover:bg-white/10"
                 }`}
                 aria-label="Toggle menu"
+                aria-expanded={menuOpen}
               >
                 {menuOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
@@ -245,121 +213,17 @@ export default function Navbar() {
           </div>
         </div>
       </motion.header>
+
       <AnimatePresence>
         {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="fixed top-16 inset-x-0 z-40 bg-white border-b border-brand-rose shadow-xl lg:hidden max-h-[calc(100vh-4rem)] overflow-y-auto"
-          >
-            <nav className="flex flex-col py-4 px-4 xs:px-5">
-              {[...effectiveNavLinks, ...mobileOnlyLinks].map((link, i) =>
-                link.children ? (
-                  <div key={link.href} className="border-b border-brand-rose/50 last:border-0">
-                    <button
-                      type="button"
-                      onClick={() => setMobileOpenDropdown((o) => (o === link.href ? null : link.href))}
-                      aria-expanded={mobileOpenDropdown === link.href}
-                      className="flex w-full items-center justify-between py-3.5 text-[15px] font-medium text-[#222] hover:text-burgundy transition-colors"
-                    >
-                      {link.label}
-                      <ChevronDown
-                        size={16}
-                        className={`transition-transform duration-200 ${mobileOpenDropdown === link.href ? "rotate-180" : ""}`}
-                      />
-                    </button>
-                    <AnimatePresence initial={false}>
-                      {mobileOpenDropdown === link.href && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden"
-                        >
-                          {link.children.map((child) => (
-                            <Link
-                              key={child.href}
-                              href={child.href}
-                              onClick={() => setMenuOpen(false)}
-                              className="block py-3 pl-4 text-[14px] font-medium text-[#555] hover:text-burgundy transition-colors"
-                            >
-                              {child.label}
-                            </Link>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ) : (
-                  <MotionLink
-                    key={link.href}
-                    href={link.href}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    onClick={() => setMenuOpen(false)}
-                    className="py-3.5 text-[15px] font-medium text-[#222] border-b border-brand-rose/50 last:border-0 hover:text-burgundy transition-colors"
-                  >
-                    {link.label}
-                  </MotionLink>
-                ),
-              )}
-              <div className="flex gap-3 mt-4">
-                {isLoggedIn === true ? (
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setMenuOpen(false)}
-                    className="flex-1 flex items-center justify-center px-5 py-3 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-colors"
-                  >
-                    My Dashboard
-                  </Link>
-                ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      onClick={() => setMenuOpen(false)}
-                      className="flex-1 flex items-center justify-center px-5 py-3 rounded-xl border border-[#87102C] text-[#87102C] text-sm font-semibold hover:bg-[#87102C]/5 transition-colors"
-                    >
-                      Login
-                    </Link>
-                    <a
-                      href="#services"
-                      onClick={() => setMenuOpen(false)}
-                      className="flex-1 flex items-center justify-center px-5 py-3 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-colors"
-                    >
-                      Join Us Sunday
-                    </a>
-                  </>
-                )}
-              </div>
-            </nav>
-          </motion.div>
+          <MobileMenu
+            links={[...navLinks, giveLink]}
+            pathname={pathname}
+            isLoggedIn={isLoggedIn === true}
+            onNavigate={() => setMenuOpen(false)}
+          />
         )}
       </AnimatePresence>
     </>
-  );
-}
-
-function MountainLogo({ scrolled }: { scrolled: boolean }) {
-  const fill = scrolled ? "#87102C" : "white";
-  return (
-    <svg
-      width="32"
-      height="32"
-      viewBox="0 0 40 40"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="flex-shrink-0"
-    >
-      {/* Outer mountain */}
-      <path d="M4 32L20 8L36 32H4Z" fill={fill} opacity="0.15" />
-      {/* Inner peak */}
-      <path d="M11 32L20 14L29 32H11Z" fill={fill} opacity="0.4" />
-      {/* Summit */}
-      <path d="M16 32L20 20L24 32H16Z" fill={fill} />
-    </svg>
   );
 }

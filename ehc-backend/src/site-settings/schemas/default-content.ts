@@ -291,6 +291,21 @@ export const DIRECTIONS_DEFAULT: SectionContent<'DIRECTIONS'> = {
   secondaryCta: { label: 'Full contact info', href: '/contact' },
 };
 
+export const SETMAN_DEFAULT: SectionContent<'SETMAN'> = {
+  visible: true,
+  label: 'A Word From Our Set Man',
+  headline: 'You were made for more',
+  headlineAccent: 'than just a Sunday.',
+  paragraphs: [
+    'Welcome to Everlasting Hills Church. Whether this is your first visit or you have walked with us for years, I am glad you are here.',
+    'Our prayer is simple: that every person who comes through these doors would meet the living God, grow deep in His Word, and discover the inheritance He has prepared for them. You are not a visitor here. You are family.',
+  ],
+  name: 'Pastor [Lead Name]',
+  title: 'Set Man, Everlasting Hills Church',
+  photo: null,
+  cta: { label: 'Meet our pastors', href: '/Pastor' },
+};
+
 export const DEFAULT_CONTENT = {
   HERO: HERO_DEFAULT,
   ABOUT: ABOUT_DEFAULT,
@@ -304,4 +319,5 @@ export const DEFAULT_CONTENT = {
   CONTACT: CONTACT_DEFAULT,
   CAROUSEL: CAROUSEL_DEFAULT,
   DIRECTIONS: DIRECTIONS_DEFAULT,
+  SETMAN: SETMAN_DEFAULT,
 } as const;

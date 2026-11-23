@@ -3347,6 +3347,7 @@ enum SiteSection {
   CONTACT
   CAROUSEL
   DIRECTIONS
+  SETMAN
 }
 
 enum AlertType {

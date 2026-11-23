@@ -151,6 +151,19 @@ export interface DirectionsContent {
   secondaryCta: Cta;
 }
 
+export interface SetmanContent {
+  visible: boolean;
+  label: string;
+  headline: string;
+  headlineAccent: string;
+  paragraphs: string[];
+  name: string;
+  title: string;
+  /** Null renders the branded monogram placeholder. */
+  photo: string | null;
+  cta: Cta;
+}
+
 export interface SiteSettingsMap {
   HERO: HeroContent;
   ABOUT: AboutContent;
@@ -164,6 +177,7 @@ export interface SiteSettingsMap {
   CONTACT: ContactContent;
   CAROUSEL: CarouselContent;
   DIRECTIONS: DirectionsContent;
+  SETMAN: SetmanContent;
 }
 
 export type SiteSectionName = keyof SiteSettingsMap;
@@ -203,50 +217,17 @@ export const ABOUT_FALLBACK: AboutContent = {
     "The Word of God is the foundation beneath everything we do, and the Holy Spirit is our daily source of strength. We are a family committed to growing deeply in Scripture, living by the Spirit, and flourishing together. You don’t just attend here — you belong here.",
   ],
   gallery: [
-    {
-      name: "Family",
-      src: "/HeroImages/IMG_8470.jpg",
-    },
-    {
-      name: "Worship",
-      src: "/HeroImages/IMG_8248.jpg",
-    },
-    {
-      name: "Green hills",
-      src: "/HeroImages/IMG_5684.jpg",
-    },
-      {
-      name: "After Service",
-      src: "/HeroImages/21.jpg",
-    },
-       {
-      name: "Worship",
-      src: "/HeroImages/IMG_8931.jpg",
-    },
-    {
-      name: "Service",
-      src: "/HeroImages/IMG_9014.jpg",
-    },
-         {
-      name: "Service Moments",
-      src: "/HeroImages/IMG_101.jpg",
-    },
-    {
-      name: "After Service",
-      src: "/HeroImages/IMG_1080.jpg",
-    },
-    {
-      name: "Prayer",
-      src: "/HeroImages/IMG_4565.jpg",
-    },
-        {
-      name: "Service Moments",
-      src: "/HeroImages/IMG_4667.jpg",
-    },
-    {
-      name: "Service Moments",
-      src: "/HeroImages/IMG_9014.jpg",
-    },
+    { name: "Family", src: "/HeroImages/IMG_8470.jpg" },
+    { name: "Worship", src: "/HeroImages/IMG_8248.jpg" },
+    { name: "Green hills", src: "/HeroImages/IMG_5684.jpg" },
+    { name: "After Service", src: "/HeroImages/21.jpg" },
+    { name: "Worship", src: "/HeroImages/IMG_8931.jpg" },
+    { name: "Service", src: "/HeroImages/IMG_9014.jpg" },
+    { name: "Service Moments", src: "/HeroImages/IMG_101.jpg" },
+    { name: "After Service", src: "/HeroImages/IMG_1080.jpg" },
+    { name: "Prayer", src: "/HeroImages/IMG_4565.jpg" },
+    { name: "Service Moments", src: "/HeroImages/IMG_4667.jpg" },
+    { name: "Service Moments", src: "/HeroImages/IMG_9014.jpg" },
   ],
   ctaPrimary: { label: "Join the Family", href: "#community" },
   ctaSecondary: { label: "Our Culture", href: "#culture" },
@@ -475,6 +456,21 @@ export const DIRECTIONS_FALLBACK: DirectionsContent = {
   secondaryCta: { label: "Full contact info", href: "/contact" },
 };
 
+export const SETMAN_FALLBACK: SetmanContent = {
+  visible: true,
+  label: "A Word From Our Set Man",
+  headline: "You were made for more",
+  headlineAccent: "than just a Sunday.",
+  paragraphs: [
+    "Welcome to Everlasting Hills Church. Whether this is your first visit or you have walked with us for years, I am glad you are here.",
+    "Our prayer is simple: that every person who comes through these doors would meet the living God, grow deep in His Word, and discover the inheritance He has prepared for them. You are not a visitor here. You are family.",
+  ],
+  name: "Pastor [Lead Name]",
+  title: "Set Man, Everlasting Hills Church",
+  photo: null,
+  cta: { label: "Meet our pastors", href: "/Pastor" },
+};
+
 const FALLBACKS: SiteSettingsMap = {
   HERO: HERO_FALLBACK,
   ABOUT: ABOUT_FALLBACK,
@@ -488,6 +484,7 @@ const FALLBACKS: SiteSettingsMap = {
   CONTACT: CONTACT_FALLBACK,
   CAROUSEL: CAROUSEL_FALLBACK,
   DIRECTIONS: DIRECTIONS_FALLBACK,
+  SETMAN: SETMAN_FALLBACK,
 };
 
 /* ── Fetcher ─────────────────────────────────────────────────────────────── */

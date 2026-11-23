@@ -2,6 +2,9 @@ import Link from "next/link";
 import { ArrowRight, Compass, Target, Heart } from "lucide-react";
 import PageHero from "@/components/marketing/PageHero";
 import { getStructuredContent } from "@/lib/cms-page";
+import { getAllSiteSettings, type Cta } from "@/lib/site-settings";
+import AboutSection from "@/components/home/AboutSection";
+import CultureSection from "@/components/home/CultureSection";
 
 export const metadata = {
   title: "About — Everlasting Hills Church",
@@ -44,17 +47,37 @@ const FALLBACK: AboutContent = {
   cta: { heading: "There is a place for you here", body: "Plan your first visit, or reach out and let us know you are coming. We would love to welcome you." },
 };
 
+/** Sections on this page that in-page "#…" links can still reach. */
+const LOCAL_ANCHORS = new Set(["#about", "#culture"]);
+
+/** The About/Culture sections came from the homepage, so their "#…" buttons may point at
+ *  homepage sections (e.g. "#community"). Send those back to the homepage anchor. */
+function toThisPage(cta: Cta): Cta {
+  return cta.href.startsWith("#") && !LOCAL_ANCHORS.has(cta.href) ? { ...cta, href: `/${cta.href}` } : cta;
+}
+
 function isValid(c: unknown): c is AboutContent {
   return Boolean(c && Array.isArray((c as AboutContent).cards) && (c as AboutContent).story);
 }
 
 export default async function AboutPage({ searchParams }: { searchParams: { preview?: string } }) {
-  const c = await getStructuredContent("about", { preview: searchParams.preview, fallback: FALLBACK, valid: isValid });
+  const [c, settings] = await Promise.all([
+    getStructuredContent("about", { preview: searchParams.preview, fallback: FALLBACK, valid: isValid }),
+    getAllSiteSettings(),
+  ]);
+  const aboutSection = {
+    ...settings.ABOUT,
+    ctaPrimary: toThisPage(settings.ABOUT.ctaPrimary),
+    ctaSecondary: toThisPage(settings.ABOUT.ctaSecondary),
+  };
 
   return (
     <main className="bg-white">
       {searchParams.preview && <div className="bg-[#87102C] text-white text-center text-xs font-semibold py-2 tracking-wide">PREVIEW — draft, not published</div>}
       <PageHero eyebrow={c.eyebrow} title={c.title} accent={c.accent} lead={c.lead} backgroundImage={c.heroImage} />
+
+      {/* Who we are + gallery (edited under Homepage content → About in the CMS) */}
+      <AboutSection content={aboutSection} />
 
       {/* Story */}
       <section className="mx-auto max-w-3xl px-4 xs:px-5 py-12 xs:py-20 sm:px-8">
@@ -85,6 +108,9 @@ export default async function AboutPage({ searchParams }: { searchParams: { prev
           </div>
         </div>
       </section>
+
+      {/* Our culture (edited under Homepage content → Culture in the CMS) */}
+      <CultureSection content={settings.CULTURE} />
 
       {/* CTA */}
       <section className="bg-church-dark py-20 text-center text-white">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Sparkles } from "lucide-react";
 import type { EventSummary } from "@/types";
 import { useRegisteredEvents } from "@/hooks";
 import ScrollReveal from "../ScrollReveal";
@@ -9,39 +10,52 @@ import EventTicketCard from "./EventTicketCard";
 import EventRsvpModal from "./EventRsvpModal";
 
 /**
- * Homepage teaser grid for up to three upcoming events, each styled as a
- * compact admit-one ticket: die-cut notches at the perforation, a small date
- * stamp, and quick actions to register or share (invite link, flier image,
- * WhatsApp). Sized to sit three-across so it never dominates the homepage.
+ * Homepage teaser for up to three upcoming events. Banner image on top, date tile +
+ * title, description, then a footer with time/location and the action. Three events
+ * sit three-across; one or two fill the width two-across. Cards in a row share one
+ * height with aligned footers.
  */
 export default function EventSpotlight({ events }: { events: EventSummary[] }) {
   const [rsvpModalEvent, setRsvpModalEvent] = useState<EventSummary | null>(null);
   const registeredEvents = useRegisteredEvents();
 
   return (
-    <section id="event" className="relative overflow-hidden bg-white py-24 md:py-32">
-      <div className="pointer-events-none absolute -top-24 left-[-8%] h-96 w-96 rounded-full bg-[#FFE8ED]/70 blur-[120px]" />
-      <div className="pointer-events-none absolute bottom-[-10%] right-[-8%] h-96 w-96 rounded-full bg-[#FFF4F6] blur-[120px]" />
+    <section id="event" className="relative overflow-hidden bg-white py-16 md:py-20">
+      <div className="pointer-events-none absolute -top-24 left-[-8%] h-96 w-96 rounded-full bg-[#FFE8ED]/60 blur-[120px]" />
 
       <div className="relative mx-auto max-w-6xl px-4 xs:px-5 sm:px-8">
         <ScrollReveal>
-          <div className="flex flex-col items-start text-start">
-            <span className="inline-flex items-start gap-2 text-xs font-bold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-[#87102C]">
-              <Sparkles size={13} />
-              Upcoming Events
-            </span>
-            <h2 className="mt-4 text-3xl sm:text-4xl md:text-5xl font-bold text-[#111] tracking-tight text-balance leading-[1.1]">
-              You&apos;re invited.
-            </h2>
-            <p className="mt-4 max-w-lg text-[#555] text-base sm:text-lg leading-relaxed">
-              Gatherings worth clearing your calendar for grab your seat, and bring someone with you.
-            </p>
+          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+            <div className="max-w-xl">
+              <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-[#87102C] xs:tracking-[0.25em]">
+                <Sparkles size={13} />
+                Upcoming Events
+              </span>
+              <h2 className="mt-3 text-3xl font-bold leading-[1.1] tracking-tight text-[#111] text-balance md:text-4xl">
+                You&apos;re invited.
+              </h2>
+              <p className="mt-2 text-[15px] leading-relaxed text-[#555]">
+                Gatherings worth clearing your calendar for. Grab your seat, and bring someone with you.
+              </p>
+            </div>
+            <Link
+              href="/events"
+              className="group inline-flex items-center gap-2 text-sm font-semibold text-[#87102C] transition-colors hover:text-[#6E0C24]"
+            >
+              View all events
+              <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+            </Link>
           </div>
         </ScrollReveal>
 
-        <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Three events → three across on desktop. Fewer → two columns that fill the full width. */}
+        <div
+          className={`mt-10 grid grid-cols-1 gap-6 lg:gap-8 ${
+            events.length >= 3 ? "md:grid-cols-2 lg:grid-cols-3" : "md:grid-cols-2"
+          }`}
+        >
           {events.map((event, i) => (
-            <ScrollReveal key={event.id} delay={0.1 + i * 0.08}>
+            <ScrollReveal key={event.id} delay={0.1 + i * 0.08} className="h-full">
               <EventTicketCard
                 event={event}
                 onNeedsRsvpModal={() => setRsvpModalEvent(event)}

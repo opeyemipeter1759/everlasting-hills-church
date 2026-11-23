@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import AboutSection from "@/components/home/AboutSection";
-import CultureSection from "@/components/home/CultureSection";
+import SetmanSection from "@/components/home/SetmanSection";
 import ScriptureSection from "@/components/home/ScriptureSection";
 import ServiceSection from "@/components/home/ServiceSection";
 import CommunitySection from "@/components/home/CommunitySection";
@@ -43,13 +42,13 @@ export default async function HomePage() {
       <HeroSection content={settings.HERO} />
       {/* <PublicDailyScriptureSection />
       <WordOfTheDaySection /> */}
-      <AboutSection content={settings.ABOUT} />
-      <CultureSection content={settings.CULTURE} />
-      <ScriptureSection content={settings.SCRIPTURE} />
-      <ServiceSection content={settings.SERVICE} />
-      <Suspense fallback={null}>
+      <SetmanSection content={settings.SETMAN} />
+        <Suspense fallback={null}>
         <EventSectionFade />
       </Suspense>
+    
+    
+      <ScriptureSection content={settings.SCRIPTURE} />
       <Suspense
         fallback={
           <SermonsSection content={settings.SERMONS} telegramSermons={[]} />
@@ -57,6 +56,7 @@ export default async function HomePage() {
       >
         <TelegramSermons content={settings.SERMONS} />
       </Suspense>
+      <ServiceSection content={settings.SERVICE} />
       <AttendanceSection />
       <PledgeProjectSection />
       <BirthdayTeaserSection />

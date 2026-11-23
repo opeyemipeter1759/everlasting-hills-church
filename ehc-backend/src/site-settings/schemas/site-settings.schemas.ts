@@ -296,6 +296,24 @@ export const DirectionsContentSchema = z.object({
   secondaryCta: ctaSchema,
 });
 
+/* ── 12. SETMAN (homepage "A word from our Set Man" — sits above About) ───── */
+
+export const SetmanContentSchema = z.object({
+  /** Lets the admin hide the section without deleting the copy. */
+  visible: z.boolean(),
+  label: z.string().trim().min(1).max(40),
+  headline: z.string().trim().min(1).max(80),
+  /** Burgundy second line under the headline. */
+  headlineAccent: z.string().trim().min(1).max(80),
+  paragraphs: z.array(z.string().trim().min(1).max(1000)).min(1).max(5),
+  name: z.string().trim().min(1).max(80),
+  /** Role line under the name ("Set Man, Everlasting Hills Church"). */
+  title: z.string().trim().min(1).max(80),
+  /** Portrait. Null renders the branded monogram placeholder. */
+  photo: imageUrlSchema.nullable(),
+  cta: ctaSchema,
+});
+
 /* ── Section registry ──────────────────────────────────────────────────────── */
 
 export const SITE_SECTIONS = [
@@ -311,6 +329,7 @@ export const SITE_SECTIONS = [
   'CONTACT',
   'CAROUSEL',
   'DIRECTIONS',
+  'SETMAN',
 ] as const;
 
 export const SiteSection = z.enum(SITE_SECTIONS);
@@ -330,6 +349,7 @@ export const SECTION_SCHEMAS = {
   CONTACT: ContactContentSchema,
   CAROUSEL: CarouselContentSchema,
   DIRECTIONS: DirectionsContentSchema,
+  SETMAN: SetmanContentSchema,
 } as const satisfies Record<SiteSectionName, z.ZodTypeAny>;
 
 export type SectionContent<S extends SiteSectionName> = z.infer<
@@ -348,4 +368,5 @@ export type AnySectionContent =
   | { section: 'GIVING'; content: SectionContent<'GIVING'> }
   | { section: 'CONTACT'; content: SectionContent<'CONTACT'> }
   | { section: 'CAROUSEL'; content: SectionContent<'CAROUSEL'> }
-  | { section: 'DIRECTIONS'; content: SectionContent<'DIRECTIONS'> };
+  | { section: 'DIRECTIONS'; content: SectionContent<'DIRECTIONS'> }
+  | { section: 'SETMAN'; content: SectionContent<'SETMAN'> };
