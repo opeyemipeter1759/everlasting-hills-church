@@ -13,7 +13,6 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { OnlineAttendanceModule } from '../online-attendance/online-attendance.module';
 import { AuthSupabaseService } from './services/auth-supabase.service';
 import { AuthProfileSummaryService } from './services/auth-profile-summary.service';
-import { SuperAdminBootstrapService } from './services/super-admin-bootstrap.service';
 import { AuthLoginService } from './services/auth-login.service';
 import { AuthSessionService } from './services/auth-session.service';
 import { AuthPasswordService } from './services/auth-password.service';
@@ -27,7 +26,6 @@ import { AuthMeService } from './services/auth-me.service';
     EffectiveRolesService,
     AuthSupabaseService,
     AuthProfileSummaryService,
-    SuperAdminBootstrapService,
     AuthLoginService,
     AuthSessionService,
     AuthPasswordService,

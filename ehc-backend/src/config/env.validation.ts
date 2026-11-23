@@ -28,9 +28,6 @@ export const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
 
-  DEFAULT_SUPER_ADMIN_EMAIL: z.email().optional(),
-  DEFAULT_SUPER_ADMIN_PASSWORD: z.string().min(8).optional(),
-
   // Tenant IDs in this project use a custom prefixed format (e.g. "ehc_9a893a..."), not UUIDs.
   DEFAULT_TENANT_ID: z
     .string()
