@@ -2367,6 +2367,23 @@
         "properties": {},
         "type": "object"
       },
+      "GiftExchangeChoiceDto": {
+        "properties": {
+          "giftExchange": {
+            "description": "Take part in the gift exchange",
+            "type": "boolean"
+          },
+          "picnic": {
+            "description": "Come to the picnic",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "giftExchange",
+          "picnic"
+        ],
+        "type": "object"
+      },
       "HeartbeatDto": {
         "properties": {
           "maxWatched": {
@@ -3334,6 +3351,16 @@
         "required": [
           "refresh_token"
         ],
+        "type": "object"
+      },
+      "RejectGiftEntryDto": {
+        "properties": {
+          "reason": {
+            "description": "Why the entry was rejected; shown to the member",
+            "maxLength": 300,
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "ReplaceRulesDto": {
@@ -5854,6 +5881,202 @@
         "summary": "Get first-timer pipeline stats",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/admin/gift-exchange/entries": {
+      "get": {
+        "operationId": "GiftExchangeAdminController_list",
+        "parameters": [
+          {
+            "description": "Only entries with this status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "INTERESTED",
+                "REJECTED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only members who chose this activity",
+            "in": "query",
+            "name": "activity",
+            "required": false,
+            "schema": {
+              "enum": [
+                "GIFT_EXCHANGE",
+                "PICNIC"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Everyone who signed up, newest first, with counts per status and per activity; optional status and activity filters",
+        "tags": [
+          "gift-exchange"
+        ]
+      }
+    },
+    "/admin/gift-exchange/entries/{id}/reinstate": {
+      "patch": {
+        "operationId": "GiftExchangeAdminController_reinstate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Put a rejected entry back to interested and clear the reason",
+        "tags": [
+          "gift-exchange"
+        ]
+      }
+    },
+    "/admin/gift-exchange/entries/{id}/reject": {
+      "patch": {
+        "operationId": "GiftExchangeAdminController_reject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectGiftEntryDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Reject a member's interest, with an optional reason",
+        "tags": [
+          "gift-exchange"
         ]
       }
     },
@@ -26021,6 +26244,155 @@
         "summary": "All gatherings including inactive — admin view",
         "tags": [
           "gatherings"
+        ]
+      }
+    },
+    "/gift-exchange/me": {
+      "get": {
+        "operationId": "GiftExchangeController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Whether I am in, how many are interested, and (when I am) the countdown target with server time",
+        "tags": [
+          "gift-exchange"
+        ]
+      }
+    },
+    "/gift-exchange/register": {
+      "delete": {
+        "operationId": "GiftExchangeController_withdraw",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Withdraw my interest (no-op if not registered; a rejected entry is left as it is)",
+        "tags": [
+          "gift-exchange"
+        ]
+      },
+      "post": {
+        "operationId": "GiftExchangeController_register",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiftExchangeChoiceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Join the gift exchange, the picnic, or both, or change my choice (400 if neither; 403 if my entry was rejected)",
+        "tags": [
+          "gift-exchange"
         ]
       }
     },

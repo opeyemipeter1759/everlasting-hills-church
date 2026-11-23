@@ -78,7 +78,18 @@ export class SiteSettingsService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.seedMissing();
+    // Seeding is a convenience: reads already fall back to DEFAULT_CONTENT for a
+    // missing row. So a failure here (e.g. a new SiteSection value whose
+    // prisma/manual/*.sql hasn't been run on this database yet) must not take the
+    // whole API down at boot. Log it loudly and carry on.
+    try {
+      await this.seedMissing();
+    } catch (err) {
+      this.logger.error(
+        `Could not seed default site_settings rows; the site will use built-in defaults for missing sections. ` +
+          `If a new section was added, run its prisma/manual SQL on this database. Cause: ${(err as Error).message}`,
+      );
+    }
   }
 
   /** Seed any section that doesn't yet have a row. Idempotent. */

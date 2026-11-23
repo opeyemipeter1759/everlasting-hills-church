@@ -1,52 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Image from "next/image";
-import { Sparkles } from "lucide-react";
+import Link from "next/link";
 import type { EventSummary } from "@/types";
 import FallbackArt from "./FallbackArt";
 
 interface EventFlierProps {
   event: EventSummary;
-  dayNum: string;
-  monthShort: string;
-  countdown: string;
+  href: string;
+  /** Top-right chip: "Tomorrow · 5:00 PM WAT", "Upcoming", "Happening now"… */
+  status: string;
+  /** Small buttons pinned top-left (share, WhatsApp, invite). */
+  actions?: ReactNode;
 }
 
-export default function EventFlier({ event, dayNum, monthShort, countdown }: EventFlierProps) {
+/**
+ * Banner across the top of the card. The image links to the event page; the action
+ * buttons sit on top of it as siblings (a button can't live inside a link).
+ */
+export default function EventFlier({ event, href, status, actions }: EventFlierProps) {
   const image = event.coverImageUrl || event.flyerImageUrl;
   const [flyerOk, setFlyerOk] = useState(Boolean(image));
 
   return (
-    <div className="relative aspect-[4/3] flex-shrink-0 bg-[#0E020A]">
-      {flyerOk && image ? (
-        <Image
-          src={image}
-          alt={event.title}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          onError={() => setFlyerOk(false)}
-          className="object-contain"
-        />
-      ) : (
-        <FallbackArt />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-black/5 pointer-events-none" />
+    <div className="relative h-[200px] flex-shrink-0 overflow-hidden border-b border-[#ECE7E9] bg-[#F4F2F5] sm:h-[230px] lg:h-[255px]">
+      <Link
+        href={href}
+        aria-label={`View details: ${event.title}`}
+        className="absolute inset-0 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#87102C]/50"
+      >
+        {flyerOk && image ? (
+          <Image
+            src={image}
+            alt=""
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            onError={() => setFlyerOk(false)}
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+          />
+        ) : (
+          <FallbackArt title={event.theme || event.title} />
+        )}
+      </Link>
 
-      {event.featured && (
-        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-[#87102C] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-white shadow-lg">
-          <Sparkles size={10} /> Featured
-        </span>
-      )}
+      {actions && <div className="absolute left-4 top-4 z-10 flex items-center gap-1.5">{actions}</div>}
 
-      <div className="absolute top-3 right-3 flex flex-col items-center justify-center rounded-xl bg-white px-2.5 py-1.5 leading-none shadow-lg">
-        <span className="text-[9px] font-bold uppercase tracking-wider text-[#87102C]">{monthShort}</span>
-        <span className="text-lg font-black text-[#111]">{dayNum}</span>
-      </div>
-
-      {countdown && (
-        <span className="absolute bottom-3 left-3 inline-flex items-center rounded-full border border-white/15 bg-black/50 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur-md">
-          {countdown}
+      {status && (
+        <span className="pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-md border border-[#E7E2E4] bg-white px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#87102C] shadow-sm sm:text-xs">
+          {status === "Happening now" && (
+            <span className="relative flex h-2 w-2" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-70" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+          )}
+          {status}
         </span>
       )}
     </div>

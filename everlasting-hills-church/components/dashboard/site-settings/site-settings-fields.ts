@@ -1,21 +1,12 @@
 import type { FieldDef } from "@/components/dashboard/admin/cms/structured/StructuredForm";
 import type { SiteSectionName } from "@/lib/site-settings";
+import { cta, directions, setman } from "./site-settings-fields-extra";
 
 /**
  * Field definitions for each homepage section, mirroring lib/site-settings.ts's
  * SiteSettingsMap shapes. Same pattern as structured-fields.ts for CMS pages —
  * a section's editor is a field list, not a bespoke form component.
  */
-
-const cta = (key: string, label: string): FieldDef => ({
-  kind: "group",
-  key,
-  label,
-  fields: [
-    { kind: "text", key: "label", label: "Button label" },
-    { kind: "text", key: "href", label: "Link (# section or /path)" },
-  ],
-});
 
 const DAY_OPTIONS = [
   { value: "sunday", label: "Sunday" },
@@ -270,18 +261,9 @@ const carousel: FieldDef[] = [
   { kind: "imageList", key: "images", label: "Slides", help: "\"Life at EHC\" editorial slider on the homepage", max: 30 },
 ];
 
-const directions: FieldDef[] = [
-  { kind: "text", key: "headline", label: "Headline" },
-  { kind: "text", key: "headlineAccent", label: "Headline accent (highlighted words)" },
-  { kind: "textarea", key: "body", label: "Body" },
-  { kind: "text", key: "addressLabel", label: "Address tile label", help: "Small eyebrow shown above the address" },
-  { kind: "text", key: "email", label: "Email" },
-  { kind: "text", key: "ctaLabel", label: "\"Get directions\" button label", help: "The button triggers maps/geolocation directly — no link to set" },
-  cta("secondaryCta", "Secondary button"),
-];
-
 export const SITE_SETTINGS_FIELDS: Record<SiteSectionName, FieldDef[]> = {
   HERO: hero,
+  SETMAN: setman,
   ABOUT: about,
   CULTURE: culture,
   SCRIPTURE: scripture,

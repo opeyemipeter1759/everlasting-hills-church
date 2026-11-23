@@ -2,28 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Check,
-  Eye,
-  Globe,
-  HelpingHand,
-  Images,
-  MapPin,
-  MessageSquareQuote,
-  Mountain,
-  Phone,
-  Play,
-  Quote,
-  Sparkles,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, Eye } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import StructuredForm from "@/components/dashboard/admin/cms/structured/StructuredForm";
 import TestimonialsCmsClient from "@/components/dashboard/pastor/Testimonial/TestimonialsCmsClient";
 import { SITE_SETTINGS_FIELDS } from "./site-settings-fields";
+import { SECTION_META, SECTION_ORDER } from "./site-settings-sections";
 import type {
   SiteSectionName,
   SiteSettingsMap,
@@ -44,36 +28,6 @@ interface FieldIssue {
   path: string;
   message: string;
 }
-
-const SECTION_META: Record<SiteSectionName, { label: string; icon: LucideIcon }> = {
-  HERO: { label: "Hero", icon: Play },
-  ABOUT: { label: "About", icon: Sparkles },
-  CULTURE: { label: "Culture", icon: Mountain },
-  SCRIPTURE: { label: "Scripture", icon: Quote },
-  SERVICE: { label: "Services", icon: Globe },
-  SERMONS: { label: "Sermons", icon: Play },
-  TESTIMONIALS: { label: "Testimonials", icon: MessageSquareQuote },
-  COMMUNITY: { label: "Community", icon: Users },
-  GIVING: { label: "Giving", icon: HelpingHand },
-  CONTACT: { label: "Contact", icon: Phone },
-  CAROUSEL: { label: "Carousel", icon: Images },
-  DIRECTIONS: { label: "Directions", icon: MapPin },
-};
-
-const SECTION_ORDER: SiteSectionName[] = [
-  "HERO",
-  "ABOUT",
-  "CULTURE",
-  "SCRIPTURE",
-  "SERVICE",
-  "SERMONS",
-  "TESTIMONIALS",
-  "COMMUNITY",
-  "GIVING",
-  "CONTACT",
-  "DIRECTIONS",
-  "CAROUSEL",
-];
 
 /**
  * Tabbed homepage content editor. Each section renders as a proper field-driven

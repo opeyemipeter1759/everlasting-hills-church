@@ -4,12 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown, LayoutDashboard, LogOut, User } from "lucide-react";
+import { CalendarCheck, ChevronDown, LayoutDashboard, LogOut, User } from "lucide-react";
 import {
   getFrontendSessionUser,
   type FrontendSessionUser,
 } from "@/lib/auth/frontend-session";
 import { auth, useMe } from "@/lib/api";
+
+const MENU_LINKS = [
+  { href: "/dashboard", label: "My dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/profile", label: "My profile", icon: User },
+  { href: "/#attendance", label: "Mark attendance", icon: CalendarCheck },
+];
 
 /**
  * Compact session indicator for the public navbar.
@@ -136,24 +142,13 @@ export default function NavUserBadge({ scrolled }: { scrolled: boolean }) {
             )}
           </div>
 
-          <Link
-            href="/dashboard"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-            role="menuitem"
-          >
-            <LayoutDashboard size={15} className="text-gray-400" />
-            My dashboard
-          </Link>
-          <Link
-            href="/dashboard/profile"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-            role="menuitem"
-          >
-            <User size={15} className="text-gray-400" />
-            My profile
-          </Link>
+          {MENU_LINKS.map(({ href, label, icon: Icon }) => (
+            <Link key={href} href={href} onClick={() => setOpen(false)} role="menuitem"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+              <Icon size={15} className="text-gray-400" />
+              {label}
+            </Link>
+          ))}
 
           <div className="border-t border-gray-100" />
           <button
