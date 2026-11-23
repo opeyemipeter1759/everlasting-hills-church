@@ -6,7 +6,7 @@ import { DEFAULT_DOCUMENTS_CONFIG, readDocumentsConfig, valuesOf } from './docum
 import { DocumentCrypto } from './document-crypto';
 import { coupleOf, isMedical, kindsOf, letterRef, letterVars, longDate, mayOpen, mayReview, maySeeRow, mayUpload, REQUIREMENT_KINDS, roleOf, validFrom } from './document-rules';
 import { SAMPLE_VARS } from './document-letters.service';
-import { blocksSchema, fill, placeholderProblems, SEED_BODIES, SEED_BODIES_V1, SEED_BODIES_V2, textsOf } from './letter-blocks';
+import { blocksSchema, fill, placeholderProblems, SEED_BODIES, SEED_BODIES_V1, SEED_BODIES_V2, SEED_BODIES_V3, textsOf } from './letter-blocks';
 import { LetterRenderer, SAFE } from './letter-renderer';
 import { detectType, UploadInspector } from './upload-inspector';
 
@@ -37,8 +37,8 @@ describe('counselling letters', () => {
     expect(DEFAULT_DOCUMENTS_CONFIG.medicalConsentWording.state).toBe('PENDING_PASTORAL_APPROVAL');
   });
 
-  it('makes one letter per partner, with their name, needing one parent or guardian signature', () => {
-    const consent = SEED_BODIES.PARENTAL_CONSENT;
+  it('kept v2 as one letter per partner, with their name, needing one parent or guardian signature', () => {
+    const consent = SEED_BODIES_V2.PARENTAL_CONSENT;
     const text = textsOf(consent).join(' ');
     expect(text).toContain('{personName}');
     expect(text).toContain('{partnerName}');
@@ -46,7 +46,7 @@ describe('counselling letters', () => {
     expect(text.toLowerCase()).not.toContain('church office');
     const signatures = consent.find((b) => b.type === 'signatureColumns');
     expect(signatures && signatures.type === 'signatureColumns' && signatures.columns).toHaveLength(1);
-    expect(textsOf(SEED_BODIES.MEDICAL_SCREENING)).toContain('Dear {personName},');
+    expect(textsOf(SEED_BODIES_V2.MEDICAL_SCREENING)).toContain('Dear {personName},');
     // The old shared letter is kept only to recognise an untouched v1 seed.
     expect(textsOf(SEED_BODIES_V1.PARENTAL_CONSENT).join(' ')).toContain('{groomName}');
     for (const v of Object.values(DEFAULT_DOCUMENTS_CONFIG)) expect(String(v.value).toLowerCase()).not.toContain('church office');
@@ -89,15 +89,31 @@ describe('counselling letters', () => {
 
   it('signs both letters off from the Senior Pastors, with their signature, where v2 had a blank line', () => {
     for (const kind of ['PARENTAL_CONSENT', 'MEDICAL_SCREENING'] as const) {
-      const last = SEED_BODIES[kind].at(-1);
-      expect(last).toEqual({ type: 'signoff', closing: 'Yours in Christ,', lines: ['**Pastor Opeyemi and Faith Peter**', 'Senior Pastors', 'Everlasting Hills Church'] });
-      expect(blocksSchema.safeParse(SEED_BODIES[kind]).success).toBe(true);
+      for (const body of [SEED_BODIES[kind], SEED_BODIES_V3[kind]]) {
+        expect(body.at(-1)).toEqual({ type: 'signoff', closing: 'Yours in Christ,', lines: ['**Pastor Opeyemi and Faith Peter**', 'Senior Pastors', 'Everlasting Hills Church'] });
+        expect(blocksSchema.safeParse(body).success).toBe(true);
+      }
       expect(SEED_BODIES_V2[kind].some((b) => b.type === 'signoff')).toBe(false);
-      // Otherwise the wording is version 2's: the same blocks, in order, before the sign-off.
-      const withoutSignoff = SEED_BODIES[kind].filter((b) => b.type !== 'signoff');
+      // v3 was version 2's wording with the sign-off added.
+      const withoutSignoff = SEED_BODIES_V3[kind].filter((b) => b.type !== 'signoff');
       const v2 = SEED_BODIES_V2[kind].filter((b) => !(b.type === 'lines' && b.lines.includes('Marriage & Family Ministry')));
       expect(withoutSignoff).toEqual(v2);
     }
+  });
+
+  it('is the church\'s PDFs word for word (v4): names left to write in, one medical letter for both, uploads from the dashboard', () => {
+    const consent = textsOf(SEED_BODIES.PARENTAL_CONSENT).join(' ');
+    const medical = textsOf(SEED_BODIES.MEDICAL_SCREENING).join(' ');
+    for (const text of [consent, medical]) {
+      expect(text).not.toMatch(/\{(personName|partnerName|groomName|brideName|returnInstructions)\}/);
+      expect(text).toContain('from your dashboard, or bring');
+      expect(text).not.toContain('secure link in your email');
+    }
+    expect(SEED_BODIES.PARENTAL_CONSENT.filter((b) => b.type === 'blankLine')).toHaveLength(3);
+    expect(consent).toContain('the {personRole}. I confirm that I am aware');
+    expect(textsOf(SEED_BODIES.MEDICAL_SCREENING)).toContain('Dear _________________ and _________________,');
+    expect(medical).toContain('**each of you** is required');
+    expect(medical).toContain("will not share one partner's results with the other");
   });
 
   it('fits each signed letter on one page, the tests and laboratories in two columns', async () => {

@@ -9,7 +9,7 @@ import { CaseAccess, notFound } from '../case-access';
 import { counsellingAudit } from '../counselling-audit';
 import { DocumentsConfigService, type DocumentsSettings } from './documents-config';
 import { lagosDay, letterVars } from './document-rules';
-import { blocksSchema, SEED_BODIES, SEED_BODIES_V1, SEED_BODIES_V2, type Block, type LetterVars } from './letter-blocks';
+import { blocksSchema, SEED_BODIES, SEED_BODIES_V1, SEED_BODIES_V2, SEED_BODIES_V3, type Block, type LetterVars } from './letter-blocks';
 import { LetterRenderer } from './letter-renderer';
 
 export const LETTER_KINDS: readonly CounsellingLetterKind[] = ['PARENTAL_CONSENT', 'MEDICAL_SCREENING'];
@@ -94,15 +94,16 @@ export class DocumentLettersService implements OnModuleInit {
   }
 
   /**
-   * The shared v1 letter became one letter per partner (2026-11-21), and v3
-   * added the Senior Pastors' signed sign-off (2026-11-23). Where the active
+   * The shared v1 letter became one letter per partner (2026-11-21), v3
+   * added the Senior Pastors' signed sign-off, and v4 is the church's own
+   * PDFs word for word (both 2026-11-23). Where the active
    * version is still an untouched, unapproved earlier seed, the newest wording
    * is added as the next version and sent from now on (still a draft for a
    * Pastor to approve). Anything a person wrote or approved is left alone.
    */
   private async upgradeSeed(tenantId: string, kind: CounsellingLetterKind) {
     const active = await this.prisma.counsellingDocumentTemplate.findFirst({ where: { tenantId, kind, active: true } });
-    const untouched = [SEED_BODIES_V1[kind], SEED_BODIES_V2[kind]].some((seed) => canonical(active?.body) === canonical(seed));
+    const untouched = [SEED_BODIES_V1[kind], SEED_BODIES_V2[kind], SEED_BODIES_V3[kind]].some((seed) => canonical(active?.body) === canonical(seed));
     if (!active || active.approvalState !== 'DRAFT' || !untouched) return;
     await this.prisma
       .$transaction(async (tx) => {

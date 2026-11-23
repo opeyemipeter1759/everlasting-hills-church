@@ -326,7 +326,7 @@ export class LetterRenderer {
       const gap = 24;
       // One block takes the left half's width plus a little, so the lines are a comfortable length to sign on.
       const colW = columns.length === 1 ? Math.round((SAFE.right - SAFE.left) * 0.6) : (SAFE.right - SAFE.left - gap) / 2;
-      const field = { label: 8.5, space: 18 };
+      const field = { label: 8.5, space: 15 };
       // Measure first, so the two blocks are never split across pages.
       const heights = columns.map((c) => {
         const h = wrap(runsOf(fill(c.heading, input.vars), semibold, semibold), 10, colW).length * 14;
@@ -424,6 +424,22 @@ export class LetterRenderer {
         case 'signoff':
           signoff(b.closing, b.lines);
           break;
+        case 'blankLine': {
+          // Room to write above a rule; whatever follows sits on the rule's row, right after it.
+          const size = 10.5;
+          const full = SAFE.right - SAFE.left;
+          const after = b.after ? (wrap(runsOf(fill(b.after, input.vars), regular, semibold), size, full)[0] ?? []) : [];
+          const afterWidth = after.reduce((t, r) => t + width(r, size), 0);
+          const end = Math.min(SAFE.left + b.width * full, SAFE.right - afterWidth - (afterWidth ? 1 : 0));
+          ensure(20);
+          y += 4;
+          const rule = y + size + 2;
+          page.drawLine({ start: { x: SAFE.left, y: PAGE.height - rule }, end: { x: end, y: PAGE.height - rule }, thickness: 0.6, color: color(INK) });
+          mark(SAFE.left, end, rule - 1, rule + 1);
+          if (after.length) drawLine(after, size, end + 1, 'left', color(INK), SAFE.right - end - 1);
+          y += size * 1.45 + 2;
+          break;
+        }
       }
     });
 
