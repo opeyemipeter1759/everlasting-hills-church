@@ -16,7 +16,7 @@ interface Props {
 }
 
 /**
- * Time and location pills on the left, the action on the right — on one line, always:
+ * Time · location on the left, the action on the right — on one line, always:
  * the time keeps its width and the location truncates. Start time only, so it fits
  * three-across; multi-day events already say so in a chip under the title.
  */
@@ -25,18 +25,17 @@ export default function EventCardFooter({ event, href, takingRsvps, registering,
 
   return (
     <div className="flex flex-nowrap items-center gap-4 border-t border-[#ECE7E9] pt-5">
-      <dl className="flex min-w-0 flex-1 flex-nowrap items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.1em]">
-        <div className="flex-shrink-0 rounded-md border border-[#87102C]/15 bg-[#FFF5F7] px-2.5 py-1.5 text-[#87102C]">
-          <dt className="sr-only">Time</dt>
-          <dd className="whitespace-nowrap">{formatEventTime(event.startAt)} WAT</dd>
-        </div>
+      <dl className="flex min-w-0 flex-1 flex-nowrap items-center text-[13px] font-medium uppercase tracking-[0.14em] text-[#6B6B6B]">
+        <dt className="sr-only">Time</dt>
+        <dd className="flex-shrink-0 whitespace-nowrap">{formatEventTime(event.startAt)} WAT</dd>
         {location && (
-          <div className="min-w-0 rounded-md border border-[#E7E2E4] bg-[#F8F6F7] px-2.5 py-1.5 text-[#333]">
+          <>
+            <span aria-hidden="true" className="mx-2 flex-shrink-0 text-[#C9C2C5]">·</span>
             <dt className="sr-only">Location</dt>
-            <dd className="truncate" title={location}>
+            <dd className="min-w-0 truncate" title={location}>
               {location}
             </dd>
-          </div>
+          </>
         )}
       </dl>
 

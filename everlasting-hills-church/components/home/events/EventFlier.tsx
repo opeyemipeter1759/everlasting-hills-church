@@ -24,7 +24,7 @@ export default function EventFlier({ event, href, status, actions }: EventFlierP
   const [flyerOk, setFlyerOk] = useState(Boolean(image));
 
   return (
-    <div className="relative h-[150px] flex-shrink-0 overflow-hidden border-b border-[#ECE7E9] bg-[#F4F2F5] sm:h-[180px] lg:h-[205px]">
+    <div className="relative h-[200px] flex-shrink-0 overflow-hidden border-b border-[#ECE7E9] bg-[#F4F2F5] sm:h-[230px] lg:h-[255px]">
       <Link
         href={href}
         aria-label={`View details: ${event.title}`}
