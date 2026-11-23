@@ -17,7 +17,7 @@ import { PrismaService } from '../prisma/prisma.service';
  *   Pastor            every case, including ones with a safeguarding concern
  *   Super Admin       every case except safeguarding ones; no wedding approval
  *   Marriage ministry every case except safeguarding ones; no assignment,
- *                     archive, wedding approval or safeguarding
+ *                     archive, deletion, wedding approval or safeguarding
  *   Counsellor        cases with their own active assignment, nothing else
  *
  * A later couple portal adds one more branch: the applicant's own case
@@ -30,6 +30,8 @@ export const CAN = {
   triage: ['PASTOR', 'SUPER_ADMIN', 'MINISTRY'],
   assign: ['PASTOR', 'SUPER_ADMIN'],
   archive: ['PASTOR', 'SUPER_ADMIN'],
+  /** Delete a whole application for good (CaseDeleteService). */
+  delete: ['PASTOR', 'SUPER_ADMIN'],
   safeguarding: ['PASTOR'],
   wedding: ['PASTOR'],
   /** Read the policy, letters and documents settings. */

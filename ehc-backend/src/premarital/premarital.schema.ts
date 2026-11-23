@@ -173,6 +173,14 @@ export const assignSchema = z.object({
 
 export const safeguardingSchema = z.object({ raised: z.boolean() });
 
+/** Whole applications to delete for good: one from a case, or several ticked on the list. */
+export const deleteApplicationsSchema = z.object({
+  ids: z
+    .array(z.string().min(1).max(64))
+    .min(1, 'Pick at least one application')
+    .max(100, 'Delete up to 100 applications at a time'),
+});
+
 export const weddingApprovalSchema = z.object({
   note: z
     .string()

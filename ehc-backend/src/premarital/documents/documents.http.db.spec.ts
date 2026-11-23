@@ -17,6 +17,7 @@ import type { SendEmailPayload } from '../../notifications/notification-events';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CaseAccess } from '../case-access';
 import { CaseActionsService } from '../case-actions.service';
+import { CaseDeleteService } from '../case-delete.service';
 import { CaseReadsService } from '../case-reads.service';
 import { CounsellingNotifier } from '../counselling-notifier';
 import { CoupleAccountsService } from '../couple/couple-accounts.service';
@@ -40,7 +41,7 @@ import { UploadInspector } from './upload-inspector';
 
 /** Supabase Auth, in memory: the accounts the couple dashboard makes and finds. */
 type FakeUser = { id: string; email: string; password: string; app_metadata: Record<string, unknown>; user_metadata: Record<string, unknown> };
-const mockAuth = { users: new Map<string, FakeUser>(), refuseDigits: false, down: false };
+const mockAuth = { users: new Map<string, FakeUser>(), deleted: [] as string[], refuseDigits: false, down: false };
 jest.mock('../../members/members-supabase-admin.util', () => ({
   createAdminClient: () => ({
     auth: {
@@ -62,6 +63,11 @@ jest.mock('../../members/members-supabase-admin.util', () => ({
           const user = mockAuth.users.get(id)!;
           Object.assign(user, patch);
           return { data: { user }, error: null };
+        },
+        deleteUser: async (id: string) => {
+          mockAuth.deleted.push(id);
+          mockAuth.users.delete(id);
+          return { data: {}, error: null };
         },
       },
     },
@@ -235,6 +241,7 @@ maybe('Pre-marital documents and the couple dashboard over HTTP, against Postgre
         PublicApplicationsService,
         CaseReadsService,
         CaseActionsService,
+        CaseDeleteService,
         DocumentsConfigService,
         LetterRenderer,
         DocumentCrypto,
@@ -779,6 +786,75 @@ maybe('Pre-marital documents and the couple dashboard over HTTP, against Postgre
       const legacy = await prisma.counsellingApplication.update({ where: { id: other.id }, data: { applicantRole: null, status: 'UNDER_REVIEW' } });
       await as('ministry').patch(`/premarital/applications/${legacy.id}/role`, { applicantRole: 'BRIDE' }).expect(200);
       await as('ministry').patch(`/premarital/applications/${legacy.id}/role`, { applicantRole: 'GROOM' }).expect(409);
+    });
+  });
+
+  describe('deleting whole applications', () => {
+    const remove = (who: keyof typeof people, ids: string[]) => as(who).post('/premarital/applications/bulk-delete', { ids });
+    const exists = async (id: string) => !!(await prisma.counsellingApplication.findUnique({ where: { id } }));
+
+    it('lets a Super Admin delete several at once: the cases, their stored files and the couple sign-ins go, one audit line each stays', async () => {
+      const a = await apply('GROOM');
+      const b = await apply('BRIDE');
+      await (await partner(a.id, 'APPLICANT')).upload('PARENTAL_CONSENT_GROOM', await pdf()).expect(200);
+      const keys = (await prisma.counsellingDocumentFile.findMany({ where: { Requirement: { applicationId: a.id } } })).map((f) => f.storageKey);
+      expect(keys).toHaveLength(1);
+      const users = (await prisma.counsellingParticipant.findMany({ where: { applicationId: { in: [a.id, b.id] } } })).map((p) => p.authUserId);
+      expect(users).toHaveLength(4);
+      expect(await prisma.counsellingStatusEvent.count({ where: { applicationId: a.id } })).toBeGreaterThan(0);
+      const earlierAudit = await prisma.auditLog.count({ where: { tenantId, entityId: a.id } });
+      expect(earlierAudit).toBeGreaterThan(0);
+
+      const res = await remove('superAdmin', [a.id, b.id, a.id]).expect(200);
+      expect(res.body.data).toEqual({ deleted: 2, accountsRemoved: 4 });
+      expect(await exists(a.id)).toBe(false);
+      expect(await exists(b.id)).toBe(false);
+      expect(await prisma.counsellingStatusEvent.count({ where: { applicationId: a.id } })).toBe(0);
+      for (const k of keys) expect(store.objects.has(k)).toBe(false);
+      for (const u of users) expect(mockAuth.users.has(u)).toBe(false);
+      expect(await prisma.auditLog.count({ where: { tenantId, action: 'COUNSELLING_APPLICATION_DELETED', entityId: { in: [a.id, b.id] } } })).toBe(2);
+      expect(await prisma.auditLog.count({ where: { tenantId, entityId: a.id } })).toBe(earlierAudit + 1);
+      await as('superAdmin').get(`/premarital/applications/${a.id}`).expect(404);
+    });
+
+    it('never touches a member account linked to the case', async () => {
+      const a = await apply('GROOM', { partnerEmail: people.member.email });
+      expect((await participant(a.id, 'PARTNER')).accountKind).toBe('MEMBER');
+      const res = await remove('pastor', [a.id]).expect(200);
+      expect(res.body.data).toEqual({ deleted: 1, accountsRemoved: 1 });
+      expect(mockAuth.deleted).not.toContain(people.member.userId);
+      expect(await prisma.profile.findUnique({ where: { id: people.member.profileId } })).not.toBeNull();
+    });
+
+    it('is only for the Pastor and Super Admins, and a request holding one case the person may not delete deletes nothing', async () => {
+      const a = await apply();
+      const hidden = await apply();
+      await prisma.counsellingApplication.update({ where: { id: hidden.id }, data: { safeguardingFlaggedAt: new Date() } });
+      await remove('ministry', [a.id]).expect(403);
+      await remove('member', [a.id]).expect(404);
+      await remove('counsellor', [a.id]).expect(404);
+      // A Super Admin cannot see a safeguarding case, so it cannot be deleted, and neither is the other one.
+      await remove('superAdmin', [a.id, hidden.id]).expect(404);
+      expect(await exists(a.id)).toBe(true);
+      expect(await exists(hidden.id)).toBe(true);
+      expect((await as('ministry').get('/premarital/access').expect(200)).body.data.can.delete).toBe(false);
+      expect((await as('superAdmin').get('/premarital/access').expect(200)).body.data.can.delete).toBe(true);
+      expect((await as('superAdmin').get(`/premarital/applications/${a.id}`).expect(200)).body.data.can.delete).toBe(true);
+      await remove('pastor', [a.id, hidden.id]).expect(200);
+    });
+
+    it('deletes nothing while stored files cannot be removed', async () => {
+      const a = await apply();
+      await (await partner(a.id, 'APPLICANT')).upload('PARENTAL_CONSENT_GROOM', await pdf()).expect(200);
+      store.ready = false;
+      try {
+        await remove('pastor', [a.id]).expect(409);
+      } finally {
+        store.ready = true;
+      }
+      expect(await exists(a.id)).toBe(true);
+      await remove('pastor', [a.id]).expect(200);
+      expect(await exists(a.id)).toBe(false);
     });
   });
 

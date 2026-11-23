@@ -21,6 +21,7 @@ import { ResponseEnvelopeInterceptor } from '../common/interceptors/response-env
 import { PrismaService } from '../prisma/prisma.service';
 import { CaseAccess } from './case-access';
 import { CaseActionsService } from './case-actions.service';
+import { CaseDeleteService } from './case-delete.service';
 import { CaseReadsService } from './case-reads.service';
 import { CounsellingNotifier } from './counselling-notifier';
 import { CoupleAccountsService } from './couple/couple-accounts.service';
@@ -220,6 +221,8 @@ maybe('Pre-marital counselling over HTTP, against Postgres', () => {
         PublicApplicationsService,
         CaseReadsService,
         CaseActionsService,
+        // Deleting cases is covered in documents.http.db.spec.ts.
+        { provide: CaseDeleteService, useValue: {} },
         SessionsService,
         DocumentsConfigService,
         { provide: DocumentDispatchService, useValue: dispatch },

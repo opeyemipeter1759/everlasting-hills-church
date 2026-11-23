@@ -36449,6 +36449,53 @@
         ]
       }
     },
+    "/premarital/applications/bulk-delete": {
+      "post": {
+        "operationId": "PremaritalController_deleteApplications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete whole applications for good, with their stored documents and the couple sign-ins made for them (pastors, Super Admin)",
+        "tags": [
+          "premarital"
+        ]
+      }
+    },
     "/premarital/assignments/{id}": {
       "delete": {
         "operationId": "PremaritalController_unassign",

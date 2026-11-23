@@ -15,6 +15,8 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   tone?: ConfirmDialogTone;
   loading?: boolean;
+  /** Holds the confirm button back, e.g. until a typed confirmation matches. */
+  confirmDisabled?: boolean;
   onConfirm: () => void | Promise<void>;
   onCancel: () => void;
 }
@@ -45,6 +47,7 @@ export default function ConfirmDialog({
   cancelLabel = "Cancel",
   tone = "info",
   loading = false,
+  confirmDisabled = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -84,7 +87,7 @@ export default function ConfirmDialog({
           <button ref={cancelRef} type="button" onClick={onCancel} disabled={loading} className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors disabled:opacity-50">
             {cancelLabel}
           </button>
-          <button type="button" onClick={() => onConfirm()} disabled={loading} className={`px-4 py-2 rounded-lg text-sm font-bold text-white transition-colors focus:outline-none focus:ring-2 disabled:opacity-60 disabled:cursor-not-allowed ${styles.button}`}>
+          <button type="button" onClick={() => onConfirm()} disabled={loading || confirmDisabled} className={`px-4 py-2 rounded-lg text-sm font-bold text-white transition-colors focus:outline-none focus:ring-2 disabled:opacity-60 disabled:cursor-not-allowed ${styles.button}`}>
             {loading ? <Loader/> : confirmLabel}
           </button>
         </div>

@@ -54,6 +54,7 @@ export class CaseReadsService {
         policy: can(tier, 'policy'),
         settings: can(tier, 'settings'),
         wedding: can(tier, 'wedding'),
+        delete: can(tier, 'delete'),
       },
     };
   }
@@ -326,6 +327,7 @@ export class CaseReadsService {
       admin: can(tier, 'triage'),
       assign: can(tier, 'assign'),
       archive: can(tier, 'archive'),
+      delete: can(tier, 'delete'),
       safeguarding: can(tier, 'safeguarding'),
       wedding:
         can(tier, 'wedding') &&

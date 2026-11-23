@@ -4,6 +4,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { CaseAccess } from './case-access';
 import { CaseActionsService } from './case-actions.service';
+import { CaseDeleteService } from './case-delete.service';
 import { CaseReadsService } from './case-reads.service';
 import { CounsellingNotifier } from './counselling-notifier';
 import { PolicyService } from './policy';
@@ -47,6 +48,7 @@ import { UploadInspector } from './documents/upload-inspector';
     PublicApplicationsService,
     CaseReadsService,
     CaseActionsService,
+    CaseDeleteService,
     SessionsService,
     DocumentsConfigService,
     LetterRenderer,

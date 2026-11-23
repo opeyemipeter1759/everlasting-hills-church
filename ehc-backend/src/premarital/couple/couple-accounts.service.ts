@@ -74,6 +74,32 @@ export class CoupleAccountsService {
     private readonly config: DocumentsConfigService,
   ) {}
 
+  /**
+   * After an application is deleted: removes the dashboard sign-ins that were
+   * made for it, once nothing else uses them. Only ever a couple sign-in (the
+   * marker, and no Profile), never a member's account. Never throws: a sign-in
+   * that could not be removed is left, still fenced off and finding no
+   * application. Returns how many were removed.
+   */
+  async removeUnused(authUserIds: string[]): Promise<number> {
+    let removed = 0;
+    for (const id of new Set(authUserIds)) {
+      try {
+        if (await this.prisma.counsellingParticipant.count({ where: { authUserId: id } })) continue;
+        if (await this.prisma.profile.findUnique({ where: { userId: id }, select: { id: true } })) continue;
+        const supabase = createAdminClient();
+        const { data, error } = await supabase.auth.admin.getUserById(id);
+        if (error || !data.user || !isCoupleAccount(data.user.app_metadata)) continue;
+        const gone = await supabase.auth.admin.deleteUser(id);
+        if (gone.error) throw new Error(gone.error.message);
+        removed++;
+      } catch (err) {
+        this.logger.warn(`Could not remove a counselling dashboard sign-in after its application was deleted: ${(err as Error).message}`);
+      }
+    }
+    return removed;
+  }
+
   /** Both people on the application. The partner is left out only on applications from before partner details were required. */
   people(app: CounsellingApplication): Person[] {
     const out: Person[] = [

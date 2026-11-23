@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChevronRight, ShieldAlert } from "lucide-react";
 import { Select } from "@/components/ui/select";
-import { useCases } from "@/lib/api/premarital";
+import { useCases, useMarriageAccess } from "@/lib/api/premarital";
 import { STATUS_LABEL, type CaseStatus } from "@/lib/pre-marital/schema";
+import { SelectionBar } from "./DeleteCases";
 import { PageHeader, QueryState, StatusBadge, coupleName, lagosDate, secondary, selectBox } from "./ui";
 
 /** Not a status: closed or archived cases that still hold stored documents. */
@@ -24,6 +25,19 @@ export default function CasesClient() {
   const [cursors, setCursors] = useState<string[]>([]);
   const q = useCases(status === STORED ? { storedFiles: "closed", cursor: cursors.at(-1) } : { status, cursor: cursors.at(-1) });
   const items = q.data?.items ?? [];
+  const canDelete = !!useMarriageAccess().data?.can.delete;
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const toggle = (id: string) =>
+    setSelected((s) => {
+      const next = new Set(s);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  /** A new page or filter starts with nothing ticked. */
+  const page = (next: string[]) => {
+    setCursors(next);
+    setSelected(new Set());
+  };
 
   return (
     <div className="mx-auto max-w-5xl space-y-5 px-4 py-6 sm:px-6">
@@ -33,7 +47,7 @@ export default function CasesClient() {
             value={status}
             onChange={(v) => {
               setStatus(v);
-              setCursors([]);
+              page([]);
             }}
             options={STATUS_FILTER}
             prefixLabel="Status"
@@ -49,15 +63,25 @@ export default function CasesClient() {
           No applications here. New ones appear as soon as a couple applies on the website.
         </p>
       )}
+      {canDelete && items.length > 0 && <SelectionBar pageIds={items.map((c) => c.id)} selected={selected} onChange={setSelected} />}
       {items.length > 0 && (
         <ul className="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:divide-white/[0.06] dark:border-white/10 dark:bg-[#161618]">
           {items.map((c) => {
             const lead = c.counsellors.find((x) => x.isLead)?.name;
             return (
-              <li key={c.id}>
+              <li key={c.id} className="flex items-center">
+                {canDelete && (
+                  <input
+                    type="checkbox"
+                    checked={selected.has(c.id)}
+                    onChange={() => toggle(c.id)}
+                    aria-label={`Select ${coupleName(c)}, ${c.referenceCode}`}
+                    className="ml-4 h-4 w-4 flex-shrink-0 accent-[#87102C]"
+                  />
+                )}
                 <Link
                   href={`/dashboard/marriage/applications/${c.id}`}
-                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#87102C] dark:hover:bg-white/[0.03]"
+                  className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3.5 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#87102C] dark:hover:bg-white/[0.03]"
                 >
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2 text-sm font-semibold text-[#111] dark:text-white">
@@ -79,14 +103,14 @@ export default function CasesClient() {
       )}
       <div className="flex justify-between gap-3">
         {cursors.length > 0 ? (
-          <button type="button" className={secondary} onClick={() => setCursors((c) => c.slice(0, -1))}>
+          <button type="button" className={secondary} onClick={() => page(cursors.slice(0, -1))}>
             Newer
           </button>
         ) : (
           <span />
         )}
         {q.data?.nextCursor && (
-          <button type="button" className={secondary} onClick={() => setCursors((c) => [...c, q.data!.nextCursor!])}>
+          <button type="button" className={secondary} onClick={() => page([...cursors, q.data!.nextCursor!])}>
             Older
           </button>
         )}

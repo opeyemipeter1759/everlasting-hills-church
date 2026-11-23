@@ -12,7 +12,7 @@ export interface MarriageAccess {
   counsellor: boolean;
   /** This person has a pre-marital application of their own (the Pre-marital menu item). */
   couple: boolean;
-  can: { triage: boolean; assign: boolean; policy: boolean; settings: boolean; wedding: boolean };
+  can: { triage: boolean; assign: boolean; policy: boolean; settings: boolean; wedding: boolean; delete: boolean };
 }
 
 export interface Overview {
@@ -43,7 +43,7 @@ export interface CaseDetail extends Omit<CaseSummary, "counsellors"> {
   timeline: { id: string; from: CaseStatus | null; to: CaseStatus; reason: string | null; at: string; by: string | null }[];
   WeddingApproval: { approvedAt: string; note: string | null } | null;
   tier: StaffTier | "COUNSELLOR";
-  can: { transitions: CaseStatus[]; requestInfo: boolean; admin: boolean; assign: boolean; archive: boolean; safeguarding: boolean; wedding: boolean; sessions: boolean };
+  can: { transitions: CaseStatus[]; requestInfo: boolean; admin: boolean; assign: boolean; archive: boolean; delete: boolean; safeguarding: boolean; wedding: boolean; sessions: boolean };
   documentsGate: { status: CaseStatus; satisfied: boolean; canOverride: boolean; reasons: { code: string; label: string }[] };
 }
 
@@ -86,5 +86,17 @@ export function useMarriageAction<T = unknown>() {
     mutationFn: ({ method, path, body }: { method: "post" | "patch" | "put" | "delete"; path: string; body?: object }) =>
       (method === "delete" ? api.delete<T>(path) : api[method]<T>(path, body ?? {})),
     onSuccess: () => qc.invalidateQueries({ queryKey: K }),
+  });
+}
+
+/** Deletes whole applications for good (Pastor, Super Admin). A deleted case is dropped, not refetched into a 404. */
+export function useDeleteApplications() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => api.post<{ deleted: number; accountsRemoved: number }>("/premarital/applications/bulk-delete", { ids }),
+    onSuccess: (_res, ids) => {
+      for (const id of ids) qc.removeQueries({ queryKey: [...K, "case", id] });
+      return qc.invalidateQueries({ queryKey: K, predicate: (q) => q.queryKey[1] !== "case" });
+    },
   });
 }

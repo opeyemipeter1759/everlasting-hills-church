@@ -22,6 +22,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { CaseActionsService } from './case-actions.service';
+import { CaseDeleteService } from './case-delete.service';
 import { CaseReadsService } from './case-reads.service';
 import { PolicyService } from './policy';
 
@@ -38,6 +39,7 @@ export class PremaritalController {
   constructor(
     private readonly reads: CaseReadsService,
     private readonly actions: CaseActionsService,
+    private readonly deletion: CaseDeleteService,
     private readonly policy: PolicyService,
   ) {}
 
@@ -163,6 +165,16 @@ export class PremaritalController {
   })
   archive(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
     return this.actions.archive(actor, id);
+  }
+
+  @Post('applications/bulk-delete')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Delete whole applications for good, with their stored documents and the couple sign-ins made for them (pastors, Super Admin)',
+  })
+  deleteApplications(@CurrentUser() actor: AuthUser, @Body() body: unknown) {
+    return this.deletion.remove(actor, body);
   }
 
   @Post('applications/:id/wedding-approval')

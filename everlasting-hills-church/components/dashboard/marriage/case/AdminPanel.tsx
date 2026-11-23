@@ -1,17 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import type { CaseDetail } from "@/lib/api/premarital";
+import { DeleteCasesDialog, danger } from "../DeleteCases";
 import { card, input, lagosDate, primary, secondary, useRun } from "../ui";
 
-/** Logistics note, safeguarding, archive and wedding approval, each for the roles allowed to use it. */
+/** Logistics note, safeguarding, archive, deletion and wedding approval, each for the roles allowed to use it. */
 export function AdminPanel({ c }: { c: CaseDetail }) {
   const { run, pending } = useRun();
   const [note, setNote] = useState(c.adminNote ?? "");
   const [confirm, setConfirm] = useState<"archive" | "safeguarding" | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
   const flagged = !!c.safeguardingFlaggedAt;
-  if (!c.can.admin && !c.can.safeguarding && !c.can.archive && !c.can.wedding && !c.WeddingApproval) return null;
+  if (!c.can.admin && !c.can.safeguarding && !c.can.archive && !c.can.delete && !c.can.wedding && !c.WeddingApproval) return null;
 
   return (
     <section aria-labelledby="admin-heading" className={`${card} space-y-4`}>
@@ -37,7 +41,7 @@ export function AdminPanel({ c }: { c: CaseDetail }) {
         )
       )}
 
-      {(c.can.safeguarding || c.can.archive) && (
+      {(c.can.safeguarding || c.can.archive || c.can.delete) && (
         <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-4 dark:border-white/[0.06]">
           {c.can.safeguarding && (
             <button type="button" className={secondary} disabled={pending} onClick={() => setConfirm("safeguarding")}>
@@ -49,9 +53,15 @@ export function AdminPanel({ c }: { c: CaseDetail }) {
               Archive
             </button>
           )}
+          {c.can.delete && (
+            <button type="button" className={danger} disabled={pending} onClick={() => setDeleting(true)}>
+              Delete for good
+            </button>
+          )}
         </div>
       )}
 
+      <DeleteCasesDialog ids={[c.id]} open={deleting} onClose={() => setDeleting(false)} onDeleted={() => router.replace("/dashboard/marriage/applications")} />
       <ConfirmDialog
         open={confirm !== null}
         tone={confirm === "archive" ? "warning" : "danger"}
