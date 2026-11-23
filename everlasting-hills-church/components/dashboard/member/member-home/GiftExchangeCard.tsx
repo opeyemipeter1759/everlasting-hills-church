@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useCallback, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Gift, Loader2 } from "lucide-react";
 import { showToast } from "@/components/ui/toast/toast";
 import {
   useGiftExchange,
@@ -10,104 +11,138 @@ import {
   type GiftChoice,
 } from "@/lib/api/gift-exchange";
 import { GiftCountdown, giftDayLabel } from "./GiftCountdown";
-import { GIFT_OPTIONS, GiftChoiceForm, primaryBtn, quietBtn } from "./GiftChoiceForm";
+import { GIFT_OPTIONS, GiftChoiceForm } from "./GiftChoiceForm";
+import { GiftJoinedSummary } from "./GiftJoinedSummary";
+import { GiftPartyHeader } from "./GiftPartyHeader";
+import { GiftRegisterModal } from "./GiftRegisterModal";
+import { bodyText, btnPrimary, btnSecondary, card, linkCl, metaText } from "./tokens";
 
 const failed = (err: unknown) => showToast.error((err as { message?: string }).message ?? "Something went wrong. Please try again.");
 
+/** Each state of the card body fades and slides in when it appears (keyed, so it replays on every swap). */
+const swap = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.25, ease: "easeOut" },
+} as const;
+
 /**
- * Gift exchange & picnic: members tick either or both, then can change or withdraw.
+ * Gift exchange & picnic: members register from a modal (either or both), then can change or withdraw.
  * Members never see who else is in, or how many. Once in, a countdown appears.
  */
 export function GiftExchangeCard() {
   const { data } = useGiftExchange();
   const register = useRegisterGiftExchange();
   const withdraw = useWithdrawGiftExchange();
-  const [editing, setEditing] = useState(false);
+  const [choosing, setChoosing] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const still = useReducedMotion() ?? false;
+  const saving = register.isPending;
+  const closeChooser = useCallback(() => {
+    if (!saving) setChoosing(false);
+  }, [saving]);
   if (!data) return null;
 
   const inNow = data.status === "INTERESTED";
   const busy = register.isPending || withdraw.isPending;
-  const joined = GIFT_OPTIONS.filter((o) => data[o.key]).map((o) => o.label);
+  const joined = GIFT_OPTIONS.filter((o) => data[o.key]);
+  const dayLabel = data.targetDate ? giftDayLabel(data.targetDate) : null;
+  const view = data.status === "REJECTED" ? "rejected" : !inNow ? "open" : confirming ? "confirm" : "joined";
 
   const save = (choice: GiftChoice) =>
     register.mutate(choice, {
       onSuccess: () => {
-        setEditing(false);
+        setChoosing(false);
         showToast.success(inNow ? "Your choice has been updated." : "You're signed up. See you there!");
       },
       onError: failed,
     });
 
   return (
-    <section
+    <motion.section
       aria-labelledby="gift-exchange-title"
-      className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/10 dark:bg-white/[0.03]"
+      className={`${card} overflow-hidden`}
+      initial={still ? false : { opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
     >
-      <header className="border-b border-gray-100 px-5 py-4 dark:border-white/[0.06] sm:px-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1]">
-          End-of-year fellowship
-        </p>
-        <h3 id="gift-exchange-title" className="mt-1 text-lg font-bold text-[#111] dark:text-white">
-          Gift exchange &amp; picnic
-        </h3>
-        {data.targetDate && <p className="mt-0.5 text-sm text-gray-500 dark:text-white/55">{giftDayLabel(data.targetDate)}</p>}
-      </header>
+      <GiftPartyHeader titleId="gift-exchange-title" kicker="End-of-year fellowship" title="Gift exchange & picnic" dayLabel={dayLabel} />
 
-      <div className="space-y-5 px-5 py-5 sm:px-6">
-        {data.status === "REJECTED" ? (
-          <p className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/75">
-            Your sign-up wasn&apos;t accepted this time{data.rejectionReason ? `: ${data.rejectionReason}` : "."} Please speak to a
-            church admin if you have questions.
-          </p>
-        ) : !inNow || editing ? (
-          <GiftChoiceForm
-            initial={inNow ? { giftExchange: data.giftExchange, picnic: data.picnic } : { giftExchange: true, picnic: false }}
-            changing={inNow}
-            saving={register.isPending}
-            onSave={save}
-            onCancel={editing ? () => setEditing(false) : undefined}
-          />
-        ) : confirming ? (
-          <div className="rounded-xl border border-gray-200 p-4 dark:border-white/10">
-            <p className="text-sm font-semibold text-[#111] dark:text-white">Withdraw from the gift exchange &amp; picnic?</p>
-            <p className="mt-1 text-xs text-gray-500 dark:text-white/50">You can sign up again any time before the day.</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" disabled={busy} className={primaryBtn}
-                onClick={() => withdraw.mutate(undefined, { onSuccess: () => setConfirming(false), onError: failed })}>
-                {withdraw.isPending && <Loader2 size={15} className="animate-spin" aria-hidden="true" />} Yes, withdraw
-              </button>
-              <button type="button" disabled={busy} className={quietBtn} onClick={() => setConfirming(false)}>
-                Keep me in
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <p className="text-sm text-gray-600 dark:text-white/65">You&apos;re signed up for</p>
-            <ul className="mt-2 flex flex-wrap gap-2">
-              {joined.map((label) => (
-                <li key={label}
-                  className="rounded-lg border border-[#87102C]/20 bg-[#87102C]/[0.05] px-3 py-1.5 text-sm font-semibold text-[#87102C] dark:border-[#FFB3C1]/30 dark:text-[#FFB3C1]">
-                  {label}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-3 flex gap-4 text-sm font-semibold">
-              <button type="button" onClick={() => setEditing(true)} className="text-[#87102C] hover:underline dark:text-[#FFB3C1]">
-                Change
-              </button>
-              <button type="button" onClick={() => setConfirming(true)} className="text-gray-500 hover:underline dark:text-white/55">
-                Withdraw
-              </button>
-            </div>
-          </div>
-        )}
+      <div className="px-5 py-5">
+          {view === "rejected" && (
+            <motion.p key="rejected" {...swap}
+              className="rounded-xl border border-[#E7CDD3] bg-[#FFF5F7] px-4 py-3 text-sm text-[#4a4244] dark:border-white/10 dark:bg-white/[0.04] dark:text-white/75">
+              Your sign-up wasn&apos;t accepted this time{data.rejectionReason ? `: ${data.rejectionReason}` : "."} Please speak to a
+              church admin if you have questions.
+            </motion.p>
+          )}
 
-        {inNow && !editing && !confirming && data.targetDate && (
-          <GiftCountdown targetDate={data.targetDate} clockOffsetMs={data.clockOffsetMs} />
-        )}
+          {view === "open" && (
+            <motion.div key="open" {...swap} className="flex flex-col gap-4">
+              <p className={bodyText}>Close the year with the church family. Join the gift exchange, the picnic, or both.</p>
+              <motion.button
+                type="button"
+                onClick={() => setChoosing(true)}
+                className={`${btnPrimary} relative w-full overflow-hidden shadow-md shadow-[#87102C]/20`}
+                whileHover={still ? undefined : { scale: 1.02 }}
+                whileTap={still ? undefined : { scale: 0.97 }}
+              >
+                {!still && (
+                  <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-1/3 animate-shine bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                )}
+                <Gift size={15} aria-hidden="true" />
+                Register
+              </motion.button>
+            </motion.div>
+          )}
+
+          {view === "confirm" && (
+            <motion.div key="confirm" {...swap} className="rounded-xl border border-[#E7CDD3] p-4 dark:border-white/10">
+              <p className="text-sm font-semibold text-[#111] dark:text-white">Withdraw from the gift exchange &amp; picnic?</p>
+              <p className={`mt-1 ${metaText}`}>You can sign up again any time before the day.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" disabled={busy} className={btnPrimary}
+                  onClick={() => withdraw.mutate(undefined, { onSuccess: () => setConfirming(false), onError: failed })}>
+                  {withdraw.isPending && <Loader2 size={15} className="animate-spin" aria-hidden="true" />} Yes, withdraw
+                </button>
+                <button type="button" disabled={busy} className={btnSecondary} onClick={() => setConfirming(false)}>
+                  Keep me in
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {view === "joined" && (
+            <motion.div key="joined" {...swap} className="flex flex-col gap-4">
+              <GiftJoinedSummary joined={joined} />
+              {data.targetDate && <GiftCountdown targetDate={data.targetDate} clockOffsetMs={data.clockOffsetMs} />}
+              <div className="flex items-center gap-4">
+                <button type="button" onClick={() => setChoosing(true)} className={linkCl}>
+                  Change
+                </button>
+                <button type="button" onClick={() => setConfirming(true)}
+                  className="text-xs font-semibold text-[#8a7e80] hover:underline dark:text-white/45">
+                  Withdraw
+                </button>
+              </div>
+            </motion.div>
+          )}
       </div>
-    </section>
+
+      <GiftRegisterModal
+        open={choosing}
+        onClose={closeChooser}
+        title={inNow ? "Change your registration" : "Register for the fellowship"}
+        dayLabel={dayLabel}
+      >
+        <GiftChoiceForm
+          initial={inNow ? { giftExchange: data.giftExchange, picnic: data.picnic } : { giftExchange: true, picnic: false }}
+          changing={inNow}
+          saving={saving}
+          onSave={save}
+          onCancel={closeChooser}
+        />
+      </GiftRegisterModal>
+    </motion.section>
   );
 }
