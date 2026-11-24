@@ -1,7 +1,7 @@
-import { CalendarDots, Gift, HandHeart, type IconComponent, Megaphone, Users } from "@/components/icons";
+import { CalendarDots, Gift, type IconComponent, Megaphone, PrayerRequestIcon, Users } from "@/components/icons";
 
 const RULES: Array<{ match: RegExp; icon: IconComponent }> = [
-  { match: /prayer/i, icon: HandHeart },
+  { match: /prayer/i, icon: PrayerRequestIcon },
   { match: /(service|event|conference|night|revival|program|crusade)/i, icon: CalendarDots },
   { match: /(fellowship|group|youth|women|men|choir|class)/i, icon: Users },
   { match: /(giving|offering|tithe|building|fund)/i, icon: Gift },

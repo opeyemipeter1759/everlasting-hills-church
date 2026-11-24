@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ChatText, EnvelopeSimple, Gift, HandHeart, Icon, NewHereIcon, TestimonyIcon } from "@/components/icons";
+import { ArrowRight, EnvelopeSimple, GiveIcon, Icon, NewHereIcon, PrayerRequestIcon, PreMaritalIcon, TestimonyIcon } from "@/components/icons";
 
 const LINKS = [
   {
@@ -13,7 +13,7 @@ const LINKS = [
   },
   {
     href: "/prayer-request",
-    icon: ChatText,
+    icon: PrayerRequestIcon,
     label: "Prayer Request",
     description: "Submit your petitions. Our intercessors will stand with you.",
     accent: "#FFB3C1",
@@ -31,7 +31,7 @@ const LINKS = [
   },
   {
     href: "/pre-marital-counselling",
-    icon: HandHeart,
+    icon: PreMaritalIcon,
     label: "Pre-Marital Counselling",
     description: "Planning to marry? Apply together and our pastors will be in touch.",
     accent: "#FFB3C1",
@@ -49,7 +49,7 @@ const LINKS = [
   },
   {
     href: "/give",
-    icon: Gift,
+    icon: GiveIcon,
     label: "Give Online",
     description: "Support the work of Everlasting Hills Church.",
     accent: "#FFB3C1",
