@@ -45,14 +45,14 @@ export default function EventFlier({ event, href, status, actions, compact = fal
         )}
       </Link>
 
-      {actions && <div className="absolute left-4 top-4 z-10 flex items-center gap-1.5">{actions}</div>}
+      {actions && <div className={`absolute z-10 flex items-center gap-1.5 ${compact ? "left-3 top-3" : "left-4 top-4"}`}>{actions}</div>}
 
       {status && (
         <span className={`pointer-events-none absolute z-10 inline-flex items-center gap-2 rounded-md border border-[#E7E2E4] bg-white font-bold uppercase text-[#87102C] shadow-sm ${compact ? "right-3 top-3 px-2.5 py-1.5 text-[10px] tracking-[0.1em]" : "right-4 top-4 px-3.5 py-2 text-[11px] tracking-[0.16em] sm:text-xs"}`}>
           {status === "Happening now" && (
-            <span className="relative flex h-2 w-2" aria-hidden="true">
+            <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-70" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
             </span>
           )}
           {status}
