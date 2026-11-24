@@ -24,7 +24,7 @@ export default function EventFlier({ event, href, status, actions }: EventFlierP
   const [flyerOk, setFlyerOk] = useState(Boolean(image));
 
   return (
-    <div className="relative h-[200px] flex-shrink-0 overflow-hidden border-b border-[#ECE7E9] bg-[#F4F2F5] sm:h-[230px] lg:h-[255px]">
+    <div className="relative aspect-[16/9] flex-shrink-0 overflow-hidden border-b border-[#ECE7E9] bg-[#F4F2F5]">
       <Link
         href={href}
         aria-label={`View details: ${event.title}`}
@@ -44,14 +44,14 @@ export default function EventFlier({ event, href, status, actions }: EventFlierP
         )}
       </Link>
 
-      {actions && <div className="absolute left-4 top-4 z-10 flex items-center gap-1.5">{actions}</div>}
+      {actions && <div className="absolute left-3 top-3 z-10 flex items-center gap-1.5">{actions}</div>}
 
       {status && (
-        <span className="pointer-events-none absolute right-4 top-4 z-10 inline-flex items-center gap-2 rounded-md border border-[#E7E2E4] bg-white px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#87102C] shadow-sm sm:text-xs">
+        <span className="pointer-events-none absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#87102C] shadow-sm backdrop-blur">
           {status === "Happening now" && (
-            <span className="relative flex h-2 w-2" aria-hidden="true">
+            <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-70" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
             </span>
           )}
           {status}

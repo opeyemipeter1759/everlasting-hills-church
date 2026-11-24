@@ -14,7 +14,6 @@
     "app/(public)/home-cell/find/page.tsx": 753,
     "app/(public)/ministries/[slug]/page.tsx": 615,
     "app/(public)/ministries/page.tsx": 161,
-    "app/(public)/Pastor/page.tsx": 231,
     "app/api/backend/[...path]/route.ts": 258,
     "app/dashboard/(dashboard)/cms/media/page.tsx": 188,
     "app/dashboard/(dashboard)/cms/settings/page.tsx": 193,

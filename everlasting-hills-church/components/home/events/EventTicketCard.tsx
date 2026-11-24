@@ -37,18 +37,18 @@ export default function EventTicketCard({ event, onNeedsRsvpModal, registeredEve
   const { registering, registered, handleRegisterClick } = useEventRegistration(event, onNeedsRsvpModal, registeredEvents);
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-[#E7E2E4] bg-white transition-shadow duration-300 hover:shadow-[0_18px_40px_-18px_rgba(135,16,44,0.25)]">
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-[#E7E2E4] bg-white transition-shadow duration-300 hover:shadow-[0_18px_40px_-18px_rgba(135,16,44,0.25)]">
       <EventFlier event={event} href={href} status={status} />
 
-      <div className="flex flex-1 flex-col px-6 pb-5 pt-6 sm:px-8 sm:pt-7">
+      <div className="flex flex-1 flex-col px-5 pb-4 pt-5">
         <EventCardHeading event={event} href={href} />
 
         {event.shortDescription && (
-          <p className="mt-5 text-[17px] leading-relaxed text-[#555] line-clamp-3">{event.shortDescription}</p>
+          <p className="mt-3 text-sm leading-relaxed text-[#5a5a5a] line-clamp-2">{event.shortDescription}</p>
         )}
 
         {/* Pinned to the bottom so cards in a row line up */}
-        <div className="mt-auto pt-6">
+        <div className="mt-auto pt-4">
           <EventCardFooter
             event={event}
             href={href}
