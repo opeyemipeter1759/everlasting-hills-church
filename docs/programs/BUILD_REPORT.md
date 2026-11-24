@@ -209,3 +209,16 @@ Tests, 18 of 18 across the Programs frontend:
 - `programs-admin.test.tsx`: the attention chips; moving a row sends the new order; Save sends only the changed field and leaves untouched lists alone; a list is replaced only when it changed; the story text converts to HTML and back, safely.
 
 Not checked by eye: the admin screens need a real sign-in, which I don't have locally. They are covered by the component tests.
+
+## Phase 7: nav, revalidation, metadata
+
+- **Nav.** Programs is in the main menu right after Sermons, inside Media, with a Phosphor `Repeat` icon ("the rhythm of the house"). It reaches every page, mobile menu included.
+- **Revalidation.** Every admin write now revalidates the tag `programs` and the path `/programs`. The site tags its Programs fetches `programs` because it does not know the tenant id. The tenant tag `programs:<tenantId>` is kept for a multi-church site later. The site's `/api/revalidate` route already accepts tags.
+- **Metadata.**
+  - `generateMetadata` on each program page: title, description and canonical.
+  - A generated share image per program (`opengraph-image.tsx`): the name on black, lit by its accent, with its rhythm and the church's name.
+  - schema.org `Event` JSON-LD for confirmed dates only. The API sends occurrences only once a date is confirmed, so a program whose date is to be announced emits nothing.
+
+Tests:
+- `metadata.test.ts`: Programs follows Sermons in the menu; confirmed dates become Events, with the attendance mode taken from the format; programs to be announced produce none.
+- The frontend Programs, admin and navbar tests are at 33 of 33, and the backend Programs suite at 42 of 42.

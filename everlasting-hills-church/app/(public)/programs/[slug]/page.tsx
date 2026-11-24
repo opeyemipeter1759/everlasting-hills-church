@@ -1,12 +1,21 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DetailHero } from "@/components/programs/detail/DetailHero";
 import { EditionsPanel } from "@/components/programs/detail/EditionsPanel";
+import { ProgramJsonLd } from "@/components/programs/detail/ProgramJsonLd";
 import { SchedulePanel } from "@/components/programs/detail/SchedulePanel";
 import { ScriptureBlock } from "@/components/programs/detail/ScriptureBlock";
 import { SessionsTimeline } from "@/components/programs/detail/SessionsTimeline";
 import { getProgram } from "@/lib/programs";
 
 export const revalidate = 300;
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const p = await getProgram(params.slug).catch(() => null);
+  if (!p) return { title: "Program not found | Everlasting Hills Church" };
+  const title = `${p.name} | Programs | Everlasting Hills Church`;
+  return { title, description: p.shortDescription, alternates: { canonical: `/programs/${p.slug}` }, openGraph: { title: p.name, description: p.shortDescription, type: "website" } };
+}
 
 /** One program: cover and call to action, its scripture, when it happens, the watches, the editions and its story. */
 export default async function ProgramPage({ params }: { params: { slug: string } }) {
@@ -15,6 +24,7 @@ export default async function ProgramPage({ params }: { params: { slug: string }
   const renderedAt = new Date().toISOString();
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#080808] pb-24 text-white selection:bg-[#87102C]">
+      <ProgramJsonLd program={program} />
       <DetailHero program={program} />
       <ScriptureBlock scriptures={program.scriptures} />
       <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_1.1fr]">

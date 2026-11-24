@@ -15,6 +15,7 @@ import {
   PrayerRequestIcon,
   PrayerWatchIcon,
   PreMaritalIcon,
+  ProgramsIcon,
   SalvationIcon,
   SermonsIcon,
   ServeIcon,
@@ -60,6 +61,7 @@ export const navLinks: NavLink[] = [
     label: "Media",
     children: [
       { label: "Sermons", href: "/sermons", description: "Watch and listen to past messages", icon: SermonsIcon },
+      { label: "Programs", href: "/programs", description: "The rhythm of the house", icon: ProgramsIcon },
       { label: "Articles", href: "/articles", description: "Devotionals and teaching to read", icon: ArticlesIcon },
     ],
   },

@@ -292,6 +292,7 @@ export class ProgramsAdminService {
   }
 
   private changed() {
-    this.revalidate.trigger([`programs:${this.tenantId}`], ['/programs']);
+    // The site tags its Programs fetches 'programs' (it does not know the tenant id); the tenant tag is for a future multi-church site.
+    this.revalidate.trigger(['programs', `programs:${this.tenantId}`], ['/programs']);
   }
 }

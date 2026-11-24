@@ -18,6 +18,8 @@ export { MapTrifold as FindUsIcon } from "@phosphor-icons/react/dist/ssr/MapTrif
 // Media
 export { PlayCircle as SermonsIcon } from "@phosphor-icons/react/dist/ssr/PlayCircle";
 export { BookOpenText as ArticlesIcon } from "@phosphor-icons/react/dist/ssr/BookOpenText";
+/** The rhythm of the house: the programs that come round week by week and year by year. */
+export { Repeat as ProgramsIcon } from "@phosphor-icons/react/dist/ssr/Repeat";
 
 // Ministries
 export { Signpost as MinistriesIcon } from "@phosphor-icons/react/dist/ssr/Signpost";
