@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, Play, Pause, Loader2 } from "lucide-react";
+import { ArrowSquareOut, CircleNotch, Icon, Pause, Play } from "@/components/icons";
 import type { TelegramSermonItem } from "@/lib/telegram-sermons";
 
 function formatDate(iso: string): string {
@@ -66,11 +66,11 @@ export default function TelegramSermonCard({ item, isPlaying, onTogglePlay }: Te
           aria-label={isPlaying ? "Pause" : "Play"}
         >
           {loading ? (
-            <Loader2 className="h-6 w-6 animate-spin" />
+            <Icon icon={CircleNotch} size={24} className="h-6 w-6 animate-spin" />
           ) : isPlaying ? (
-            <Pause className="h-6 w-6" fill="currentColor" />
+            <Icon icon={Pause} size={24} className="h-6 w-6" weight="fill" />
           ) : (
-            <Play className="h-6 w-6" fill="currentColor" />
+            <Icon icon={Play} size={24} className="h-6 w-6" weight="fill" />
           )}
         </button>
 
@@ -94,7 +94,7 @@ export default function TelegramSermonCard({ item, isPlaying, onTogglePlay }: Te
           className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#FFB3C1] transition-all hover:border-white/20 hover:bg-white/10"
           title="Open in Telegram"
         >
-          <ExternalLink className="h-3.5 w-3.5" />
+          <Icon icon={ArrowSquareOut} size={24} className="h-3.5 w-3.5" />
         </a>
       </div>
 

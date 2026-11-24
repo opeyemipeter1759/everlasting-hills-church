@@ -2,21 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Search,
-  Pencil,
-  Trash2,
-  BookOpen,
-  Mic2,
-  Layers,
-  ChevronDown,
-  Check,
-  Clock,
-  FileText,
-  MoreVertical,
-  Loader2,
-  Plus,
-} from 'lucide-react';
+import { BookOpen, CaretDown, Check, CircleNotch, Clock, DotsThreeVertical, FileText, Icon, MagnifyingGlass, Microphone, PencilSimple, Plus, Stack, Trash } from "@/components/icons";
 import { useAdminSermons, useDeleteSermon, useUpdateSermon } from '@/lib/api';
 import { showToast } from '@/components/ui/toast/toast';
 import { Select } from '@/components/ui/select';
@@ -28,19 +14,19 @@ const STATUS_STYLE: Record<SermonStatus, { badge: string; dot: string; icon: Rea
   PUBLISHED: {
     badge: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
     dot: 'bg-emerald-500',
-    icon: <Check size={10} />,
+    icon: <Icon icon={Check} size={10} />,
     label: 'Published',
   },
   DRAFT: {
     badge: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',
     dot: 'bg-amber-500',
-    icon: <FileText size={10} />,
+    icon: <Icon icon={FileText} size={10} />,
     label: 'Draft',
   },
   SCHEDULED: {
     badge: 'bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400',
     dot: 'bg-sky-500',
-    icon: <Clock size={10} />,
+    icon: <Icon icon={Clock} size={10} />,
     label: 'Scheduled',
   },
 };
@@ -117,7 +103,7 @@ export default function SermonList() {
                     onClick={() => router.push('/dashboard/pastor/sermons/new')}
                     className="font-sans inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#87102C] px-4 py-2 text-xs font-bold text-white hover:bg-[#6E0C24] active:scale-[0.97] transition-all"
                   >
-                    <Plus size={13} strokeWidth={2.5} />
+                    <Icon icon={Plus} size={13} weight="bold" />
                     New Sermon
                   </button>
       </div>
@@ -125,7 +111,7 @@ export default function SermonList() {
       {/* ── Toolbar ────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-3 px-5 py-4">
         <div className="relative flex-1 min-w-[180px] max-w-xs">
-          <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Icon icon={MagnifyingGlass} size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -203,7 +189,7 @@ export default function SermonList() {
                 <td colSpan={5} className="px-5 py-14">
                   <div className="flex flex-col items-center gap-2 text-center">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 dark:bg-white/5">
-                      <BookOpen size={16} className="text-gray-400" />
+                      <Icon icon={BookOpen} size={16} className="text-gray-400" />
                     </div>
                     <p className="font-sans text-sm font-semibold text-gray-500 dark:text-gray-400">
                       {sermons?.length ? 'No sermons match your filters' : 'No sermons yet'}
@@ -224,7 +210,7 @@ export default function SermonList() {
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2.5">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#87102C]/10 dark:bg-[#87102C]/20 text-[#87102C] dark:text-[#e8768a]">
-                          {type === 'SERIES' ? <Layers size={13} /> : <Mic2 size={13} />}
+                          {type === 'SERIES' ? <Icon icon={Stack} size={13} /> : <Icon icon={Microphone} size={13} />}
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[280px]">
@@ -239,7 +225,7 @@ export default function SermonList() {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-                        {type === 'SERIES' ? <Layers size={11} /> : <Mic2 size={11} />}
+                        {type === 'SERIES' ? <Icon icon={Stack} size={11} /> : <Icon icon={Microphone} size={11} />}
                         {type === 'SERIES' ? 'Series' : 'Single'}
                       </span>
                     </td>
@@ -261,12 +247,12 @@ export default function SermonList() {
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors disabled:opacity-70 ${st.badge}`}
                       >
                         {savingStatusId === s.id ? (
-                          <Loader2 size={10} className="animate-spin" />
+                          <Icon icon={CircleNotch} size={10} className="animate-spin" />
                         ) : (
                           <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
                         )}
                         {st.label}
-                        <ChevronDown size={10} className="ml-0.5 opacity-60" />
+                        <Icon icon={CaretDown} size={10} className="ml-0.5 opacity-60" />
                       </button>
                     </td>
                     <td className="px-4 py-3">
@@ -277,7 +263,7 @@ export default function SermonList() {
                           onClick={() => router.push(`/dashboard/pastor/sermons/${s.id}/edit`)}
                           className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/10 dark:hover:text-white transition-colors"
                         >
-                          <Pencil size={13} />
+                          <Icon icon={PencilSimple} size={13} />
                         </button>
                         <button
                           type="button"
@@ -285,14 +271,14 @@ export default function SermonList() {
                           onClick={() => setDeleteTarget(s)}
                           className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition-colors"
                         >
-                          <Trash2 size={13} />
+                          <Icon icon={Trash} size={13} />
                         </button>
                         <button
                           type="button"
                           title="More"
                           className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-300 dark:text-gray-600 cursor-default"
                         >
-                          <MoreVertical size={13} />
+                          <Icon icon={DotsThreeVertical} size={13} />
                         </button>
                       </div>
                     </td>
@@ -330,7 +316,7 @@ export default function SermonList() {
                 >
                   <span className={`h-1.5 w-1.5 rounded-full ${STATUS_STYLE[opt].dot}`} />
                   {STATUS_STYLE[opt].label}
-                  {opt === currentStatus && <Check size={11} className="ml-auto" />}
+                  {opt === currentStatus && <Icon icon={Check} size={11} className="ml-auto" />}
                 </button>
               ))}
             </div>
@@ -346,7 +332,7 @@ export default function SermonList() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 mb-3">
-              <Trash2 size={16} className="text-red-500" />
+              <Icon icon={Trash} size={16} className="text-red-500" />
             </div>
             <h3 className="font-sans text-sm font-bold text-gray-900 dark:text-white">
               Delete this sermon?
@@ -369,7 +355,7 @@ export default function SermonList() {
                 disabled={deleteSermon.isPending}
                 className="font-sans inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-red-700 active:scale-[0.97] transition-all disabled:opacity-60"
               >
-                {deleteSermon.isPending && <Loader2 size={12} className="animate-spin" />}
+                {deleteSermon.isPending && <Icon icon={CircleNotch} size={12} className="animate-spin" />}
                 {deleteSermon.isPending ? 'Deleting…' : 'Delete'}
               </button>
             </div>

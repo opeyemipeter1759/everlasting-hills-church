@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
-import { TrendingUp, Zap, Clock, QrCode } from "lucide-react";
+import { TrendingUp, Clock, QrCode, Flame } from "lucide-react";
 import type { MemberHomeProps, StreakState } from "./types";
 import { getGreeting, getServiceCountdown } from "./helpers";
 import { QRModal } from "./QRModal";
@@ -70,7 +70,7 @@ export function WelcomeHero({ firstName, initials, photoUrl, memberDisplayId, at
             </span>
           )}
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-sm">
-            <Zap size={14} aria-hidden="true" />
+            <Flame size={14} aria-hidden="true" />
             Level {streak.level} · {streak.title}
           </span>
           {nextService && (

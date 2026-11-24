@@ -1,4 +1,4 @@
-import { Flame, MessageCircle, Mic2, Users } from "lucide-react";
+import { ChatCircle, Fire, Icon, Microphone, Users } from "@/components/icons";
 import ScrollReveal from "@/components/home/ScrollReveal";
 
 /**
@@ -20,28 +20,28 @@ interface Item {
 const ITEMS: Item[] = [
   {
     number: "01",
-    icon: <Flame size={20} />,
+    icon: <Icon icon={Fire} size={20} />,
     title: "Encounter",
     description:
       "Time set apart for God to move — not a program, but a posture. Come expecting Him.",
   },
   {
     number: "02",
-    icon: <Mic2 size={20} />,
+    icon: <Icon icon={Microphone} size={20} />,
     title: "Powerful Worship",
     description:
       "A live band leading us into the throne room. Songs that lift our eyes and loosen our hearts.",
   },
   {
     number: "03",
-    icon: <MessageCircle size={20} />,
+    icon: <Icon icon={ChatCircle} size={20} />,
     title: "Life-Changing Teaching",
     description:
       "Scripture taught with weight and warmth — Word that travels home with you and reshapes the week.",
   },
   {
     number: "04",
-    icon: <Users size={20} />,
+    icon: <Icon icon={Users} size={20} />,
     title: "Community & Fellowship",
     description:
       "Hours among the family — laughter, prayer, and the kind of conversations that turn strangers into kin.",

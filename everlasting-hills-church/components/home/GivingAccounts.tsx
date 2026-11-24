@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Check, CreditCard, QrCode } from "lucide-react";
+import { Check, Copy, CreditCard, Icon, QrCode } from "@/components/icons";
 import BankLogo from "./BankLogo";
 import QRCodeModal from "./QRCodeModal";
 
@@ -61,7 +61,7 @@ export default function GivingAccounts() {
       {copiedValue && (
         <div className="fixed right-4 sm:right-6 top-20 sm:top-6 z-50 max-w-[calc(100vw-2rem)]">
           <div className="flex items-center gap-3 bg-white/95 text-church-dark px-4 py-2 rounded-lg shadow">
-            <Check size={16} />
+            <Icon icon={Check} size={16} />
             <div className="text-sm">Copied {copiedValue}</div>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function GivingAccounts() {
 
           <div className="relative">
             <button onClick={() => setDonateOpen((s) => !s)} aria-expanded={donateOpen} aria-controls="donate-panel" className="px-4 py-2 rounded-full text-sm font-semibold bg-church-accent text-white inline-flex items-center gap-2">
-              <CreditCard size={14} /> Give Online
+              <Icon icon={CreditCard} size={14} /> Give Online
             </button>
             {donateOpen && (
               <div id="donate-panel" role="dialog" aria-label="Online giving options" className="absolute right-0 z-20 mt-2 w-[calc(100vw-3rem)] max-w-[14rem] bg-white/5 border border-white/6 rounded-xl p-3 shadow backdrop-blur-md">
@@ -115,10 +115,10 @@ export default function GivingAccounts() {
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       <div className="text-white/50 text-sm">{a.currency}</div>
                       <button onClick={() => { copy(a.number, a.id); }} aria-label={`Copy ${a.number}`} className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-church-accent/10 text-church-accent font-semibold">
-                        {copied === a.id ? <Check size={14} /> : <Copy size={14} />} <span className="hidden sm:inline">Copy</span>
+                        {copied === a.id ? <Icon icon={Check} size={14} /> : <Icon icon={Copy} size={14} />} <span className="hidden sm:inline">Copy</span>
                       </button>
                       <button onClick={() => { setQrText(`${a.bank} — ${a.label}\nAccount: ${a.number}\nCurrency: ${a.currency}`); setQrTitle(`${a.bank} — ${a.label}`); setQrOpen(true); }} aria-label={`Show QR for ${a.number}`} className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 text-white/90">
-                        <QrCode size={14} /> <span className="hidden sm:inline">QR</span>
+                        <Icon icon={QrCode} size={14} /> <span className="hidden sm:inline">QR</span>
                       </button>
                     </div>
                   </div>
@@ -145,10 +145,10 @@ export default function GivingAccounts() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => { copy(a.number, a.id); }} aria-label={`Copy ${a.number}`} className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/10 text-white/90">
-                      {copied === a.id ? <Check size={14} /> : <Copy size={14} />}
+                      {copied === a.id ? <Icon icon={Check} size={14} /> : <Icon icon={Copy} size={14} />}
                     </button>
                     <button onClick={() => { setQrText(`${a.bank} — ${a.label}\nAccount: ${a.number}\nCurrency: ${a.currency}`); setQrTitle(`${a.bank} — ${a.label}`); setQrOpen(true); }} aria-label={`Show QR for ${a.number}`} className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 text-white/90">
-                      <QrCode size={14} />
+                      <Icon icon={QrCode} size={14} />
                     </button>
                   </div>
                 </article>
@@ -173,10 +173,10 @@ export default function GivingAccounts() {
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <div className="text-white/50 text-sm">{a.currency}</div>
                     <button onClick={() => { copy(a.number, a.id); }} aria-label={`Copy ${a.number}`} className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-church-accent/10 text-church-accent font-semibold">
-                      {copied === a.id ? <Check size={14} /> : <Copy size={14} />} <span className="hidden sm:inline">Copy</span>
+                      {copied === a.id ? <Icon icon={Check} size={14} /> : <Icon icon={Copy} size={14} />} <span className="hidden sm:inline">Copy</span>
                     </button>
                     <button onClick={() => { setQrText(`${a.bank} — ${a.label}\nAccount: ${a.number}\nCurrency: ${a.currency}`); setQrTitle(`${a.bank} — ${a.label}`); setQrOpen(true); }} aria-label={`Show QR for ${a.number}`} className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 text-white/90">
-                      <QrCode size={14} /> <span className="hidden sm:inline">QR</span>
+                      <Icon icon={QrCode} size={14} /> <span className="hidden sm:inline">QR</span>
                     </button>
                   </div>
                 </div>

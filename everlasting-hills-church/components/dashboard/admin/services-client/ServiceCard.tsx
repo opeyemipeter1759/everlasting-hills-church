@@ -6,12 +6,12 @@ import {
   Lock,
   Moon,
   Pencil,
-  Sparkles,
   Sun,
   Trash2,
   Unlock,
   Users,
   type LucideIcon,
+  CalendarHeart,
 } from "lucide-react";
 import Loader from "@/components/ui/feedback/Loader";
 import type { ServiceRow } from "./types";
@@ -20,7 +20,7 @@ import type { ServicesApi } from "./useServices";
 const TYPE_ICON: Record<string, LucideIcon> = {
   SUNDAY: Sun,
   WEDNESDAY: Moon,
-  SPECIAL: Sparkles,
+  SPECIAL: CalendarHeart,
 };
 
 const TYPE_TONE: Record<string, string> = {

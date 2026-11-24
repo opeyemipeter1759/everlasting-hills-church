@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, XCircle, Loader2, Home } from "lucide-react";
+import { CheckCircle, CircleNotch, House, Icon, XCircle } from "@/components/icons";
 import { apiClient } from "@/lib/api/axios";
 
 type Status = "verifying" | "success" | "failed";
@@ -43,7 +43,7 @@ function CallbackInner() {
       <div className="relative z-10 max-w-md">
         {status === "verifying" && (
           <>
-            <Loader2 size={48} className="mx-auto mb-6 animate-spin text-church-accent" />
+            <Icon icon={CircleNotch} size={48} className="mx-auto mb-6 animate-spin text-church-accent" />
             <h1 className="text-2xl font-bold">Confirming your gift...</h1>
             <p className="mt-3 text-white/55">This will only take a moment.</p>
           </>
@@ -51,7 +51,7 @@ function CallbackInner() {
 
         {status === "success" && (
           <>
-            <CheckCircle2 size={56} className="mx-auto mb-6 text-emerald-400" />
+            <Icon icon={CheckCircle} size={56} className="mx-auto mb-6 text-emerald-400" />
             <h1 className="text-balance text-3xl font-bold">Thank you for your gift</h1>
             <p className="mx-auto mt-4 max-w-sm text-white/55">
               Your gift was received successfully. A receipt is on its way to your
@@ -62,7 +62,7 @@ function CallbackInner() {
 
         {status === "failed" && (
           <>
-            <XCircle size={56} className="mx-auto mb-6 text-[#e8768a]" />
+            <Icon icon={XCircle} size={56} className="mx-auto mb-6 text-[#e8768a]" />
             <h1 className="text-balance text-3xl font-bold">We could not confirm that</h1>
             <p className="mx-auto mt-4 max-w-sm text-white/55">
               Your payment may not have completed. If you were charged, please
@@ -77,7 +77,7 @@ function CallbackInner() {
               href="/"
               className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-7 py-3.5 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:bg-[#6E0C24]"
             >
-              <Home size={16} />
+              <Icon icon={House} size={16} />
               Back Home
             </Link>
             <Link

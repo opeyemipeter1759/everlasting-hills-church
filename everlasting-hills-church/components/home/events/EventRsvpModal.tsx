@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send } from "lucide-react";
+import { Icon, PaperPlaneTilt } from "@/components/icons";
 import Modal from "@/components/ui/overlay/Modal";
 import { showToast } from "@/components/ui/toast/toast";
 import { submitEventRsvp, getRsvpErrorMessage } from "@/lib/api/events";
@@ -93,7 +93,7 @@ export default function EventRsvpModal({ event, onClose, registeredEvents }: Eve
             </>
           ) : (
             <>
-              <Send size={15} />
+              <Icon icon={PaperPlaneTilt} size={15} />
               Reserve My Seat
             </>
           )}

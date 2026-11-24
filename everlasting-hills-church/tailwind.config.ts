@@ -33,6 +33,8 @@ const config: Config = {
           blush: "#FFF4F6",
           rose: "#E7CDD3",
           black: "#111111",
+          /** Secondary text (menu descriptions): 5.6:1 on white, 5.2:1 on the blush row tint. Passes AA without flattening it against the title. */
+          muted: "#6E656A",
         },
         church: {
           maroon: "#87102C",

@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { Icon, X } from "@/components/icons";
 
 interface DrawerProps {
   open: boolean;
@@ -59,7 +59,7 @@ export default function Drawer({ open, onClose, children, maxWidth = "lg" }: Dra
               aria-label="Close"
               className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/10 dark:hover:text-white"
             >
-              <X size={16} />
+              <Icon icon={X} size={16} />
             </button>
             <div className="flex-1 overflow-y-auto">{children}</div>
           </motion.div>

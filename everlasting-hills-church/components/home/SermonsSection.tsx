@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Video, Send } from "lucide-react";
+import { ArrowRight, Icon, PaperPlaneTilt, VideoCamera } from "@/components/icons";
 import { SERMONS_FALLBACK, type SermonsContent } from "@/lib/site-settings";
 import { useYouTubeVideos } from "@/utils/Useyoutubevideos";
 import type { CategoryCounts, VideoCategory, YouTubeVideo } from "@/types";
@@ -101,7 +101,7 @@ export default function SermonsSection({
             className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-[#FFB3C1] transition-all hover:gap-3"
           >
             {c.viewAllCta.label}
-            <ArrowRight size={15} />
+            <Icon icon={ArrowRight} size={15} />
           </Link>
         </div>
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -113,7 +113,7 @@ export default function SermonsSection({
                 source === "YouTube" ? "bg-[#87102C] text-white" : "text-white/60 hover:text-white/85"
               }`}
             >
-              <Video size={15} />
+              <Icon icon={VideoCamera} size={15} />
               YouTube
             </button>
             <button
@@ -123,7 +123,7 @@ export default function SermonsSection({
                 source === "Telegram" ? "bg-[#87102C] text-white" : "text-white/60 hover:text-white/85"
               }`}
             >
-              <Send size={15} />
+              <Icon icon={PaperPlaneTilt} size={15} />
               Telegram
             </button>
           </div>
@@ -242,7 +242,7 @@ function EmptyState({ viewAllHref, viewAllLabel }: { viewAllHref: string; viewAl
         className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#FFB3C1] transition-all hover:gap-3"
       >
         {viewAllLabel}
-        <ArrowRight size={14} />
+        <Icon icon={ArrowRight} size={14} />
       </Link>
     </div>
   );

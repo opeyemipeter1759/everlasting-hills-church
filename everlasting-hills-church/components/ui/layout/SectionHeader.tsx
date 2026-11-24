@@ -1,4 +1,4 @@
-import { Pencil, Check, X } from 'lucide-react';
+import { Check, Icon, PencilSimple, X } from "@/components/icons";
 
 export function SectionHeader<T extends string>({ title, section, editingSection, onEdit, onSave, onCancel }: {
   title: string;
@@ -15,15 +15,15 @@ export function SectionHeader<T extends string>({ title, section, editingSection
       {isEditing ? (
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => onCancel(section)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-            <X size={12} /> Cancel
+            <Icon icon={X} size={12} /> Cancel
           </button>
           <button type="button" onClick={() => onSave(section)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#87102C] text-white text-xs font-semibold hover:opacity-90 active:scale-95 transition-all">
-            <Check size={12} /> Save
+            <Icon icon={Check} size={12} /> Save
           </button>
         </div>
       ) : (
         <button type="button" onClick={() => onEdit(section)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-          <Pencil size={12} /> Edit
+          <Icon icon={PencilSimple} size={12} /> Edit
         </button>
       )}
     </div>

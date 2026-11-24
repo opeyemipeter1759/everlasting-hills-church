@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { X, Printer } from "lucide-react";
+import { Icon, Printer, X } from "@/components/icons";
 
 type Props = {
   text: string | null;
@@ -48,10 +48,10 @@ export default function QRCodeModal({ text, open, onClose, title }: Props) {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={handlePrint} aria-label="Print QR" className="p-2 rounded-md hover:bg-black/5">
-              <Printer size={16} />
+              <Icon icon={Printer} size={16} />
             </button>
             <button onClick={onClose} aria-label="Close modal" className="p-2 rounded-md hover:bg-black/5">
-              <X size={16} />
+              <Icon icon={X} size={16} />
             </button>
           </div>
         </div>

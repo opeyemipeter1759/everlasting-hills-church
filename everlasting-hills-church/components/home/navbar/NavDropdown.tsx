@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { CaretDown, Icon } from "@/components/icons";
+import { FOCUS_RING } from "./focus-ring";
 import NavDropdownPanel from "./NavDropdownPanel";
 import { isLinkActive, type NavLink } from "./nav-links";
 
@@ -36,8 +37,8 @@ export default function NavDropdown({
   const active = isLinkActive(pathname, link);
   const triggerClass =
     variant === "button"
-      ? "flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/20"
-      : `relative flex items-center gap-1 py-2 text-[14px] font-medium transition-colors duration-200 hover:text-burgundy whitespace-nowrap ${
+      ? `flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-burgundy text-white text-sm font-semibold hover:bg-burgundy-dark transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/20 ${FOCUS_RING}`
+      : `relative flex items-center gap-1 rounded-md py-2 text-[14px] font-medium transition-colors duration-200 hover:text-burgundy whitespace-nowrap ${FOCUS_RING} ${
           active ? (solid ? "text-burgundy" : "text-white") : solid ? "text-[#333]" : "text-white/85"
         }`;
 
@@ -45,7 +46,7 @@ export default function NavDropdown({
     <div ref={containerRef} className="relative" onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
       <button type="button" onClick={onToggle} aria-haspopup="menu" aria-expanded={isOpen} className={triggerClass}>
         {link.label}
-        <ChevronDown size={14} className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+        <Icon icon={CaretDown} size={14} weight="bold" className={`transition-transform duration-200 motion-reduce:transition-none ${isOpen ? "rotate-180" : ""}`} />
         {variant === "link" && active && (
           <span aria-hidden className={`absolute -bottom-0.5 left-0 right-5 h-0.5 rounded-full ${solid ? "bg-burgundy" : "bg-white"}`} />
         )}

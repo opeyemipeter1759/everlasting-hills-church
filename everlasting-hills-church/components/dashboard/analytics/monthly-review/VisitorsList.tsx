@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Sparkles } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Avatar } from "@/components/dashboard/admin/people/peopleShared";
 import type { VisitorListRow } from "@/lib/api/visitors";
 
@@ -7,7 +7,7 @@ export default function VisitorsList({ visitors }: { visitors: VisitorListRow[] 
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-5">
       <div className="mb-3 flex items-center gap-2">
-        <Sparkles size={15} className="text-amber-500" />
+        <UserPlus size={15} className="text-amber-500" />
         <h2 className="text-sm font-black uppercase tracking-widest text-gray-500 dark:text-white/50">
           Visitors this month ({visitors.length})
         </h2>

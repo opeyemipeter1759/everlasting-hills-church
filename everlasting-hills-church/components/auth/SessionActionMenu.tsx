@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronDown, LayoutDashboard, LogOut, UserRound } from "lucide-react";
+import { CaretDown, Icon, SignOut, SquaresFour, User } from "@/components/icons";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/components/ui/dropdown/DropdownItem";
 import { DropdownDivider } from "@/components/ui/dropdown/DropdownDivider";
@@ -157,9 +157,8 @@ export default function SessionActionMenu({
           </span>
         </span>
 
-        <ChevronDown
+        <Icon icon={CaretDown}
           size={16}
-          strokeWidth={2.3}
           className={`shrink-0 text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
@@ -175,16 +174,16 @@ export default function SessionActionMenu({
 
         <DropdownDivider />
 
-        <DropdownItem tag="a" href={dashboardTargetHref} icon={LayoutDashboard} onItemClick={handleNavigate}>
+        <DropdownItem tag="a" href={dashboardTargetHref} icon={SquaresFour} onItemClick={handleNavigate}>
           {dashboardLabel}
         </DropdownItem>
-        <DropdownItem tag="a" href={profileHref} icon={UserRound} onItemClick={handleNavigate}>
+        <DropdownItem tag="a" href={profileHref} icon={User} onItemClick={handleNavigate}>
           Profile
         </DropdownItem>
 
         <DropdownDivider />
 
-        <DropdownItem icon={LogOut} danger onClick={handleLogout}>
+        <DropdownItem icon={SignOut} danger onClick={handleLogout}>
           Logout
         </DropdownItem>
       </Dropdown>

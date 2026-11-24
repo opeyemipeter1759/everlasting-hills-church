@@ -1,8 +1,7 @@
-import { Inbox } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Icon, type IconComponent, Tray } from "@/components/icons";
 
 interface EmptyStateProps {
-  icon?: LucideIcon;
+  icon?: IconComponent;
   title?: string;
   description?: string;
   action?: React.ReactNode;
@@ -10,7 +9,7 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon: Icon = Inbox,
+  icon: Glyph = Tray,
   title = "No data",
   description = "Nothing to display yet.",
   action,
@@ -19,7 +18,7 @@ export function EmptyState({
   return (
     <div className={`flex flex-col items-center justify-center gap-2 text-center ${compact ? "py-6" : "py-12"}`}>
       <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
-        <Icon size={18} className="text-gray-400" />
+        <Icon icon={Glyph} size={18} className="text-gray-400" />
       </div>
       <div>
         <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">{title}</p>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Cog, Minus, Pencil, Plus, Zap } from "lucide-react";
+import { ChevronDown, Cog, Minus, Pencil, Plus, Activity } from "lucide-react";
 import type { AuditItem } from "@/lib/api/audit-trail";
 import { areaLabel, type Tone, toneOf, whenText } from "@/lib/audit/format";
 import { ActivityDetails } from "./ActivityDetails";
@@ -10,7 +10,7 @@ const TONE: Record<Tone, { icon: typeof Plus; cls: string; word: string }> = {
   add: { icon: Plus, cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400", word: "New or done" },
   change: { icon: Pencil, cls: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400", word: "Changed" },
   remove: { icon: Minus, cls: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400", word: "Removed" },
-  other: { icon: Zap, cls: "bg-gray-100 text-gray-600 dark:bg-white/[0.06] dark:text-white/60", word: "Logged" },
+  other: { icon: Activity, cls: "bg-gray-100 text-gray-600 dark:bg-white/[0.06] dark:text-white/60", word: "Logged" },
 };
 
 /** One line in the audit trail; opens to show the details. */

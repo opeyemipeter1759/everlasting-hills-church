@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, Sparkles, X } from "lucide-react";
+import { Loader2, X, PenLine } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import { Field, inputCls } from "./atoms";
 import type { Testimonial } from "./types";
@@ -167,7 +167,7 @@ export default function TestimonialForm({
             disabled={polishing || charCount < minChars}
             className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/[0.08] px-2.5 py-1 text-xs font-semibold text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-500/15 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {polishing ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+            {polishing ? <Loader2 size={13} className="animate-spin" /> : <PenLine size={13} />}
             {polishing ? "Improving…" : "Improve with AI"}
           </button>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import ScrollReveal from "./ScrollReveal";
-import { ArrowRight, Heart } from "lucide-react";
+import { ArrowRight, Heart, Icon } from "@/components/icons";
 import { COMMUNITY_FALLBACK, type CommunityContent } from "@/lib/site-settings";
 
 export default function CommunitySection({ content }: { content?: CommunityContent }) {
@@ -44,12 +44,9 @@ export default function CommunitySection({ content }: { content?: CommunityConte
                   rel={c.ctaSecondary.href.startsWith("http") ? "noopener noreferrer" : undefined}
                   className="group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-lg bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/25 hover:-translate-y-0.5"
                 >
-                  <Heart size={15} />
+                  <Icon icon={Heart} size={15} />
                   {c.ctaSecondary.label}
-                  <ArrowRight
-                    size={14}
-                    className="group-hover:translate-x-1 transition-transform"
-                  />
+                  <Icon icon={ArrowRight} size={14} className="group-hover:translate-x-1 transition-transform" />
                 </a>
               </div>
             </ScrollReveal>
@@ -110,7 +107,7 @@ export default function CommunitySection({ content }: { content?: CommunityConte
               {/* Floating stat */}
               <div className="absolute -bottom-5 -left-4 md:-left-6 bg-white rounded-xl shadow-[0_8px_32px_rgba(135,16,44,0.12)] border border-[#E7CDD3]/60 p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#FFE8ED] flex items-center justify-center flex-shrink-0">
-                  <Heart size={16} className="text-[#87102C]" fill="#87102C" />
+                  <Icon icon={Heart} size={16} className="text-[#87102C]" weight="fill" />
                 </div>
                 <div>
                   <p className="text-[#111] font-bold text-base leading-none">

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, ChevronDown, LayoutDashboard, LogOut, User } from "lucide-react";
+import { AttendanceIcon, CaretDown, DashboardIcon, Icon, ProfileIcon, SignOutIcon } from "@/components/icons";
 import {
   getFrontendSessionUser,
   type FrontendSessionUser,
@@ -12,9 +12,9 @@ import {
 import { auth, useMe } from "@/lib/api";
 
 const MENU_LINKS = [
-  { href: "/dashboard", label: "My dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/profile", label: "My profile", icon: User },
-  { href: "/#attendance", label: "Mark attendance", icon: CalendarCheck },
+  { href: "/dashboard", label: "My dashboard", icon: DashboardIcon },
+  { href: "/dashboard/profile", label: "My profile", icon: ProfileIcon },
+  { href: "/#attendance", label: "Mark attendance", icon: AttendanceIcon },
 ];
 
 /**
@@ -120,10 +120,7 @@ export default function NavUserBadge({ scrolled }: { scrolled: boolean }) {
         <span className="hidden xs:block text-sm font-semibold leading-tight max-w-[100px] sm:max-w-[140px] truncate">
           {displayName}
         </span>
-        <ChevronDown
-          size={14}
-          className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        />
+        <Icon icon={CaretDown} size={14} weight="bold" className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
@@ -142,10 +139,10 @@ export default function NavUserBadge({ scrolled }: { scrolled: boolean }) {
             )}
           </div>
 
-          {MENU_LINKS.map(({ href, label, icon: Icon }) => (
+          {MENU_LINKS.map(({ href, label, icon }) => (
             <Link key={href} href={href} onClick={() => setOpen(false)} role="menuitem"
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-              <Icon size={15} className="text-gray-400" />
+              <Icon icon={icon} size={16} className="text-gray-500" />
               {label}
             </Link>
           ))}
@@ -158,7 +155,7 @@ export default function NavUserBadge({ scrolled }: { scrolled: boolean }) {
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
             role="menuitem"
           >
-            <LogOut size={15} />
+            <Icon icon={SignOutIcon} size={16} />
             {signingOut ? "Signing out…" : "Sign out"}
           </button>
         </div>

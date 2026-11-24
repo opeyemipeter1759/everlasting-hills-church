@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Hand } from "lucide-react";
+import { HandPalm, Icon } from "@/components/icons";
 
 interface ServiceDayHeroProps {
   onClick: () => void;
@@ -51,7 +51,7 @@ export default function ServiceDayHero({ onClick, loading, error }: ServiceDayHe
               animate={{ rotate: [-4, 4, -4] }}
               transition={{ duration: 0.45, repeat: Infinity, ease: "easeInOut" }}
             >
-              <Hand size={52} className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]" />
+              <Icon icon={HandPalm} size={52} className="text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]" />
             </motion.span>
           )}
         </motion.span>

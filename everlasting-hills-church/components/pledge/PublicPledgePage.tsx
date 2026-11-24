@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, HandCoins, Mic2, Radio, Video } from "lucide-react";
+import { ArrowRight, Broadcast, CheckCircle, HandCoins, Icon, Microphone, VideoCamera } from "@/components/icons";
 import PledgeForm, {
   PLEDGE_INTRO,
 } from "@/components/dashboard/member/member-home/PledgeForm";
@@ -42,7 +42,7 @@ export default function PublicPledgePage() {
 
         <div className="mx-auto max-w-6xl px-4 xs:px-5 pb-24 pt-16 sm:px-8 sm:pb-32 sm:pt-24">
           <p className="inline-flex items-center gap-2 rounded-full bg-[#f2b84b] px-3 py-1.5 text-xs font-black uppercase tracking-[0.08em] xs:tracking-[0.16em] text-[#3a0612]">
-            <HandCoins size={15} aria-hidden="true" />
+            <Icon icon={HandCoins} size={15} />
             Sacrificial giving
           </p>
           <h1 className="mt-5 max-w-4xl text-4xl font-black leading-[1.02] tracking-tight [text-wrap:balance] sm:text-6xl lg:text-7xl">
@@ -54,12 +54,12 @@ export default function PublicPledgePage() {
           </p>
           <ul className="mt-7 flex flex-wrap gap-2 text-sm font-semibold text-white/90">
             {[
-              { icon: Mic2, label: "Sound" },
-              { icon: Video, label: "Media & recording" },
-              { icon: Radio, label: "Streaming" },
-            ].map(({ icon: Icon, label }) => (
+              { icon: Microphone, label: "Sound" },
+              { icon: VideoCamera, label: "Media & recording" },
+              { icon: Broadcast, label: "Streaming" },
+            ].map(({ icon: Glyph, label }) => (
               <li key={label} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 ring-1 ring-white/15">
-                <Icon size={15} aria-hidden="true" />
+                <Icon icon={Glyph} size={15} />
                 {label}
               </li>
             ))}
@@ -77,10 +77,10 @@ export default function PublicPledgePage() {
             <RemittanceAccount className="mt-7" />
 
             <Link href="/give" className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#87102C] hover:underline">
-              View all church giving accounts <ArrowRight size={16} aria-hidden="true" />
+              View all church giving accounts <Icon icon={ArrowRight} size={16} />
             </Link>
             <Link href="/pledge/track" className="mt-1 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#87102C] hover:underline">
-              Already pledged? Find my tracking link <ArrowRight size={16} aria-hidden="true" />
+              Already pledged? Find my tracking link <Icon icon={ArrowRight} size={16} />
             </Link>
           </div>
 
@@ -88,7 +88,7 @@ export default function PublicPledgePage() {
             {saved ? (
               <div role="status" className="flex min-h-[620px] flex-col items-center justify-center p-4 xs:p-7 text-center sm:p-12">
                 <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                  <CheckCircle2 size={42} aria-hidden="true" />
+                  <Icon icon={CheckCircle} size={42} />
                 </span>
                 <p className="mt-6 text-xs font-black uppercase tracking-[0.08em] xs:tracking-[0.16em] text-[#87102C]">Pledge received</p>
                 <h2 className="mt-2 text-3xl font-black tracking-tight text-[#211317]">Thank you, {saved.fullName.split(/\s+/)[0]}.</h2>

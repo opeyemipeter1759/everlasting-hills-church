@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, Check, Copy } from "lucide-react";
+import { Buildings, Check, Copy, Icon } from "@/components/icons";
 import { SOUND_MEDIA_ACCOUNT } from "@/lib/api/pledges";
 
 /**
@@ -39,7 +39,7 @@ export default function RemittanceAccount({
   return (
     <div className={`rounded-2xl border p-4 ${shell} ${className}`}>
       <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-[#87102C] dark:text-[#f2c86b]">
-        <Building2 size={14} aria-hidden="true" />
+        <Icon icon={Buildings} size={14} />
         Account to remit to
       </p>
       <dl className="mt-3 space-y-1.5 text-sm">
@@ -62,7 +62,7 @@ export default function RemittanceAccount({
               aria-label="Copy the account number"
               className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-current/20 px-2 text-xs font-bold text-[#87102C] hover:bg-[#87102C]/5 dark:text-[#f2c86b] dark:hover:bg-white/5"
             >
-              {copied ? <Check size={13} aria-hidden="true" /> : <Copy size={13} aria-hidden="true" />}
+              {copied ? <Icon icon={Check} size={13} /> : <Icon icon={Copy} size={13} />}
               {copied ? "Copied" : "Copy"}
             </button>
           </dd>

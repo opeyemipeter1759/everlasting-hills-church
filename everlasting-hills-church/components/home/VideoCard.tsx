@@ -3,7 +3,7 @@
 import type { YouTubeVideo, VideoCategory } from "@/types";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Eye, Play, Share2, ThumbsUp, MessageCircle } from "lucide-react";
+import { ChatCircle, Eye, Icon, Play, ShareNetwork, ThumbsUp } from "@/components/icons";
 
 interface VideoCardProps {
   video: YouTubeVideo;
@@ -22,10 +22,10 @@ const BADGE_COLORS: Record<VideoCategory, string> = {
   Other: "bg-[#2a1216] text-[#FFB3C1]/80",
 };
 
-function StatPill({ icon: Icon, value }: { icon: typeof Play; value: string }) {
+function StatPill({ icon: Glyph, value }: { icon: typeof Play; value: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/72">
-      <Icon className="h-3.5 w-3.5 text-[#FFB3C1]" />
+      <Icon icon={Glyph} size={24} className="h-3.5 w-3.5 text-[#FFB3C1]" />
       {value}
     </span>
   );
@@ -54,7 +54,7 @@ export default function VideoCard({ video, onOpen }: VideoCardProps) {
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#271015] via-[#14070b] to-[#0a0a0a]">
             <div className="rounded-full border border-white/10 bg-white/5 p-5">
-              <Play className="h-8 w-8 text-[#FFB3C1]" />
+              <Icon icon={Play} size={24} className="h-8 w-8 text-[#FFB3C1]" />
             </div>
           </div>
         )}
@@ -73,7 +73,7 @@ export default function VideoCard({ video, onOpen }: VideoCardProps) {
 
         <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-white/10 shadow-[0_16px_40px_rgba(0,0,0,0.35)] backdrop-blur-sm">
-            <Play className="h-6 w-6 fill-white text-white" />
+            <Icon icon={Play} size={24} className="h-6 w-6 text-white" weight="fill" />
           </div>
         </div>
 
@@ -97,16 +97,16 @@ export default function VideoCard({ video, onOpen }: VideoCardProps) {
         <div className="flex flex-wrap gap-2">
           <StatPill icon={Eye} value={video.viewCount} />
           <StatPill icon={ThumbsUp} value={video.likeCount} />
-          <StatPill icon={MessageCircle} value={video.commentCount} />
+          <StatPill icon={ChatCircle} value={video.commentCount} />
         </div>
 
         <div className="flex items-center justify-between pt-1">
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#FFB3C1]">
-            <Play className="h-3.5 w-3.5 fill-current" />
+            <Icon icon={Play} size={24} className="h-3.5 w-3.5" weight="fill" />
             Open player
           </span>
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/55 transition-colors group-hover:text-white/80">
-            <Share2 className="h-3.5 w-3.5" />
+            <Icon icon={ShareNetwork} size={24} className="h-3.5 w-3.5" />
             Share
           </span>
         </div>

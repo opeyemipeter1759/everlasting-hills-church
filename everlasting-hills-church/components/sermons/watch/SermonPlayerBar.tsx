@@ -2,9 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import {
-  Play, Pause, X, ChevronUp, ChevronDown, RotateCcw, RotateCw, Loader2, Video as VideoIcon, SkipForward,
-} from 'lucide-react';
+import { ArrowClockwise, ArrowCounterClockwise, CaretDown, CaretUp, CircleNotch, Icon, Pause, Play, SkipForward, VideoCamera as VideoIcon, X } from "@/components/icons";
 import SermonEngagementContent from './SermonEngagementContent';
 import { useSermonBySlug, useSermonMemberContext, useSermonProgress, useIncrementSermonPlay } from '@/lib/api';
 import { getFrontendSessionUser } from '@/lib/auth/frontend-session';
@@ -237,7 +235,7 @@ export default function SermonPlayerBar({
               onClick={() => setExpanded(false)}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors"
             >
-              <ChevronDown size={16} /> Minimize
+              <Icon icon={CaretDown} size={16} /> Minimize
             </button>
             <button
               type="button"
@@ -245,14 +243,14 @@ export default function SermonPlayerBar({
               aria-label="Close player"
               className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
             >
-              <X size={16} />
+              <Icon icon={X} size={16} />
             </button>
           </div>
 
           <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto">
             {isLoading || !sermon ? (
               <div className="flex justify-center py-16">
-                <Loader2 size={22} className="animate-spin text-[#87102C]" />
+                <Icon icon={CircleNotch} size={22} className="animate-spin text-[#87102C]" />
               </div>
             ) : (
               <div className="space-y-6">
@@ -301,7 +299,7 @@ export default function SermonPlayerBar({
                                   {isCurrent ? (playing ? 'Playing' : 'Paused') : formatSermonDuration(ep.duration) || `Part ${i + 1}`}
                                 </span>
                               </span>
-                              {!isCurrent && <Play size={14} className="shrink-0 text-gray-300 dark:text-gray-600" />}
+                              {!isCurrent && <Icon icon={Play} size={14} className="shrink-0 text-gray-300 dark:text-gray-600" />}
                             </button>
                           </li>
                         );
@@ -348,7 +346,7 @@ export default function SermonPlayerBar({
               <Image src={cover} alt="" width={44} height={44} className="h-11 w-11 rounded-lg object-cover shrink-0" />
             ) : (
               <div className="h-11 w-11 rounded-lg bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center shrink-0">
-                {isVideo ? <VideoIcon size={16} className="text-[#87102C] dark:text-[#e8768a]" /> : <Play size={16} className="text-[#87102C] dark:text-[#e8768a]" />}
+                {isVideo ? <Icon icon={VideoIcon} size={16} className="text-[#87102C] dark:text-[#e8768a]" /> : <Icon icon={Play} size={16} className="text-[#87102C] dark:text-[#e8768a]" />}
               </div>
             )}
             <div className="min-w-0">
@@ -363,23 +361,23 @@ export default function SermonPlayerBar({
                     : ''}
               </p>
             </div>
-            <ChevronUp size={16} className={`shrink-0 text-gray-300 dark:text-gray-600 transition-transform hidden sm:block ${expanded ? 'rotate-180' : ''}`} />
+            <Icon icon={CaretUp} size={16} className={`shrink-0 text-gray-300 dark:text-gray-600 transition-transform hidden sm:block ${expanded ? 'rotate-180' : ''}`} />
           </button>
 
           {!isVideo && sermon && (
             <div className="hidden sm:flex items-center gap-1 shrink-0">
               <button type="button" onClick={() => skip(-15)} title="Back 15s" className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
-                <RotateCcw size={16} />
+                <Icon icon={ArrowCounterClockwise} size={16} />
               </button>
               <button
                 type="button"
                 onClick={togglePlay}
                 className="w-9 h-9 rounded-full bg-[#87102C] text-white flex items-center justify-center hover:bg-[#6E0C24] transition-all"
               >
-                {playing ? <Pause size={15} fill="white" /> : <Play size={15} fill="white" />}
+                {playing ? <Icon icon={Pause} size={15} weight="fill" /> : <Icon icon={Play} size={15} weight="fill" />}
               </button>
               <button type="button" onClick={() => skip(15)} title="Forward 15s" className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
-                <RotateCw size={16} />
+                <Icon icon={ArrowClockwise} size={16} />
               </button>
               {nextEpisode && (
                 <button
@@ -389,7 +387,7 @@ export default function SermonPlayerBar({
                   aria-label={`Next episode: ${nextEpisode.title}`}
                   className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                 >
-                  <SkipForward size={16} />
+                  <Icon icon={SkipForward} size={16} />
                 </button>
               )}
             </div>
@@ -401,7 +399,7 @@ export default function SermonPlayerBar({
               onClick={togglePlay}
               className="sm:hidden w-9 h-9 rounded-full bg-[#87102C] text-white flex items-center justify-center hover:bg-[#6E0C24] transition-all shrink-0"
             >
-              {playing ? <Pause size={15} fill="white" /> : <Play size={15} fill="white" />}
+              {playing ? <Icon icon={Pause} size={15} weight="fill" /> : <Icon icon={Play} size={15} weight="fill" />}
             </button>
           )}
 
@@ -411,7 +409,7 @@ export default function SermonPlayerBar({
             aria-label="Close player"
             className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors shrink-0"
           >
-            <X size={15} />
+            <Icon icon={X} size={15} />
           </button>
         </div>
 

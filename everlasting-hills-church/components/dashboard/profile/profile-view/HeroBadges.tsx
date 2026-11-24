@@ -1,4 +1,4 @@
-import { Calendar, ShieldCheck, Sparkles } from "lucide-react";
+import { Calendar, ShieldCheck, CircleCheck } from "lucide-react";
 import { fmtJoined } from "./helpers";
 
 /** Anchor badge chips row: role, joined date, active status. */
@@ -22,7 +22,7 @@ export function HeroBadges({ role, joinedAt }: { role: string; joinedAt: string 
       <span className="inline-flex items-center gap-1.5 rounded-full
         bg-white/10 border border-white/15 backdrop-blur-sm
         px-3.5 py-1.5 text-[11px] font-semibold text-white/90">
-        <Sparkles size={12} aria-hidden="true" />
+        <CircleCheck size={12} aria-hidden="true" />
         Active
       </span>
     </div>

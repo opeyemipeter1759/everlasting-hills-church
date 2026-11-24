@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { DayPicker, type DateRange } from "react-day-picker";
 import { format } from "date-fns";
-import { CalendarDays, X } from "lucide-react";
+import { CalendarDots, Icon, X } from "@/components/icons";
 import "react-day-picker/style.css";
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -116,7 +116,7 @@ function TriggerButton({
           hasValue ? "rounded-l-lg" : "rounded-lg"
         }`}
       >
-        <CalendarDays size={12} aria-hidden="true" className="text-gray-400 shrink-0" />
+        <Icon icon={CalendarDots} size={12} className="text-gray-400 shrink-0" />
         {label ?? <span className="text-gray-400">{placeholder}</span>}
       </button>
       {hasValue && (
@@ -127,7 +127,7 @@ function TriggerButton({
           onClick={onClear}
           className="rounded-r-lg border border-l-0 border-gray-200 bg-gray-50 px-2 text-gray-400 outline-none transition-colors hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-[#87102C]/25 disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:hover:text-white"
         >
-          <X size={10} aria-hidden="true" />
+          <Icon icon={X} size={10} />
         </button>
       )}
     </span>

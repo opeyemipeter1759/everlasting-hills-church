@@ -1,4 +1,4 @@
-import { Calendar, Clock, Info, Mail, MapPin, Mic2, Phone, User, UserCheck } from "lucide-react";
+import { Calendar, Clock, EnvelopeSimple, Icon, Info, MapPin, Microphone, Phone, User, UserCheck } from "@/components/icons";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import { HEAVEN_ON_EARTH } from "./event-constants";
 
@@ -36,7 +36,7 @@ export default function EventDetailsBento() {
           {/* Date — inverted, spans 2 cols, two rows tall on lg */}
           <ScrollReveal delay={0.25} className="lg:col-span-3 lg:row-span-2">
             <InvertedAnchorCard
-              icon={<Calendar size={20} />}
+              icon={<Icon icon={Calendar} size={20} />}
               eyebrow="Save the date"
               primary={HEAVEN_ON_EARTH.dateDisplay}
               secondary="One night. Set apart. Don't miss it."
@@ -47,7 +47,7 @@ export default function EventDetailsBento() {
           {/* Time */}
           <ScrollReveal delay={0.3} className="lg:col-span-3">
             <AnchorChip
-              icon={<Clock size={16} />}
+              icon={<Icon icon={Clock} size={16} />}
               eyebrow="Time"
               primary={HEAVEN_ON_EARTH.timeDisplay}
               secondary="Doors open 30 minutes prior"
@@ -57,7 +57,7 @@ export default function EventDetailsBento() {
           {/* Venue */}
           <ScrollReveal delay={0.35} className="lg:col-span-3">
             <AnchorChip
-              icon={<MapPin size={16} />}
+              icon={<Icon icon={MapPin} size={16} />}
               eyebrow="Venue"
               primary={HEAVEN_ON_EARTH.venue.name}
               secondary={HEAVEN_ON_EARTH.venue.address}
@@ -67,7 +67,7 @@ export default function EventDetailsBento() {
           {/* Host Pastor */}
           <ScrollReveal delay={0.4} className="lg:col-span-2">
             <AnchorChip
-              icon={<User size={16} />}
+              icon={<Icon icon={User} size={16} />}
               eyebrow="Host Pastor"
               primary={HEAVEN_ON_EARTH.hostPastor}
             />
@@ -76,7 +76,7 @@ export default function EventDetailsBento() {
           {/* Guest Minister */}
           <ScrollReveal delay={0.45} className="lg:col-span-2">
             <AnchorChip
-              icon={<Mic2 size={16} />}
+              icon={<Icon icon={Microphone} size={16} />}
               eyebrow="Guest Minister"
               primary={HEAVEN_ON_EARTH.guestMinister}
             />
@@ -85,7 +85,7 @@ export default function EventDetailsBento() {
           {/* Registration */}
           <ScrollReveal delay={0.5} className="lg:col-span-2">
             <AnchorChip
-              icon={<UserCheck size={16} />}
+              icon={<Icon icon={UserCheck} size={16} />}
               eyebrow="Registration"
               primary="Free of charge"
               secondary="RSVP below to reserve your seat"
@@ -96,7 +96,7 @@ export default function EventDetailsBento() {
           <ScrollReveal delay={0.55} className="lg:col-span-2">
             <LinkAnchorChip
               href={`tel:${HEAVEN_ON_EARTH.contact.phone.replace(/\s/g, "")}`}
-              icon={<Phone size={16} />}
+              icon={<Icon icon={Phone} size={16} />}
               eyebrow="Phone"
               primary={HEAVEN_ON_EARTH.contact.phone}
             />
@@ -106,7 +106,7 @@ export default function EventDetailsBento() {
           <ScrollReveal delay={0.6} className="lg:col-span-2">
             <LinkAnchorChip
               href={`mailto:${HEAVEN_ON_EARTH.contact.email}`}
-              icon={<Mail size={16} />}
+              icon={<Icon icon={EnvelopeSimple} size={16} />}
               eyebrow="Email"
               primary={HEAVEN_ON_EARTH.contact.email}
             />
@@ -117,7 +117,7 @@ export default function EventDetailsBento() {
             <div className="h-full rounded-2xl bg-[#FFF4F6] border border-[#E7CDD3]/60 p-4 xs:p-6 hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.06)] transition-all duration-300">
               <div className="flex items-start gap-3 mb-3">
                 <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-[#FFE8ED] text-[#87102C] flex items-center justify-center">
-                  <Info size={16} />
+                  <Icon icon={Info} size={16} />
                 </span>
                 <p className="text-[10px] uppercase tracking-[0.13em] xs:tracking-[0.25em] font-bold text-[#888] pt-2.5">
                   Good to know

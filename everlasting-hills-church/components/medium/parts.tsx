@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bookmark, BookmarkCheck, Heart, MessageCircle, Sparkles } from "lucide-react";
+import { BookmarkSimple, ChatCircle, FeaturedIcon, Heart, Icon } from "@/components/icons";
 import { compact, initialsOf, storyDate, type Story } from "./story";
 
 /** Round, the one thing besides buttons that is not square. */
@@ -108,7 +108,7 @@ export function StoryRow({
         <div className="m-muted flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
           {story.featured && (
             <span className="inline-flex items-center gap-1" title="Featured by the pastors">
-              <Sparkles size={14} aria-hidden="true" className="text-[#C9A227]" />
+              <Icon icon={FeaturedIcon} size={14} weight="fill" className="text-[#C9A227]" />
               <span className="sr-only">Featured</span>
             </span>
           )}
@@ -123,15 +123,15 @@ export function StoryRow({
               aria-label={story.likedByMe ? "Unlike" : "Like"}
               className="inline-flex min-h-9 items-center gap-1 hover:text-[var(--m-ink)]"
             >
-              <Heart size={15} aria-hidden="true" fill={story.likedByMe ? "currentColor" : "none"} /> {compact(story.likeCount)}
+              <Icon icon={Heart} size={15} weight="fill" /> {compact(story.likeCount)}
             </button>
           ) : (
             <span className="inline-flex items-center gap-1">
-              <Heart size={15} aria-hidden="true" /> {compact(story.likeCount)}
+              <Icon icon={Heart} size={15} /> {compact(story.likeCount)}
             </span>
           )}
           <Link href={`${href}#comments`} className="inline-flex min-h-9 items-center gap-1 hover:text-[var(--m-ink)]" aria-label={`${story.commentCount} responses`}>
-            <MessageCircle size={15} aria-hidden="true" /> {compact(story.commentCount)}
+            <Icon icon={ChatCircle} size={15} /> {compact(story.commentCount)}
           </Link>
         </div>
         {onBookmark && (
@@ -143,7 +143,7 @@ export function StoryRow({
             aria-label={story.bookmarkedByMe ? "Remove from saved" : "Save for later"}
             className="m-icon-btn"
           >
-            {story.bookmarkedByMe ? <BookmarkCheck size={19} aria-hidden="true" /> : <Bookmark size={19} aria-hidden="true" />}
+            {story.bookmarkedByMe ? <Icon icon={BookmarkSimple} size={19} /> : <Icon icon={BookmarkSimple} size={19} />}
           </button>
         )}
       </div>

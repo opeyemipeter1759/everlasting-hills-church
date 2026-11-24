@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Icon, Warning } from "@/components/icons";
 import { useMarkSession, useRoster } from "@/lib/api/classes";
 import { showToast } from "@/components/ui/toast/toast";
 import { ClassTheme } from "./theme";
@@ -29,7 +29,7 @@ export default function RosterClient({ cohortId, backHref = "/dashboard/classes"
     <ClassTheme className={embedded ? "" : "mx-auto max-w-[1200px] px-4 py-8"}>
       {!embedded && (
         <Link href={backHref} className="inline-flex items-center gap-1 text-sm text-black/60 hover:underline dark:text-white/60">
-          <ArrowLeft className="h-4 w-4" aria-hidden /> Back
+          <Icon icon={ArrowLeft} size={24} className="h-4 w-4" /> Back
         </Link>
       )}
       <p className="cls-eyebrow mt-4 text-[var(--color-burgundy)] dark:text-[var(--color-gold)]">{data.course.title}</p>
@@ -71,7 +71,7 @@ export default function RosterClient({ cohortId, backHref = "/dashboard/classes"
                   </span>
                   {l.stalled && (
                     <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
-                      <AlertTriangle className="h-3.5 w-3.5" aria-hidden /> No progress for 3 weeks
+                      <Icon icon={Warning} size={24} className="h-3.5 w-3.5" /> No progress for 3 weeks
                     </span>
                   )}
                 </td>
@@ -95,7 +95,7 @@ export default function RosterClient({ cohortId, backHref = "/dashboard/classes"
                           present ? "border-[var(--color-burgundy)] bg-[var(--color-burgundy)] text-white" : "border-[var(--color-pink-border)] text-transparent hover:text-black/30 dark:border-white/20"
                         }`}
                       >
-                        <Check className="h-4 w-4" aria-hidden />
+                        <Icon icon={Check} size={24} className="h-4 w-4" />
                       </button>
                     </td>
                   );

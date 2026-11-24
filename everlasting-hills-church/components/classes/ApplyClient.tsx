@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Icon } from "@/components/icons";
 import { useClassHome, useEnroll, type ApplicationForm } from "@/lib/api/classes";
 import { showToast } from "@/components/ui/toast/toast";
 import { ClassTheme } from "./theme";
@@ -53,7 +53,7 @@ export default function ApplyClient({ slug }: { slug: string }) {
   return (
     <ClassTheme className="mx-auto max-w-[760px] px-4 py-8 sm:py-12">
       <Link href={back} className="inline-flex items-center gap-1.5 text-sm text-black/60 hover:text-[var(--color-burgundy)] dark:text-white/60">
-        <ArrowLeft className="h-4 w-4" aria-hidden /> {home.class.title}
+        <Icon icon={ArrowLeft} size={24} className="h-4 w-4" /> {home.class.title}
       </Link>
 
       <header className="cls-glow cls-on-ink relative mt-6 overflow-hidden rounded-[24px] px-6 py-10 sm:px-10">

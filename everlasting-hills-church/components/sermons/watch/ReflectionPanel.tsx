@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Lightbulb, Loader2, Pencil, Users } from 'lucide-react';
+import { CircleNotch, Icon, Lightbulb, PencilSimple, Users } from "@/components/icons";
 import { useAnswerQuestion } from '@/lib/api';
 import { showToast } from '@/components/ui/toast/toast';
 import type { WatchDiscussionQuestion } from '@/lib/api/sermon-types';
@@ -59,7 +59,7 @@ function QuestionCard({
                 onClick={() => { setDraft(mine.content); setEditing(true); }}
                 className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 hover:text-[#87102C] dark:hover:text-[#e8768a] transition-colors"
               >
-                <Pencil size={10} /> Edit
+                <Icon icon={PencilSimple} size={10} /> Edit
               </button>
             </div>
           ) : (
@@ -83,7 +83,7 @@ function QuestionCard({
                   disabled={answerQuestion.isPending || !draft.trim()}
                   className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-1.5 rounded-lg bg-[#87102C] text-white hover:bg-[#6E0C24] disabled:opacity-50 transition-all"
                 >
-                  {answerQuestion.isPending && <Loader2 size={11} className="animate-spin" />}
+                  {answerQuestion.isPending && <Icon icon={CircleNotch} size={11} className="animate-spin" />}
                   {mine ? 'Update Answer' : 'Submit Answer'}
                 </button>
               </div>
@@ -95,7 +95,7 @@ function QuestionCard({
       {others.length > 0 && (
         <div className="pl-8 space-y-2 pt-1 border-t border-gray-100 dark:border-white/8">
           <p className="text-[11px] font-semibold text-gray-400 flex items-center gap-1 pt-2">
-            <Users size={11} /> {others.length} other response{others.length !== 1 ? 's' : ''}
+            <Icon icon={Users} size={11} /> {others.length} other response{others.length !== 1 ? 's' : ''}
           </p>
           {others.slice(0, 3).map((r) => (
             <div key={r.id} className="text-sm">
@@ -121,7 +121,7 @@ export default function ReflectionPanel({
   if (questions.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-10 text-center">
-        <Lightbulb size={20} className="text-gray-300 dark:text-gray-600" />
+        <Icon icon={Lightbulb} size={20} className="text-gray-300 dark:text-gray-600" />
         <p className="text-sm text-gray-400 dark:text-gray-500">No reflection questions for this message yet.</p>
       </div>
     );

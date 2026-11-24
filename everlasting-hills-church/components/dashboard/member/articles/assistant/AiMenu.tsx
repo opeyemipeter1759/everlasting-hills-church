@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { ChevronDown, Sparkles, Type, type LucideIcon } from "lucide-react";
+import { ChevronDown, Type, type LucideIcon, PenLine } from "lucide-react";
 import type { WritingAction } from "@/lib/api/writing-assist";
 import { AI_ACTIONS } from "./actions";
 import { useDismiss } from "./useDismiss";
@@ -61,7 +61,7 @@ export function AiMenu({
         onClick={() => setOpen((o) => !o)}
         className="inline-flex h-8 items-center gap-1.5 rounded-md bg-gradient-to-r from-[var(--m-brand)] to-[#b4234a] px-2.5 text-[12px] font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.15)] transition-opacity hover:opacity-90 disabled:opacity-40"
       >
-        <Sparkles size={14} aria-hidden="true" />
+        <PenLine size={14} aria-hidden="true" />
         AI assist
         <ChevronDown size={13} aria-hidden="true" className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>

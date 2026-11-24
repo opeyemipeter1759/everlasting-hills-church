@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { BookOpen, Check, ChevronDown, Copy, Download, Layers, Loader2, Settings2, Share2, Sparkles, X } from "lucide-react";
+import { BookOpen, Check, ChevronDown, Copy, Download, Layers, Loader2, Settings2, Share2, X, MessageSquareQuote } from "lucide-react";
 import type { DailyScripture } from "@/lib/api/daily-scripture";
 import { useHillsConfession } from "@/components/sermon-digest/useHillsConfession";
 import {
@@ -18,7 +18,7 @@ type Target = "scripture" | "confession" | "both";
 const TARGETS: { id: Target; label: string; icon: typeof BookOpen }[] = [
   { id: "both", label: "Both", icon: Layers },
   { id: "scripture", label: "Scripture", icon: BookOpen },
-  { id: "confession", label: "Confession", icon: Sparkles },
+  { id: "confession", label: "Confession", icon: MessageSquareQuote },
 ];
 
 const SCRIPTURE_ALT = "WhatsApp status image of today’s scripture, with Everlasting Hills Church’s name and website";

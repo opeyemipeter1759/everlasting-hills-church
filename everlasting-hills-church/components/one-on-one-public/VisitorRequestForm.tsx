@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Icon, Lock } from "@/components/icons";
 import { SESSION_TOPICS, type HostSummary, type SessionTopic } from "@/lib/api/one-on-one";
 import { FOUND_VIA, useCreateVisitorRequest, type FoundVia } from "@/lib/api/one-on-one-public";
 import { errorText } from "@/components/pray-watch/shared";
@@ -79,7 +79,7 @@ export default function VisitorRequestForm({
     <form onSubmit={onSubmit} className="relative flex flex-col gap-6 overflow-hidden rounded-2xl border border-[#E7CDD3]/60 bg-white p-6 dark:border-white/[0.09] dark:bg-white/[0.05]">
       <div className="flex flex-col gap-2">
         <button type="button" onClick={onBack} className="inline-flex items-center gap-1 self-start text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]">
-          <ArrowLeft size={14} /> Change time
+          <Icon icon={ArrowLeft} size={14} /> Change time
         </button>
         <p className="text-sm tabular-nums text-[#7A6A6F] dark:text-white/55">
           {formatWhenLong(slot.startsAt, slot.endsAt, timeZone)} your time · {type?.name} · {pastorName}
@@ -135,7 +135,7 @@ export default function VisitorRequestForm({
           <span className="text-sm font-bold text-[#111] dark:text-white">{askTopic ? `Anything you’d like ${pastorName} to know beforehand (optional)` : `What would you like ${pastorName} to be aware of ahead of the session? (optional)`}</span>
           <textarea id="v-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={1500} rows={4} className={`${input} resize-y`} />
           <span className="flex items-center gap-1.5 text-xs text-[#7A6A6F] dark:text-white/50">
-            <Lock size={12} aria-hidden="true" /> {viaIntake ? "Only the pastors handling your request can read this." : `Only ${pastorName} can read this.`} It’s stored encrypted.
+            <Icon icon={Lock} size={12} /> {viaIntake ? "Only the pastors handling your request can read this." : `Only ${pastorName} can read this.`} It’s stored encrypted.
           </span>
         </label>
       )}

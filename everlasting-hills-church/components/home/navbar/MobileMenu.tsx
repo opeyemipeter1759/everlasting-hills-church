@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarCheck, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { AttendanceIcon, CaretDown, Icon } from "@/components/icons";
+import { FOCUS_RING } from "./focus-ring";
+import { MenuGlyph } from "./MenuGlyph";
 import { ATTENDANCE_HREF, isLinkActive, isPathActive, type NavLink } from "./nav-links";
 
 // Client-side nav — a raw <a> would force a full page reload, which
@@ -47,7 +49,7 @@ export default function MobileMenu({ links, pathname, isLoggedIn, onNavigate }: 
                 }`}
               >
                 {link.label}
-                <ChevronDown size={16} className={`transition-transform duration-200 ${openId === link.id ? "rotate-180" : ""}`} />
+                <Icon icon={CaretDown} size={16} className={`transition-transform duration-200 motion-reduce:transition-none ${openId === link.id ? "rotate-180" : ""}`} />
               </button>
               <AnimatePresence initial={false}>
                 {openId === link.id && (
@@ -60,18 +62,17 @@ export default function MobileMenu({ links, pathname, isLoggedIn, onNavigate }: 
                   >
                     <div className="pb-2">
                       {link.children.map((child) => {
-                        const Icon = child.icon;
                         const childActive = isPathActive(pathname, child.href);
                         return (
                           <Link
                             key={child.href}
                             href={child.href}
                             onClick={onNavigate}
-                            className={`flex items-center gap-3 rounded-lg py-2.5 pl-2 text-[14px] font-medium transition-colors hover:text-burgundy ${
+                            className={`group flex items-center gap-3 rounded-lg py-2.5 pl-2 text-[14px] font-medium transition-colors hover:text-burgundy ${FOCUS_RING} ${
                               childActive ? "text-burgundy bg-brand-blush" : "text-[#555]"
                             }`}
                           >
-                            {Icon && <Icon size={16} className="shrink-0 text-burgundy/70" />}
+                            {child.icon && <MenuGlyph icon={child.icon} active={childActive} size={20} />}
                             {child.label}
                           </Link>
                         );
@@ -101,7 +102,7 @@ export default function MobileMenu({ links, pathname, isLoggedIn, onNavigate }: 
           {isLoggedIn ? (
             <>
               <Link href={ATTENDANCE_HREF} onClick={onNavigate} className={outlineBtn}>
-                <CalendarCheck size={16} />
+                <Icon icon={AttendanceIcon} size={16} />
                 Attendance
               </Link>
               <Link href="/dashboard" onClick={onNavigate} className={solidBtn}>

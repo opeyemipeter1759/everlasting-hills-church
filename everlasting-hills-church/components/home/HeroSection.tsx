@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowRight, ChevronDown, Play, Sparkles } from "lucide-react";
+import { ArrowRight, CaretDown, Icon, Play, ScriptureIcon } from "@/components/icons";
 import { HERO_FALLBACK, type HeroContent } from "@/lib/site-settings";
 import HeroWordNotes from "./HeroWordNotes";
 
@@ -41,7 +41,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
         >
           {c.scriptureBadge.visible && (
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-church-maroon/30 border border-church-maroon/50 backdrop-blur-sm">
-              <Sparkles className="w-3 h-3 text-church-accent" />
+              <Icon icon={ScriptureIcon} size={12} className="text-church-accent" />
               <span className="text-[10px] sm:text-xs uppercase tracking-[0.13em] xs:tracking-[0.25em] font-black text-church-accent">
                 {c.scriptureBadge.text}
               </span>
@@ -182,7 +182,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           >
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent w-1/2 animate-shine" />
             <span className="relative">{c.ctaPrimary.label}</span>
-            <ArrowRight className="relative w-5 h-5 transition-transform group-hover:translate-x-1" />
+            <Icon icon={ArrowRight} size={24} className="relative w-5 h-5 transition-transform group-hover:translate-x-1" />
           </motion.a>
           <motion.a
             href={c.ctaSecondary.href}
@@ -194,7 +194,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
             className="group px-6 sm:px-10 py-3.5 sm:py-4 bg-transparent border border-white/20 font-bold rounded-xl transition-all flex items-center justify-center gap-3 text-white"
           >
             <div className="w-6 h-6 shrink-0 rounded-full bg-white/10 flex items-center justify-center transition-transform group-hover:scale-110">
-              <Play className="w-3 h-3 fill-white" />
+              <Icon icon={Play} size={24} className="w-3 h-3 text-white" weight="fill" />
             </div>
             {c.ctaSecondary.label}
           </motion.a>
@@ -216,7 +216,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           <span className="text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] font-bold">
             Scroll
           </span>
-          <ChevronDown className="w-4 h-4 animate-bounce-soft" />
+          <Icon icon={CaretDown} size={24} className="w-4 h-4 animate-bounce-soft" />
         </a>
       </div>
     </section>

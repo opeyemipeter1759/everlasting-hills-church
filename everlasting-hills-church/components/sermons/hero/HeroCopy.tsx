@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, Play } from "lucide-react";
+import { ArrowUpRight, Icon, Play } from "@/components/icons";
 import type { SermonHeroSlide } from "./types";
 
 
@@ -52,7 +52,7 @@ export default function HeroCopy({
               onClick={() => onPlay(slide.slug)}
               className="inline-flex items-center gap-2.5 rounded-full bg-white px-4 xs:px-5 py-2.5 xs:py-3 text-sm font-black text-[#87102C] shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-[1.03] active:scale-95"
             >
-              <Play className="h-4 w-4 shrink-0 fill-current" />
+              <Icon icon={Play} size={24} className="h-4 w-4 shrink-0" weight="fill" />
               Play Now
             </button>
           ) : (
@@ -60,7 +60,7 @@ export default function HeroCopy({
               href={slide.href}
               className="inline-flex items-center gap-2.5 rounded-full bg-white px-4 xs:px-5 py-2.5 xs:py-3 text-sm font-black text-[#87102C] shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-[1.03] active:scale-95"
             >
-              <Play className="h-4 w-4 shrink-0 fill-current" />
+              <Icon icon={Play} size={24} className="h-4 w-4 shrink-0" weight="fill" />
               Play Now
             </Link>
           )}
@@ -69,7 +69,7 @@ export default function HeroCopy({
             className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 xs:px-5 py-2.5 xs:py-3 text-sm font-bold text-white/75 transition-colors hover:border-white/35 hover:text-white"
           >
             All sermons
-            <ArrowUpRight className="h-4 w-4" />
+            <Icon icon={ArrowUpRight} size={24} className="h-4 w-4" />
           </Link>
         </div>
       </motion.div>

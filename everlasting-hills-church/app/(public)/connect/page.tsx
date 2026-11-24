@@ -4,27 +4,13 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 
-import {
-  ArrowLeft,
-  ChevronRight,
-  MessageSquare,
-  HelpCircle,
-  Heart,
-  Users,
-  Scroll,
-  Sprout,
-  Star,
-  Handshake,
-  Sparkles,
-  Calendar,
-  Gift,
-} from "lucide-react";
+import { ArrowLeft, Calendar, CaretRight, ChatText, Gift, Handshake, Heart, Icon, NewHereIcon, Plant, Question, Scroll, TestimonyIcon, Users } from "@/components/icons";
 
 const INVOLVEMENT_CARDS = [
   { 
     title: "Prayer Request", 
     description: "Submit your petitions and let our intercessors stand with you.",
-    icon: <MessageSquare className="w-6 h-6" />, 
+    icon: <Icon icon={ChatText} size={24} className="w-6 h-6" />, 
     href: "/prayer-request",
     size: "large",
     color: "bg-church-maroon/20"
@@ -32,7 +18,7 @@ const INVOLVEMENT_CARDS = [
   { 
     title: "Membership", 
     description: "Start your journey of belonging.",
-    icon: <Scroll className="w-5 h-5" />, 
+    icon: <Icon icon={Scroll} size={24} className="w-5 h-5" />, 
     href: "#form-membership",
     size: "small",
     color: "bg-white/5"
@@ -40,7 +26,7 @@ const INVOLVEMENT_CARDS = [
   { 
     title: "Serve", 
     description: "Join a volunteer team.",
-    icon: <Users className="w-5 h-5" />, 
+    icon: <Icon icon={Users} size={24} className="w-5 h-5" />, 
     href: "#form-volunteer",
     size: "small",
     color: "bg-white/5"
@@ -48,7 +34,7 @@ const INVOLVEMENT_CARDS = [
   { 
     title: "Counselling", 
     description: "Find spiritual guidance and support for your season.",
-    icon: <Heart className="w-6 h-6" />, 
+    icon: <Icon icon={Heart} size={24} className="w-6 h-6" />, 
     href: "#form-counselling",
     size: "medium",
     color: "bg-church-accent/10"
@@ -56,7 +42,7 @@ const INVOLVEMENT_CARDS = [
   { 
     title: "Campus Connect", 
     description: "New to the area? Connect with a local campus near you.",
-    icon: <Sprout className="w-5 h-5" />, 
+    icon: <Icon icon={Plant} size={24} className="w-5 h-5" />, 
     href: "#form-campus",
     size: "medium",
     color: "bg-white/5"
@@ -64,7 +50,7 @@ const INVOLVEMENT_CARDS = [
   { 
     title: "First Timers", 
     description: "We'd love to know you were here.",
-    icon: <Star className="w-5 h-5" />, 
+    icon: <Icon icon={NewHereIcon} size={24} className="w-5 h-5" />, 
     href: "#form-first-timer",
     size: "small",
     color: "bg-church-maroon/10"
@@ -72,7 +58,7 @@ const INVOLVEMENT_CARDS = [
   {
     title: "Home Cell",
     description: "Life happens in small groups.",
-    icon: <Handshake className="w-5 h-5" />,
+    icon: <Icon icon={Handshake} size={24} className="w-5 h-5" />,
     href: "/connect/home-cell",
     size: "small",
     color: "bg-white/5"
@@ -104,7 +90,7 @@ export default function GetInvolvedPage() {
           href="/" 
           className="inline-flex items-center gap-2 text-church-accent/60 hover:text-church-accent transition-all mb-12 group"
         >
-          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          <Icon icon={ArrowLeft} size={16} className="group-hover:-translate-x-1 transition-transform" />
           <span className="text-[10px] font-black uppercase tracking-[0.2em] xs:tracking-[0.4em]">Home</span>
         </Link>
 
@@ -144,7 +130,7 @@ export default function GetInvolvedPage() {
           <BentoCard 
             title="Prayer Request" 
             desc="Let us stand with you in faith."
-            icon={<MessageSquare className="w-8 h-8" />}
+            icon={<Icon icon={ChatText} size={24} className="w-8 h-8" />}
             href="/prayer-request"
             className="md:col-span-2 md:row-span-2 bg-church-maroon/20 border-church-maroon/40"
             featured
@@ -154,7 +140,7 @@ export default function GetInvolvedPage() {
           <BentoCard
             title="Ask a Question"
             desc="Bible, life — ask us anything."
-            icon={<HelpCircle className="w-6 h-6" />}
+            icon={<Icon icon={Question} size={24} className="w-6 h-6" />}
             href="/questions"
             className="md:col-span-2 md:row-span-1 bg-white/5"
           />
@@ -163,7 +149,7 @@ export default function GetInvolvedPage() {
           <BentoCard
             title="Home Cell"
             desc="Life happens in small groups."
-            icon={<Users className="w-6 h-6" />}
+            icon={<Icon icon={Users} size={24} className="w-6 h-6" />}
             href="/connect/home-cell"
             className="md:col-span-2 md:row-span-1 bg-white/5"
           />
@@ -172,7 +158,7 @@ export default function GetInvolvedPage() {
           <BentoCard 
             title="New Here?" 
             desc="Start your journey."
-            icon={<Star className="w-6 h-6" />}
+            icon={<Icon icon={NewHereIcon} size={24} className="w-6 h-6" />}
             href="/first-timer"
             className="md:col-span-2 md:row-span-1 bg-church-accent/10 border-church-accent/20"
           />
@@ -181,7 +167,7 @@ export default function GetInvolvedPage() {
           <BentoCard
             title="Serve Team"
             desc="Use your gifts to build the house."
-            icon={<Handshake className="w-7 h-7" />}
+            icon={<Icon icon={Handshake} size={24} className="w-7 h-7" />}
             href="/connect/serve"
             className="md:col-span-2 md:row-span-2 bg-white/5"
             featured
@@ -191,7 +177,7 @@ export default function GetInvolvedPage() {
           <BentoCard 
             title="Membership" 
             desc="Commitment to community."
-            icon={<Scroll className="w-6 h-6" />}
+            icon={<Icon icon={Scroll} size={24} className="w-6 h-6" />}
             href="#membership"
             className="md:col-span-2 md:row-span-1 bg-white/5"
           />
@@ -200,7 +186,7 @@ export default function GetInvolvedPage() {
           <BentoCard 
             title="Counselling" 
             desc="Spiritual guidance."
-            icon={<Heart className="w-6 h-6" />}
+            icon={<Icon icon={Heart} size={24} className="w-6 h-6" />}
             href="#care"
             className="md:col-span-2 md:row-span-1 bg-white/5"
           />
@@ -212,10 +198,10 @@ export default function GetInvolvedPage() {
             className="md:col-span-3 h-20 glass-card bg-white/5 flex items-center justify-between gap-3 px-5 sm:px-8 group cursor-pointer"
           >
             <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              <Gift className="shrink-0 text-church-accent" />
+              <Icon icon={Gift} size={24} className="shrink-0 text-church-accent" />
               <span className="font-display font-black text-lg sm:text-xl">Online Giving</span>
             </div>
-            <ChevronRight className="shrink-0 group-hover:translate-x-1 transition-transform text-white/20" />
+            <Icon icon={CaretRight} size={24} className="shrink-0 group-hover:translate-x-1 transition-transform text-white/20" />
           </motion.a>
 
           <motion.a 
@@ -224,10 +210,10 @@ export default function GetInvolvedPage() {
             className="md:col-span-3 h-20 glass-card bg-white/5 flex items-center justify-between gap-3 px-5 sm:px-8 group cursor-pointer"
           >
             <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              <Sparkles className="shrink-0 text-church-accent" />
+              <Icon icon={TestimonyIcon} size={24} className="shrink-0 text-church-accent" />
               <span className="font-display font-black text-lg sm:text-xl">Share Testimony</span>
             </div>
-            <ChevronRight className="shrink-0 group-hover:translate-x-1 transition-transform text-white/20" />
+            <Icon icon={CaretRight} size={24} className="shrink-0 group-hover:translate-x-1 transition-transform text-white/20" />
           </motion.a>
         </div>
 
@@ -283,7 +269,7 @@ function BentoCard({ title, desc, icon, href, className, featured = false }: any
       </div>
 
       <div className="absolute bottom-10 right-10 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-        <ChevronRight size={24} className="text-church-accent" />
+        <Icon icon={CaretRight} size={24} className="text-church-accent" />
       </div>
     </motion.a>
   );

@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Icon } from "@/components/icons";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import { HEAVEN_ON_EARTH } from "./event-constants";
 
@@ -60,7 +60,7 @@ export default function FinalInvitation() {
               className="inline-flex items-center gap-3 px-10 py-5 rounded-full bg-white text-[#87102C] text-base font-bold hover:bg-[#FFE8ED] hover:shadow-2xl hover:shadow-black/40 hover:-translate-y-0.5 transition-all duration-200"
             >
               Reserve My Seat
-              <ArrowUpRight size={18} />
+              <Icon icon={ArrowUpRight} size={18} />
             </a>
             <p className="mt-6 text-xs uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/60 font-semibold">
               {HEAVEN_ON_EARTH.dateDisplay} · {HEAVEN_ON_EARTH.venue.name}

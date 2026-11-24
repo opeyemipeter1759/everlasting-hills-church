@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, Icon } from "@/components/icons";
 
 type Kind = "service" | "event" | "gathering";
 
@@ -46,7 +46,7 @@ export default function AddToCalendarButton({
       download
       className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${styles} ${className}`}
     >
-      <CalendarPlus className="h-4 w-4" />
+      <Icon icon={CalendarPlus} size={24} className="h-4 w-4" />
       {label}
     </a>
   );

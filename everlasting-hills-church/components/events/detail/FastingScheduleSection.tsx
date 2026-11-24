@@ -1,4 +1,4 @@
-import { Flame, Moon, Sun, UtensilsCrossed } from "lucide-react";
+import { Fire, ForkKnife, Icon, Moon, Sun } from "@/components/icons";
 import type { EventSection } from "@/types";
 import { dateSpan, planFast, shortDate, weekdayRange, type FastDay } from "./fasting-schedule";
 
@@ -58,7 +58,7 @@ export default function FastingScheduleSection({ section }: { section: Section }
                   </p>
                   <p className="mt-2 flex gap-0.5 text-[#F97316]" aria-hidden="true">
                     {Array.from({ length: w.days }, (_, k) => (
-                      <Flame key={k} size={15} fill="currentColor" />
+                      <Icon icon={Fire} key={k} size={15} weight="fill" />
                     ))}
                   </p>
                   <dl className="mt-4 space-y-1.5 text-sm">
@@ -170,7 +170,7 @@ export default function FastingScheduleSection({ section }: { section: Section }
               {c.guidelines.map((g) => (
                 <li key={g.title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
                   <p className="flex items-center gap-2 font-bold text-[#FACC15]">
-                    <UtensilsCrossed size={15} aria-hidden="true" /> {g.title}
+                    <Icon icon={ForkKnife} size={15} /> {g.title}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-white/65">{g.body}</p>
                 </li>
@@ -249,7 +249,7 @@ function Legend({ swatch, label }: { swatch: string; label: string }) {
 }
 
 function Session({
-  icon: Icon,
+  icon: Glyph,
   label,
   when,
   note,
@@ -264,7 +264,7 @@ function Session({
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
       <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">
-        <Icon size={14} aria-hidden="true" /> {label}
+        <Glyph size={14} aria-hidden="true" /> {label}
       </p>
       <p className="mt-2 text-3xl font-black tracking-tight">{when}</p>
       {note && <p className="mt-2 text-sm text-white/60">{note}</p>}
