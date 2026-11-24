@@ -2,7 +2,7 @@
 
 import type React from "react";
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
+import { Icon, type IconComponent } from "@/components/icons";
 
 interface DropdownItemProps {
   tag?: "a" | "button";
@@ -11,7 +11,7 @@ interface DropdownItemProps {
   /** Runs alongside onClick — by convention the caller closes the menu here. */
   onItemClick?: () => void;
   /** Leading icon. Sized and coloured by the item so menus stay visually aligned. */
-  icon?: LucideIcon;
+  icon?: IconComponent;
   /** Destructive action (delete, sign out) — renders red. */
   danger?: boolean;
   /** Escape hatch: replaces the item's own layout/colour classes entirely. */
@@ -30,7 +30,7 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
   href,
   onClick,
   onItemClick,
-  icon: Icon,
+  icon: Glyph,
   danger = false,
   baseClassName,
   className = "",
@@ -57,15 +57,11 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
 
   const content = (
     <>
-      {Icon && (
-        <Icon
-          size={15}
-          aria-hidden="true"
-          className={[
+      {Glyph && (
+        <Icon icon={Glyph} size={15} className={[
             "flex-shrink-0",
             danger ? "text-red-500 dark:text-red-400" : "text-[#8a7e80] dark:text-white/40",
-          ].join(" ")}
-        />
+          ].join(" ")} />
       )}
       <span className="min-w-0 flex-1 truncate">{children}</span>
     </>

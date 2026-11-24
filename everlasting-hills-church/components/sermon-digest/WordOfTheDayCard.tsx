@@ -1,6 +1,6 @@
 "use client";
 
-import { PlayCircle, Sparkles } from "lucide-react";
+import { Icon, PlayCircle, WordOfTheDayIcon } from "@/components/icons";
 import { serviceLabel, useWordOfTheDay } from "@/lib/sermon-digest";
 
 /**
@@ -25,7 +25,7 @@ export default function WordOfTheDayCard() {
   if (!data?.ready) {
     return (
       <section className="rounded-2xl border border-[#E7CDD3] bg-white p-6 text-center dark:border-white/10 dark:bg-white/5">
-        <Sparkles className="mx-auto text-[#87102C] dark:text-[#f5d49a]" size={22} aria-hidden="true" />
+        <Icon icon={WordOfTheDayIcon} size={22} className="mx-auto text-burgundy dark:text-[#f5d49a]" />
         <h3 className="mt-3 font-display text-xl font-bold text-[#211317] dark:text-white">The Word of the Day is on its way</h3>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[#6d565b] dark:text-white/60">
           It is drawn from our latest Sunday or Wednesday sermon and appears here a few hours after the service. Check back soon.
@@ -41,7 +41,7 @@ export default function WordOfTheDayCard() {
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#f5d49a]">
-          <Sparkles size={15} aria-hidden="true" />
+          <Icon icon={WordOfTheDayIcon} size={15} />
           Word of the Day
         </p>
         <p className="text-xs text-white/60">{serviceLabel(data.serviceDay, data.serviceDate)}</p>
@@ -75,7 +75,7 @@ export default function WordOfTheDayCard() {
           rel="noopener noreferrer"
           className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#f5d49a] px-5 py-3 text-sm font-bold text-[#220d20] transition hover:bg-white"
         >
-          <PlayCircle size={18} aria-hidden="true" />
+          <Icon icon={PlayCircle} size={18} />
           Watch the sermon
         </a>
         <p className="text-xs text-white/60">

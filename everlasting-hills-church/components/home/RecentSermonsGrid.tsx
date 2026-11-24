@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Icon, Play } from "@/components/icons";
 import SermonCover from "@/components/sermons/SermonCover";
 
 export interface RecentSermon {
@@ -100,7 +100,7 @@ function SermonCard({ sermon }: { sermon: RecentSermon }) {
             aria-hidden="true"
             className="flex h-14 w-14 items-center justify-center rounded-full border border-white/30 bg-white/10 backdrop-blur-sm transition-all duration-300 group-hover:scale-110 group-hover:border-transparent group-hover:bg-[#87102C]"
           >
-            <Play className="h-5 w-5 translate-x-[1px] text-white" fill="currentColor" />
+            <Icon icon={Play} size={24} className="h-5 w-5 translate-x-[1px] text-white" weight="fill" />
           </span>
         </span>
       </div>
@@ -133,7 +133,7 @@ function SermonCard({ sermon }: { sermon: RecentSermon }) {
 
         <span className="mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-semibold text-[#FFB3C1] transition-all group-hover:gap-2.5">
           {sermon.ctaLabel}
-          <ArrowRight size={14} />
+          <Icon icon={ArrowRight} size={14} />
         </span>
       </div>
     </Link>

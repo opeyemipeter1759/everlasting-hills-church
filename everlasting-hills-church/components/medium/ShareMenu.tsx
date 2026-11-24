@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Facebook, Link2, Linkedin, Share, Twitter } from "lucide-react";
+import { Check, Export, FacebookLogo, Icon, LinkedinLogo, LinkSimple, XLogo } from "@/components/icons";
 
 function WhatsAppIcon() {
   return (
@@ -50,25 +50,25 @@ export default function ShareMenu({ url, title }: { url: string; title: string }
   return (
     <div ref={box} className="relative">
       <button type="button" aria-haspopup="menu" aria-expanded={open} aria-label="Share" onClick={() => setOpen((v) => !v)} className="m-icon-btn">
-        <Share size={19} aria-hidden="true" />
+        <Icon icon={Export} size={19} />
       </button>
       {open && (
         <div role="menu" className="m-paper absolute right-0 z-30 mt-1 w-60 border m-rule py-2">
           <button type="button" role="menuitem" onClick={copy} className={item}>
-            {copied ? <Check size={16} aria-hidden="true" /> : <Link2 size={16} aria-hidden="true" />}
+            {copied ? <Icon icon={Check} size={16} /> : <Icon icon={LinkSimple} size={16} />}
             {copied ? "Link copied" : "Copy link"}
           </button>
           <a role="menuitem" className={item} href={`https://wa.me/?text=${enc(`${text}\n${url}`)}`} target="_blank" rel="noopener noreferrer">
             <WhatsAppIcon /> Share on WhatsApp
           </a>
           <a role="menuitem" className={item} href={`https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(url)}`} target="_blank" rel="noopener noreferrer">
-            <Twitter size={16} aria-hidden="true" /> Share on X
+            <Icon icon={XLogo} size={16} /> Share on X
           </a>
           <a role="menuitem" className={item} href={`https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`} target="_blank" rel="noopener noreferrer">
-            <Facebook size={16} aria-hidden="true" /> Share on Facebook
+            <Icon icon={FacebookLogo} size={16} /> Share on Facebook
           </a>
           <a role="menuitem" className={item} href={`https://www.linkedin.com/sharing/share-offsite/?url=${enc(url)}`} target="_blank" rel="noopener noreferrer">
-            <Linkedin size={16} aria-hidden="true" /> Share on LinkedIn
+            <Icon icon={LinkedinLogo} size={16} /> Share on LinkedIn
           </a>
         </div>
       )}

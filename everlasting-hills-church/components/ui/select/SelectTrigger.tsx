@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, type KeyboardEvent, type ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { CaretDown, Icon } from "@/components/icons";
 
 /** The closed control: what is chosen, and the chevron that says there is more. */
 export const SelectTrigger = forwardRef<
@@ -53,9 +53,8 @@ export const SelectTrigger = forwardRef<
       <span className={["min-w-0 flex-1 truncate", label ? "" : "text-[#8a7e80] dark:text-white/40"].join(" ")}>
         {label ?? placeholder}
       </span>
-      <ChevronDown
+      <Icon icon={CaretDown}
         size={16}
-        aria-hidden="true"
         className={[
           "flex-shrink-0 text-[#8a7e80] transition-transform duration-150 dark:text-white/40",
           open ? "rotate-180" : "",

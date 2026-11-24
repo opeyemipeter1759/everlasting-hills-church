@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, ArrowRight, HeartHandshake } from "lucide-react";
+import { ArrowRight, CircleNotch, HandHeart, Icon } from "@/components/icons";
 import { apiClient } from "@/lib/api/axios";
 
 const CATEGORIES = ["Tithe", "Offering", "Building Fund", "Missions", "General"];
@@ -44,7 +44,7 @@ export default function OnlineGivingForm() {
       <div className="rounded-3xl border border-church-accent/15 bg-white/[0.02] backdrop-blur-md p-5 xs:p-8 sm:p-10">
         <div className="flex items-center gap-3 mb-6">
           <span className="w-11 h-11 rounded-2xl bg-church-maroon/20 flex items-center justify-center text-church-accent">
-            <HeartHandshake size={20} />
+            <Icon icon={HandHeart} size={20} />
           </span>
           <div>
             <h2 className="font-display text-xl font-black uppercase tracking-wide text-white">
@@ -140,13 +140,13 @@ export default function OnlineGivingForm() {
           >
             {loading ? (
               <>
-                <Loader2 size={16} className="animate-spin" />
+                <Icon icon={CircleNotch} size={16} className="animate-spin" />
                 Redirecting to Paystack...
               </>
             ) : (
               <>
                 Give Securely
-                <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                <Icon icon={ArrowRight} size={16} className="transition-transform group-hover:translate-x-0.5" />
               </>
             )}
           </button>

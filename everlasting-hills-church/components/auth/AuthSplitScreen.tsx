@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ShieldCheck } from "lucide-react";
+import { Icon, ShieldCheck } from "@/components/icons";
 
 interface AuthSplitScreenProps {
   /** Right-panel form content. Already-padded; the wrapper supplies bg + sizing. */
@@ -79,7 +79,7 @@ export default function AuthSplitScreen({
           <div className="flex items-center justify-between text-[11px] text-white/40">
             <span>© 2026 Everlasting Hills, Ibadan</span>
             <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck size={12} />
+              <Icon icon={ShieldCheck} size={12} />
               Secured
             </span>
           </div>

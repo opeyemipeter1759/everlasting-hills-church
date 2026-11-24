@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Play, BookOpen } from 'lucide-react';
+import { BookOpen, Icon, Play } from "@/components/icons";
 import SermonEngagementContent from './SermonEngagementContent';
 import SeriesEpisodeList from './SeriesEpisodeList';
 import { useSermonPlayer } from '@/context/SermonPlayerContext';
@@ -68,12 +68,12 @@ export default function SermonWatchPanel({
             <Image src={sermon.thumbnailUrl} alt={sermon.title} fill sizes="100vw" className="object-cover" />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-[#87102C]/10 to-[#87102C]/5 dark:from-[#87102C]/20 dark:to-transparent flex items-center justify-center">
-              <BookOpen size={40} className="text-[#87102C]/30 dark:text-[#87102C]/40" />
+              <Icon icon={BookOpen} size={40} className="text-[#87102C]/30 dark:text-[#87102C]/40" />
             </div>
           )}
           <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors flex items-center justify-center">
             <div className="h-16 w-16 rounded-full bg-white text-[#87102C] flex items-center justify-center shadow-xl group-hover:scale-105 transition-transform">
-              <Play size={26} fill="currentColor" />
+              <Icon icon={Play} size={26} weight="fill" />
             </div>
           </div>
           {isPlayingHere && (

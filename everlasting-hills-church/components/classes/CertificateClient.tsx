@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Icon, Printer } from "@/components/icons";
 import { useCertificate } from "@/lib/api/classes";
 import { ClassTheme } from "./theme";
 import Arches from "./Arches";
@@ -27,10 +27,10 @@ export default function CertificateClient({ slug }: { slug: string }) {
     <ClassTheme className="mx-auto max-w-[900px] px-4 py-8">
       <div className="mb-6 flex items-center justify-between gap-3 print:hidden">
         <Link href={`/dashboard/classes/${slug}`} className="inline-flex items-center gap-1 text-sm text-black/60 hover:underline dark:text-white/60">
-          <ArrowLeft className="h-4 w-4" aria-hidden /> Back to the class
+          <Icon icon={ArrowLeft} size={24} className="h-4 w-4" /> Back to the class
         </Link>
         <button type="button" onClick={() => window.print()} className="cls-btn cls-btn-outline">
-          <Printer className="h-4 w-4" aria-hidden /> Print
+          <Icon icon={Printer} size={24} className="h-4 w-4" /> Print
         </button>
       </div>
 

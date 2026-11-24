@@ -2,23 +2,23 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { CheckCircle2, HeartHandshake, Mail, MessageCircle } from "lucide-react";
+import { ChatCircle, CheckCircle, EnvelopeSimple, HandHeart, Icon } from "@/components/icons";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 const NEXT_STEPS = [
   {
-    icon: Mail,
+    icon: EnvelopeSimple,
     title: "We've received it",
     body: "Your request has reached our welfare team. Nothing else is needed from you right now.",
   },
   {
-    icon: MessageCircle,
+    icon: ChatCircle,
     title: "Someone will reach out",
     body: "A member of the team will contact you directly, usually within a few days, to talk things through.",
   },
   {
-    icon: HeartHandshake,
+    icon: HandHeart,
     title: "We'll walk with you",
     body: "Whatever we're able to do, we'll do with care and without judgment. You're not alone in this.",
   },
@@ -33,7 +33,7 @@ export default function WelfareSuccess() {
       className="flex flex-col items-center px-5 py-10 text-center sm:px-10 sm:py-14"
     >
       <span className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-        <CheckCircle2 size={32} aria-hidden="true" />
+        <Icon icon={CheckCircle} size={32} />
       </span>
 
       <h2
@@ -47,10 +47,10 @@ export default function WelfareSuccess() {
       </p>
 
       <div className="mt-10 w-full max-w-sm space-y-5 text-left">
-        {NEXT_STEPS.map(({ icon: Icon, title, body }) => (
+        {NEXT_STEPS.map(({ icon: Glyph, title, body }) => (
           <div key={title} className="flex gap-3.5">
             <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#FFF4F6] text-[#87102C]">
-              <Icon size={16} aria-hidden="true" />
+              <Icon icon={Glyph} size={16} />
             </span>
             <div>
               <p className="text-sm font-bold text-[#2B1114]">{title}</p>

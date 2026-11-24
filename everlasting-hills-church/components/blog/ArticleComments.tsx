@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, Trash2 } from "lucide-react";
+import { CircleNotch, Icon, Trash } from "@/components/icons";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { Pagination } from "@/components/dashboard/member/family/Pagination";
 import { MAvatar } from "@/components/medium/parts";
@@ -101,7 +101,7 @@ export default function ArticleComments({ slug, asMember }: { slug: string; asMe
                     </div>
                     {c.canDelete && (
                       <button type="button" onClick={() => setRemoving(c.id)} aria-label={`Remove ${c.authorName}'s comment`} className="m-icon-btn">
-                        <Trash2 size={15} aria-hidden="true" />
+                        <Icon icon={Trash} size={15} />
                       </button>
                     )}
                   </div>
@@ -153,7 +153,7 @@ export default function ArticleComments({ slug, asMember }: { slug: string; asMe
             {thanks ? "Thank you, your response is up." : asMember ? "You respond as yourself." : "Your name shows with your response. Please keep it kind."}
           </p>
           <button type="submit" disabled={post.isPending || !body.trim()} className="m-pill">
-            {post.isPending && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
+            {post.isPending && <Icon icon={CircleNotch} size={15} className="animate-spin" />}
             Respond
           </button>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { Icon, X } from "@/components/icons";
 
 interface ModalProps {
   open: boolean;
@@ -100,7 +100,7 @@ export default function Modal({ open, onClose, title, description, children, max
               aria-label="Close"
               className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors shrink-0"
             >
-              <X size={15} />
+              <Icon icon={X} size={15} />
             </button>
           </div>
           {/* Body */}

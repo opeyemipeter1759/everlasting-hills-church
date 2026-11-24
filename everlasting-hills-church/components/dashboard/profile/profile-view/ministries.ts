@@ -1,4 +1,4 @@
-import { Crown, Flower2, Zap, Heart, type LucideIcon } from "lucide-react";
+import { Crown, Flower2, Heart, type LucideIcon, Backpack } from "lucide-react";
 import { computeAgeGroup } from "./helpers";
 
 export interface MinistryInfo {
@@ -11,7 +11,7 @@ export interface MinistryInfo {
 export const MINISTRY_INFO: Record<"mens" | "womens" | "teens" | "couples", MinistryInfo> = {
   mens: { slug: "mens", name: "Men's Ministry", schedule: "Every 2nd Saturday · 7:00 AM", icon: Crown },
   womens: { slug: "womens", name: "Women's Ministry", schedule: "Every 1st Sunday · After Service", icon: Flower2 },
-  teens: { slug: "teens", name: "Teen's Ministry", schedule: "Every Friday · 5:00 PM", icon: Zap },
+  teens: { slug: "teens", name: "Teen's Ministry", schedule: "Every Friday · 5:00 PM", icon: Backpack },
   couples: { slug: "couples", name: "Couple's Ministry", schedule: "Every 3rd Saturday · 4:00 PM", icon: Heart },
 };
 

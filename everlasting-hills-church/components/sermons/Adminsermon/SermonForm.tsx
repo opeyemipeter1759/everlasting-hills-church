@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Link, Upload, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookOpen, CircleNotch, FloppyDisk, Icon, Link, Plus, SummaryIcon, TakeawaysIcon, Trash, UploadSimple } from "@/components/icons";
 import { useCreateSermon, useUpdateSermon, useSermon } from '@/lib/api';
 import FileUpload from '@/components/ui/form/FileUpload';
 import { postAi } from '@/lib/ai/client';
@@ -165,10 +165,10 @@ function AudioModeTabs({
   return (
     <div className="mb-2.5 flex w-fit items-center gap-0.5 rounded-xl bg-gray-100 dark:bg-white/[0.06] p-1">
       <button type="button" onClick={() => onChange('upload')} className={`${base} ${mode === 'upload' ? active : idle}`}>
-        <Upload size={11} /> Upload File
+        <Icon icon={UploadSimple} size={11} /> Upload File
       </button>
       <button type="button" onClick={() => onChange('url')} className={`${base} ${mode === 'url' ? active : idle}`}>
-        <Link size={11} /> Enter URL
+        <Icon icon={Link} size={11} /> Enter URL
       </button>
     </div>
   );
@@ -325,7 +325,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
   if (mode === 'edit' && isLoadingSermon) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 size={28} className="animate-spin text-[#87102C]" />
+        <Icon icon={CircleNotch} size={28} className="animate-spin text-[#87102C]" />
       </div>
     );
   }
@@ -343,11 +343,11 @@ export default function SermonForm({ mode }: SermonFormProps) {
             onClick={() => router.push('/dashboard/pastor/sermons')}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors"
           >
-            <ArrowLeft size={15} />
+            <Icon icon={ArrowLeft} size={15} />
           </button>
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
-              <BookOpen size={17} className="text-white" strokeWidth={2} />
+              <Icon icon={BookOpen} size={17} className="text-white" />
             </div>
             <div>
               <h2 className="font-serif text-lg font-bold italic leading-tight text-white">
@@ -380,16 +380,16 @@ export default function SermonForm({ mode }: SermonFormProps) {
           >
             {isPending ? (
               <>
-                <Loader2 size={14} className="animate-spin" />
+                <Icon icon={CircleNotch} size={14} className="animate-spin" />
                 {mode === 'create' ? 'Creating…' : 'Saving…'}
               </>
             ) : mode === 'create' ? (
               <>
-                <Plus size={14} strokeWidth={2.5} /> Create Sermon
+                <Icon icon={Plus} size={14} weight="bold" /> Create Sermon
               </>
             ) : (
               <>
-                <Save size={14} /> Save Changes
+                <Icon icon={FloppyDisk} size={14} /> Save Changes
               </>
             )}
           </button>
@@ -481,7 +481,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
                     className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/[0.08] px-2.5 py-1 text-[11px] font-bold text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-500/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     title={!form.title ? 'Enter a title first' : 'Generate with Gemini AI'}
                   >
-                    {aiLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                    {aiLoading ? <Icon icon={CircleNotch} size={11} className="animate-spin" /> : <Icon icon={SummaryIcon} size={12} />}
                     {aiLoading ? 'Generating…' : 'Generate with AI'}
                   </button>
                 </div>
@@ -496,7 +496,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
                 {aiTakeaways.length > 0 && (
                   <div className="rounded-xl border border-violet-100 dark:border-violet-500/20 bg-violet-50/60 dark:bg-violet-500/[0.06] p-3">
                     <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
-                      <Sparkles size={10} /> Key Takeaways (AI generated)
+                      <Icon icon={TakeawaysIcon} size={11} /> Key Takeaways (AI generated)
                     </p>
                     <ul className="space-y-1">
                       {aiTakeaways.map((t, i) => (
@@ -574,7 +574,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
 
                 <Field label="Video URL">
                   <div className="relative">
-                    <Link size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <Icon icon={Link} size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     <input
                       type="url"
                       placeholder="https://youtube.com/watch?v=…"
@@ -603,7 +603,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
                       onClick={addEpisode}
                       className="font-sans inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[#87102C]/30 px-3 py-1.5 text-xs font-bold text-[#87102C] dark:text-[#e8768a] hover:bg-[#87102C]/5 transition-colors"
                     >
-                      <Plus size={12} strokeWidth={2.5} /> Add First Episode
+                      <Icon icon={Plus} size={12} weight="bold" /> Add First Episode
                     </button>
                   </div>
                 ) : (
@@ -623,7 +623,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
                             onClick={() => removeEpisode(i)}
                             className="flex h-6 w-6 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition-colors"
                           >
-                            <Trash2 size={12} />
+                            <Icon icon={Trash} size={12} />
                           </button>
                         </div>
 
@@ -722,7 +722,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
                       onClick={addEpisode}
                       className="font-sans inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[#87102C]/30 px-3 py-1.5 text-xs font-bold text-[#87102C] dark:text-[#e8768a] hover:bg-[#87102C]/5 transition-colors"
                     >
-                      <Plus size={12} strokeWidth={2.5} /> Add Episode
+                      <Icon icon={Plus} size={12} weight="bold" /> Add Episode
                     </button>
                   </div>
                 )}
@@ -808,16 +808,16 @@ export default function SermonForm({ mode }: SermonFormProps) {
           >
             {isPending ? (
               <>
-                <Loader2 size={14} className="animate-spin" />
+                <Icon icon={CircleNotch} size={14} className="animate-spin" />
                 {mode === 'create' ? 'Creating…' : 'Saving…'}
               </>
             ) : mode === 'create' ? (
               <>
-                <Plus size={14} strokeWidth={2.5} /> Create Sermon
+                <Icon icon={Plus} size={14} weight="bold" /> Create Sermon
               </>
             ) : (
               <>
-                <Save size={14} /> Save Changes
+                <Icon icon={FloppyDisk} size={14} /> Save Changes
               </>
             )}
           </button>

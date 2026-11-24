@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Loader2, MessageSquarePlus, RotateCcw, Trash2, Wand2, X } from "lucide-react";
+import { Check, Loader2, MessageSquarePlus, RotateCcw, Trash2, X } from "lucide-react";
 import {
   useAddReviewNote,
   useDeleteReviewNote,
@@ -101,7 +101,7 @@ function NoteCard({
       <div className="mt-3 flex flex-wrap gap-2">
         {onApply && note.suggestion && !resolved && (
           <button type="button" onClick={onApply} disabled={busy} className="m-pill !min-h-8 !px-3 text-[13px]">
-            <Wand2 size={13} aria-hidden="true" /> Apply suggestion
+            <Check size={13} aria-hidden="true" /> Apply suggestion
           </button>
         )}
         {canResolve && (

@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { MessageSquare, Star, Sparkles, Mail, Gift, ArrowRight, HeartHandshake } from "lucide-react";
+import { ArrowRight, ChatText, EnvelopeSimple, Gift, HandHeart, Icon, NewHereIcon, TestimonyIcon } from "@/components/icons";
 
 const LINKS = [
   {
     href: "/first-timer",
-    icon: Star,
+    icon: NewHereIcon,
     label: "First Timer Form",
     description: "Visited for the first time? Let us get to know you.",
     accent: "#FFB3C1",
@@ -13,7 +13,7 @@ const LINKS = [
   },
   {
     href: "/prayer-request",
-    icon: MessageSquare,
+    icon: ChatText,
     label: "Prayer Request",
     description: "Submit your petitions. Our intercessors will stand with you.",
     accent: "#FFB3C1",
@@ -22,7 +22,7 @@ const LINKS = [
   },
   {
     href: "/testimony",
-    icon: Sparkles,
+    icon: TestimonyIcon,
     label: "Share Testimony",
     description: "Tell us what God has done. Your story encourages the whole family.",
     accent: "#FFB3C1",
@@ -31,7 +31,7 @@ const LINKS = [
   },
   {
     href: "/pre-marital-counselling",
-    icon: HeartHandshake,
+    icon: HandHeart,
     label: "Pre-Marital Counselling",
     description: "Planning to marry? Apply together and our pastors will be in touch.",
     accent: "#FFB3C1",
@@ -40,7 +40,7 @@ const LINKS = [
   },
   {
     href: "/contact",
-    icon: Mail,
+    icon: EnvelopeSimple,
     label: "Contact Us",
     description: "Questions, feedback, or just want to say hello.",
     accent: "#FFB3C1",
@@ -76,7 +76,7 @@ export default function QuickLinksPage() {
         </div>
 
         <div className="space-y-3">
-          {LINKS.map(({ href, icon: Icon, label, description, bg, border }) => (
+          {LINKS.map(({ href, icon: Glyph, label, description, bg, border }) => (
             <Link
               key={href}
               href={href}
@@ -84,14 +84,14 @@ export default function QuickLinksPage() {
             >
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0 group-hover:bg-church-accent/20 transition-colors">
-                  <Icon size={18} className="text-church-accent" />
+                  <Icon icon={Glyph} size={18} className="text-church-accent" />
                 </div>
                 <div>
                   <p className="font-semibold text-white text-sm">{label}</p>
                   <p className="text-white/60 text-xs mt-0.5 leading-relaxed">{description}</p>
                 </div>
               </div>
-              <ArrowRight
+              <Icon icon={ArrowRight}
                 size={16}
                 className="text-white/20 group-hover:text-church-accent group-hover:translate-x-1 transition-all flex-shrink-0"
               />

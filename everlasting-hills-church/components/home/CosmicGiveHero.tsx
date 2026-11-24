@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowDown, Heart, Shield, Sparkles, Zap } from "lucide-react";
+import { ArrowDown, Bank, Heart, Icon, Shield } from "@/components/icons";
 
 /**
  * Cosmic-themed hero for the /give page.
@@ -44,7 +44,6 @@ export default function CosmicGiveHero() {
               animate={{ opacity: 1, y: 0 }}
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/60 backdrop-blur-sm mb-6"
             >
-              <Sparkles size={12} className="text-[#e8768a]" />
               Partnership & Stewardship
             </motion.span>
 
@@ -84,7 +83,7 @@ export default function CosmicGiveHero() {
               {/* Core gradient orb */}
               <div className="absolute inset-20 rounded-full bg-gradient-to-br from-[#87102C] via-[#c93860] to-transparent blur-2xl opacity-60" />
               <div className="absolute inset-24 rounded-full bg-gradient-to-br from-[#e8768a] to-[#87102C] flex items-center justify-center shadow-2xl shadow-[#87102C]/50">
-                <Heart size={48} className="text-white" />
+                <Icon icon={Heart} size={48} className="text-white" />
               </div>
               {/* Tiny orbiting dots */}
               <div className="absolute top-4 left-1/2 w-2 h-2 -translate-x-1/2 rounded-full bg-[#e8768a]" />
@@ -97,21 +96,21 @@ export default function CosmicGiveHero() {
           {/* ── RIGHT: bento trust cards ── */}
           <div className="space-y-4">
             <TrustCard
-              icon={<Zap size={18} />}
+              icon={<Icon icon={Bank} size={18} />}
               eyebrow="Zero fees"
               primary="100% direct to ministry"
               secondary="Bank transfer with no payment gateway cut"
               delay={0.3}
             />
             <TrustCard
-              icon={<Shield size={18} />}
+              icon={<Icon icon={Shield} size={18} />}
               eyebrow="Audited annually"
               primary="Transparent stewardship"
               secondary="Published statements every fiscal year"
               delay={0.4}
             />
             <TrustCard
-              icon={<Heart size={18} />}
+              icon={<Icon icon={Heart} size={18} />}
               eyebrow="Where it goes"
               primary="Pastoral care, outreach, building"
               secondary="Your gift supports the local body and beyond"
@@ -127,10 +126,7 @@ export default function CosmicGiveHero() {
               className="group w-full inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#87102C] to-[#a52242] hover:from-[#6E0C24] hover:to-[#87102C] px-6 py-4 font-bold text-sm transition-all shadow-lg shadow-[#87102C]/30 hover:shadow-xl hover:shadow-[#87102C]/40 hover:-translate-y-0.5"
             >
               View account details
-              <ArrowDown
-                size={16}
-                className="group-hover:translate-y-0.5 transition-transform"
-              />
+              <Icon icon={ArrowDown} size={16} className="group-hover:translate-y-0.5 transition-transform" />
             </motion.button>
           </div>
         </div>

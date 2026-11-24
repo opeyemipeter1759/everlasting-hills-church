@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Plus, Trash2, UserPlus, X } from "lucide-react";
+import { CaretDown, Icon, Plus, Trash, UserPlus, X } from "@/components/icons";
 import {
   useAddFacilitator,
   useAddSession,
@@ -63,7 +63,7 @@ export default function CohortsTab({ courseId }: { courseId: string }) {
           <input type="number" min={0} max={20} className={input} value={form.minSessions} onChange={(e) => setForm({ ...form, minSessions: e.target.value })} />
         </label>
         <button type="submit" disabled={create.isPending} className="cls-btn cls-btn-primary !py-2">
-          <Plus className="h-4 w-4" aria-hidden /> Start
+          <Icon icon={Plus} size={24} className="h-4 w-4" /> Start
         </button>
       </form>
 
@@ -117,7 +117,7 @@ function CohortCard({ cohort, courseId, open, onToggle }: { cohort: AdminCohort;
         </span>
         <span className="flex items-center gap-2">
           <span className={`cls-chip ${cohort.status === "CLOSED" ? "!bg-black/5 !text-black/50 dark:!bg-white/10 dark:!text-white/50" : ""}`}>{cohort.status === "OPEN" ? "Open" : "Closed"}</span>
-          <ChevronDown className={`h-5 w-5 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+          <Icon icon={CaretDown} size={24} className={`h-5 w-5 transition-transform ${open ? "rotate-180" : ""}`} />
         </span>
       </button>
 
@@ -155,7 +155,7 @@ function CohortCard({ cohort, courseId, open, onToggle }: { cohort: AdminCohort;
                     {s.location ? ` · ${s.location}` : ""}
                   </span>
                   <button type="button" onClick={() => setRemoving(s.id)} className="text-black/40 hover:text-red-600 dark:text-white/40" aria-label={`Remove ${s.title}`}>
-                    <Trash2 className="h-4 w-4" />
+                    <Icon icon={Trash} size={24} className="h-4 w-4" />
                   </button>
                 </li>
               ))}
@@ -182,7 +182,7 @@ function CohortCard({ cohort, courseId, open, onToggle }: { cohort: AdminCohort;
                     onClick={() => attempt(removeFacilitator.mutateAsync({ cohortId: cohort.id, memberId: m.id }), "Facilitator removed")}
                     aria-label={`Remove ${m.firstName}`}
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <Icon icon={X} size={24} className="h-3.5 w-3.5" />
                   </button>
                 </span>
               ))}
@@ -201,7 +201,7 @@ function CohortCard({ cohort, courseId, open, onToggle }: { cohort: AdminCohort;
                         }}
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[var(--color-blush)] dark:text-white dark:hover:bg-white/[0.06]"
                       >
-                        <UserPlus className="h-4 w-4 text-[var(--color-burgundy)]" aria-hidden />
+                        <Icon icon={UserPlus} size={24} className="h-4 w-4 text-[var(--color-burgundy)]" />
                         {p.firstName} {p.lastName}
                       </button>
                     </li>

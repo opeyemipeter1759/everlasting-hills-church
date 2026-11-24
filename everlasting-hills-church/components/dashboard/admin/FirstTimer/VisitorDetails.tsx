@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Briefcase, Cake, ClipboardCopy, Check, Home, Loader2, Mail, MapPin, MessageCircle, Phone, Sparkles } from "lucide-react";
+import { Briefcase, Cake, ClipboardCopy, Check, Home, Loader2, Mail, MapPin, MessageCircle, Phone, Lightbulb } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ui/toast/toast";
 import { userMessageForError } from "@/lib/api/user-message";
@@ -194,7 +194,7 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
               onClick={analyse}
               className="inline-flex items-center gap-2 rounded-xl border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/[0.08] px-3.5 py-2 text-xs font-semibold text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-500/15 transition-colors"
             >
-              <Sparkles size={13} />
+              <Lightbulb size={13} />
               Analyse with Gemini AI
             </button>
           ) : loading ? (
@@ -211,7 +211,7 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
               <div className="rounded-xl border border-violet-100 dark:border-violet-500/20 bg-violet-50/60 dark:bg-violet-500/[0.06] p-3.5 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
-                    <Sparkles size={11} /> Gemini Insight
+                    <Lightbulb size={11} /> Gemini Insight
                   </p>
                   <div className="flex items-center gap-1.5">
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold capitalize ${SENTIMENT_COLOR[analysis.sentiment] ?? SENTIMENT_COLOR.neutral}`}>

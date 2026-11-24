@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Expand, Sparkles, X } from "lucide-react";
+import { ArrowsOutSimple, Icon, X } from "@/components/icons";
 import { useEffect, useState } from "react";
 import NextImage from "next/image";
 import ScrollReveal from "@/components/home/ScrollReveal";
@@ -109,7 +109,7 @@ export default function FlyerShowcase() {
 
                   {/* Hover hint pill */}
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-white/95 text-[#87102C] px-3.5 py-1.5 text-xs font-bold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm">
-                    <Expand size={12} />
+                    <Icon icon={ArrowsOutSimple} size={12} />
                     View full size
                   </div>
                 </div>
@@ -138,7 +138,7 @@ export default function FlyerShowcase() {
               aria-label="Close enlarged view"
               className="absolute top-5 right-5 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center text-white transition-colors"
             >
-              <X size={20} />
+              <Icon icon={X} size={20} />
             </button>
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
@@ -194,7 +194,6 @@ function FlyerPlaceholder({ loading = false }: { loading?: boolean }) {
         }}
       />
       <div className="relative z-10 text-white">
-        <Sparkles size={36} className="mx-auto mb-5 text-[#FFB3C1] opacity-60" />
         <p className="text-3xl sm:text-4xl font-bold font-serif italic mb-2">
           Heaven on Earth
         </p>

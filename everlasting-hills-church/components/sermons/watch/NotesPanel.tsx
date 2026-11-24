@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Lock, Loader2 } from 'lucide-react';
+import { CircleNotch, Icon, Lock } from "@/components/icons";
 import { useSermonNote } from '@/lib/api';
 import { showToast } from '@/components/ui/toast/toast';
 
@@ -41,7 +41,7 @@ export default function NotesPanel({
   if (!isLoggedIn) {
     return (
       <div className="flex flex-col items-center gap-2 py-10 text-center">
-        <Lock size={20} className="text-gray-300 dark:text-gray-600" />
+        <Icon icon={Lock} size={20} className="text-gray-300 dark:text-gray-600" />
         <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Private notes are for members</p>
         <p className="text-xs text-gray-400 dark:text-gray-600 max-w-xs">
           Log in to jot down reflections while you listen — only you can see these.
@@ -67,7 +67,7 @@ export default function NotesPanel({
           disabled={saveNote.isPending}
           className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg bg-[#87102C] text-white hover:bg-[#6E0C24] disabled:opacity-50 transition-all"
         >
-          {saveNote.isPending && <Loader2 size={12} className="animate-spin" />}
+          {saveNote.isPending && <Icon icon={CircleNotch} size={12} className="animate-spin" />}
           {saveNote.isPending ? 'Saving…' : 'Save Note'}
         </button>
       </div>

@@ -2,13 +2,7 @@
 
 import { useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
-import {
-  CalendarDays,
-  CheckCircle2,
-  Loader2,
-  Plus,
-  ReceiptText,
-} from "lucide-react";
+import { CalendarDots, CheckCircle, CircleNotch, Icon, Plus, Receipt } from "@/components/icons";
 import {
   formatNaira,
   useAddPledgeInstallment,
@@ -157,11 +151,7 @@ export default function PledgeProgress({
 
       {pledge.balance <= 0 ? (
         <div className="mt-4 flex items-start gap-3 rounded-2xl bg-emerald-50 p-4 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-200">
-          <CheckCircle2
-            size={21}
-            className="mt-0.5 shrink-0"
-            aria-hidden="true"
-          />
+          <Icon icon={CheckCircle} size={21} className="mt-0.5 shrink-0" />
           <div>
             <p className="font-black">Pledge completed</p>
             <p className="mt-0.5 text-xs opacity-80">
@@ -179,7 +169,7 @@ export default function PledgeProgress({
           </Link>
           <details className="mt-1 rounded-2xl border border-[#dcb9a4]/60 bg-white/60 dark:border-white/10 dark:bg-white/[0.03]">
             <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-black text-[#87102C] marker:hidden dark:text-rose-200">
-              <Plus size={17} aria-hidden="true" /> Record an installment
+              <Icon icon={Plus} size={17} /> Record an installment
             </summary>
             <form
               onSubmit={submit}
@@ -254,13 +244,9 @@ export default function PledgeProgress({
                 className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-4 text-sm font-black text-white hover:bg-[#6f0d24] disabled:opacity-60 sm:w-auto"
               >
                 {add.isPending ? (
-                  <Loader2
-                    size={16}
-                    className="animate-spin"
-                    aria-hidden="true"
-                  />
+                  <Icon icon={CircleNotch} size={16} className="animate-spin" />
                 ) : (
-                  <Plus size={16} aria-hidden="true" />
+                  <Icon icon={Plus} size={16} />
                 )}
                 {add.isPending ? "Recording…" : "Record installment"}
               </button>
@@ -271,7 +257,7 @@ export default function PledgeProgress({
 
       <details className="mt-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 py-2 text-sm font-bold text-gray-700 marker:hidden dark:text-white/75">
-          <ReceiptText size={16} aria-hidden="true" />
+          <Icon icon={Receipt} size={16} />
           Giving history ({installments.length})
         </summary>
         {installments.length ? (
@@ -295,7 +281,7 @@ export default function PledgeProgress({
                   dateTime={installment.givenOn}
                   className="inline-flex shrink-0 items-center gap-1 text-xs text-gray-500 dark:text-white/50"
                 >
-                  <CalendarDays size={13} aria-hidden="true" />{" "}
+                  <Icon icon={CalendarDots} size={13} />{" "}
                   {shortDate(installment.givenOn)}
                 </time>
               </li>

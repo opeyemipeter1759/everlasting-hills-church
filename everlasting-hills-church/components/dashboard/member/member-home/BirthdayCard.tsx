@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Cake, PartyPopper, Send, Loader2, MessageCircleHeart, Sparkles } from "lucide-react";
+import { Cake, PartyPopper, Send, Loader2, MessageCircleHeart } from "lucide-react";
 import { Avatar, timeAgo } from "../../../sermons/watch/chatUi";
 import { ConfettiFall } from "@/components/ui/motion/ConfettiFall";
 import { showToast } from "@/components/ui/toast/toast";
@@ -82,10 +82,9 @@ function MyBirthdayWall({ memberId }: { memberId: string }) {
         <div className="flex items-center gap-3.5">
           <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 shadow-lg shadow-amber-500/30">
             <PartyPopper size={22} className="text-[#4a0819]" aria-hidden="true" />
-            <Sparkles size={13} className="absolute -right-1 -top-1 text-amber-200 animate-pulse" aria-hidden="true" />
           </span>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-200">It&apos;s your day ✨</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-200">It&apos;s your day</p>
             <h2 className="text-base font-bold text-white tracking-tight">Happy Birthday! 🎉🎂</h2>
           </div>
         </div>

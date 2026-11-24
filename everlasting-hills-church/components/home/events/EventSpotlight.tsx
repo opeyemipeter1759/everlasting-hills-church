@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Icon } from "@/components/icons";
 import type { EventSummary } from "@/types";
 import { useRegisteredEvents } from "@/hooks";
 import ScrollReveal from "../ScrollReveal";
@@ -28,7 +28,6 @@ export default function EventSpotlight({ events }: { events: EventSummary[] }) {
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
             <div className="max-w-xl">
               <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-[#87102C] xs:tracking-[0.25em]">
-                <Sparkles size={13} />
                 Upcoming Events
               </span>
               <h2 className="mt-3 text-3xl font-bold leading-[1.1] tracking-tight text-[#111] text-balance md:text-4xl">
@@ -43,7 +42,7 @@ export default function EventSpotlight({ events }: { events: EventSummary[] }) {
               className="group inline-flex items-center gap-2 text-sm font-semibold text-[#87102C] transition-colors hover:text-[#6E0C24]"
             >
               View all events
-              <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+              <Icon icon={ArrowRight} size={15} className="transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
         </ScrollReveal>

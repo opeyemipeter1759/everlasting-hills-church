@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sparkles, Type, X } from "lucide-react";
+import { Type, X, PenLine } from "lucide-react";
 import { AI_ACTIONS, TITLES_BUSY, wordCount, type Job } from "./actions";
 import { PanelError, PanelLoading } from "./PanelStates";
 import { PanelFooter } from "./PanelFooter";
@@ -34,7 +34,7 @@ export function AiPanel({ job, onClose, onRetry, onApplyTitle }: {
   const rewrite = result && result.action !== "titles" ? result : null;
   const unchanged = Boolean(rewrite && rewrite.text.trim() === job.target.text.trim());
   const title = job.action === "titles" ? "Title ideas" : meta?.label ?? "AI suggestion";
-  const Icon = job.action === "titles" ? Type : meta?.Icon ?? Sparkles;
+  const Icon = job.action === "titles" ? Type : meta?.Icon ?? PenLine;
   const words = wordCount(job.target.text);
   const apply = (how: "replace" | "insert") => {
     if (!rewrite) return;

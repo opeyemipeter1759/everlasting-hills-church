@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Clock, MapPin } from "lucide-react";
+import { Clock, Icon, MapPin } from "@/components/icons";
 import type { Announcement } from "@/hooks";
 import { formatHHMM12h } from "@/lib/utils/time";
 import { getAnnouncementIcon } from "./getAnnouncementIcon";
@@ -20,7 +20,7 @@ export default function AnnouncementItem({ announcement, isNew }: AnnouncementIt
   // markers is shorter than it looks, and clamping it would hide nothing.
   const preview = stripMarkdown(announcement.body);
   const isLong = preview.length > 140;
-  const Icon = getAnnouncementIcon(announcement.title);
+  const Glyph = getAnnouncementIcon(announcement.title);
 
   return (
     <div
@@ -43,7 +43,7 @@ export default function AnnouncementItem({ announcement, isNew }: AnnouncementIt
             isNew ? "bg-[#87102C]/35 text-[#FFB3C1]" : "bg-white/8 text-white/50"
           }`}
         >
-          <Icon size={16} />
+          <Icon icon={Glyph} size={16} />
         </span>
       )}
       <div className="min-w-0 flex-1">
@@ -77,7 +77,7 @@ export default function AnnouncementItem({ announcement, isNew }: AnnouncementIt
             {announcement.eventTime && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] py-1 pl-1 pr-2.5">
                 <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[#87102C]/40 text-[#FFB3C1]">
-                  <Clock size={9} />
+                  <Icon icon={Clock} size={9} />
                 </span>
                 <span className="text-[10px] font-bold text-white/75">{formatHHMM12h(announcement.eventTime)}</span>
               </span>
@@ -85,7 +85,7 @@ export default function AnnouncementItem({ announcement, isNew }: AnnouncementIt
             {announcement.venue && (
               <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] py-1 pl-1 pr-2.5">
                 <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[#87102C]/40 text-[#FFB3C1]">
-                  <MapPin size={9} />
+                  <Icon icon={MapPin} size={9} />
                 </span>
                 <span className="truncate text-[10px] font-bold text-white/75">{announcement.venue}</span>
               </span>

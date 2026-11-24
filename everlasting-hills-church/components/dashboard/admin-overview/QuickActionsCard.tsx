@@ -6,8 +6,8 @@ import {
   Megaphone,
   Mic,
   UserPlus,
-  Zap,
   type LucideIcon,
+  MousePointerClick,
 } from "lucide-react";
 import DashboardCard from "./DashboardCard";
 
@@ -22,7 +22,7 @@ const ACTIONS: { label: string; href: string; icon: LucideIcon }[] = [
 
 export default function QuickActionsCard() {
   return (
-    <DashboardCard kicker="Shortcuts" title="Quick Actions" icon={Zap}>
+    <DashboardCard kicker="Shortcuts" title="Quick Actions" icon={MousePointerClick}>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {ACTIONS.map(({ label, href, icon: Icon }) => (
           <Link

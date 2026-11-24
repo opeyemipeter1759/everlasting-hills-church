@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Pause, Play } from 'lucide-react';
+import { Icon, Pause, Play } from "@/components/icons";
 import { useSermonPlayer } from '@/context/SermonPlayerContext';
 import { formatSermonDuration, type WatchSermon } from '@/lib/api/sermon-types';
 
@@ -46,7 +46,7 @@ export default function SeriesEpisodeList({ sermon }: { sermon: WatchSermon }) {
             onClick={() => play(sermon.slug, episodes[0].id)}
             className="inline-flex shrink-0 items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 transition-colors"
           >
-            <Play size={12} fill="currentColor" /> Play from Part 1
+            <Icon icon={Play} size={12} weight="fill" /> Play from Part 1
           </button>
         )}
       </header>
@@ -69,11 +69,15 @@ export default function SeriesEpisodeList({ sermon }: { sermon: WatchSermon }) {
               >
                 <span className="w-5 shrink-0 text-right text-sm tabular-nums text-gray-400 dark:text-gray-500">
                   {isCurrent ? (
-                    <Pause size={14} className="ml-auto text-[#87102C] dark:text-[#e8768a]" fill="currentColor" />
+                    <Icon icon={Pause} size={14} className="ml-auto text-[#87102C] dark:text-[#e8768a]" weight="fill" />
                   ) : (
                     <>
                       <span className="group-hover:hidden">{i + 1}</span>
-                      <Play size={14} className="ml-auto hidden text-gray-700 dark:text-gray-200 group-hover:block" fill="currentColor" />
+                      <Icon icon={Play}
+                        size={14}
+                        className="ml-auto hidden text-gray-700 dark:text-gray-200 group-hover:block"
+                        weight="fill"
+                      />
                     </>
                   )}
                 </span>

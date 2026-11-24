@@ -1,14 +1,14 @@
-import type { LucideIcon } from "lucide-react";
+import { Icon, type IconComponent } from "@/components/icons";
 import type { ReactNode } from "react";
 
 interface PanelHeaderProps {
-  icon: LucideIcon;
+  icon: IconComponent;
   eyebrow: string;
   title: string;
   badge?: ReactNode;
 }
 
-export default function PanelHeader({ icon: Icon, eyebrow, title, badge }: PanelHeaderProps) {
+export default function PanelHeader({ icon: Glyph, eyebrow, title, badge }: PanelHeaderProps) {
   return (
     <div
       className="flex items-center justify-between gap-3 px-5 py-4"
@@ -16,7 +16,7 @@ export default function PanelHeader({ icon: Icon, eyebrow, title, badge }: Panel
     >
       <div className="flex min-w-0 items-center gap-3">
         <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/15">
-          <Icon size={15} className="text-[#FFB3C1]" aria-hidden="true" />
+          <Icon icon={Glyph} size={15} className="text-[#FFB3C1]" />
         </span>
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.11em] xs:tracking-[0.22em] text-[#FFB3C1]/70">{eyebrow}</p>

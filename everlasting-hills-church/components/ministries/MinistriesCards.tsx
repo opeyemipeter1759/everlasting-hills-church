@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Crown, Heart, Zap, Users, type LucideIcon } from "lucide-react";
+import { Crown, Heart, Icon, type IconComponent, TeensIcon, Users } from "@/components/icons";
 import ScrollReveal from "@/components/home/ScrollReveal";
 
 export interface MinistryGroup {
@@ -14,10 +14,10 @@ export interface MinistryGroup {
 }
 
 /** Icons are fixed per group (not editable via the CMS text form). */
-const ICONS: Record<string, LucideIcon> = {
+const ICONS: Record<string, IconComponent> = {
   mens: Crown,
   womens: Heart,
-  teens: Zap,
+  teens: TeensIcon,
   couples: Users,
 };
 
@@ -66,7 +66,7 @@ function DotPattern() {
 
 function MinistryCard({ m, inverted }: { m: MinistryGroup; inverted: boolean }) {
   const [flipped, setFlipped] = useState(false);
-  const Icon = ICONS[m.slug] ?? Crown;
+  const Glyph = ICONS[m.slug] ?? Crown;
 
   return (
     <Link
@@ -94,7 +94,7 @@ function MinistryCard({ m, inverted }: { m: MinistryGroup; inverted: boolean }) 
               inverted ? "bg-white/15" : "bg-[#87102C]/8"
             }`}
           >
-            <Icon size={22} strokeWidth={1.8} className={inverted ? "text-white" : "text-[#87102C]"} />
+            <Icon icon={Glyph} size={22} className={inverted ? "text-white" : "text-[#87102C]"} />
           </div>
 
           <h3 className={`text-xl font-bold mb-3 leading-tight ${inverted ? "text-white" : "text-[#111]"}`}>

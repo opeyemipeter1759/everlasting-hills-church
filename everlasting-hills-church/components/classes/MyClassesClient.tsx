@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Users } from "lucide-react";
+import { ArrowRight, Icon, Users } from "@/components/icons";
 import { useClasses, useFacilitating, type ClassListItem, type MembershipStatus } from "@/lib/api/classes";
 import { ClassTheme, EmphasisHeading } from "./theme";
 import Arches from "./Arches";
@@ -94,7 +94,10 @@ export default function MyClassesClient() {
                     >
                       {s.text}
                     </span>
-                    <ArrowRight className="h-5 w-5 flex-none text-[var(--color-burgundy)] transition-transform group-hover:translate-x-1 dark:text-white/70" aria-hidden />
+                    <Icon icon={ArrowRight}
+                      size={24}
+                      className="h-5 w-5 flex-none text-[var(--color-burgundy)] transition-transform group-hover:translate-x-1 dark:text-white/70"
+                    />
                   </span>
                 </Link>
                 {canApply(c, data.membershipStatus) && (
@@ -124,7 +127,7 @@ export default function MyClassesClient() {
                     <span className="block font-semibold text-[var(--color-ink)] dark:text-white">{c.Course.title}: {c.name}</span>
                     <span className="block text-sm text-black/60 dark:text-white/60">Began {formatDate(c.startsOn)}</span>
                   </span>
-                  <span className="cls-chip"><Users className="h-3.5 w-3.5" aria-hidden />{c._count.Enrollments}</span>
+                  <span className="cls-chip"><Icon icon={Users} size={24} className="h-3.5 w-3.5" />{c._count.Enrollments}</span>
                 </Link>
               </li>
             ))}

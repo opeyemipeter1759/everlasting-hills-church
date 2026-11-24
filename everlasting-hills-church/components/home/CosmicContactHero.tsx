@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin } from "lucide-react";
+import { Icon, MapPin } from "@/components/icons";
 import { useDirections } from "../../utils/UseDirection";
 import DirectionsModal from "./DirectionModal";
 import ContactSection from "./ContactSection";
@@ -46,7 +46,7 @@ export default function CosmicContactHero({
             className="flex flex-col items-center gap-4"
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/60 backdrop-blur-sm">
-              <MapPin size={12} className="text-[#e8768a]" />
+              <Icon icon={MapPin} size={12} className="text-[#e8768a]" />
               {eyebrow}
             </span>
 

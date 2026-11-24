@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChangeEvent } from "react";
-import { Search } from "lucide-react";
+import { Icon, MagnifyingGlass } from "@/components/icons";
 
 interface VideoSearchInputProps {
   value: string;
@@ -13,7 +13,7 @@ export default function VideoSearchInput({ value, onChange }: VideoSearchInputPr
     <div className="relative w-full sm:w-64">
       <label htmlFor="video-search" className="sr-only">Search videos</label>
       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-        <Search className="h-4 w-4 text-[#FFB3C1]" />
+        <Icon icon={MagnifyingGlass} size={24} className="h-4 w-4 text-[#FFB3C1]" />
       </div>
       <input
         id="video-search"

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { BookOpen, Play, Sparkles } from "lucide-react";
+import { BookOpen, Icon, Play, WordOfTheDayIcon } from "@/components/icons";
 import { useDailyScripture } from "@/lib/api/daily-scripture";
 import { readyWordOfTheDay, useWordOfTheDay } from "@/lib/sermon-digest";
 import { useHillsConfession } from "@/components/sermon-digest/useHillsConfession";
@@ -132,7 +132,7 @@ function WatchButton({ href, compact = false }: { href: string; compact?: boolea
       }`}
     >
       <span className="absolute inset-0 w-1/2 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent motion-safe:animate-shine" />
-      <Play className="relative h-3 w-3 fill-white" aria-hidden="true" />
+      <Icon icon={Play} size={24} className="relative h-3 w-3 text-white" weight="fill" />
       <span className="relative">Watch</span>
     </a>
   );
@@ -258,7 +258,7 @@ export default function HeroWordNotes({ placement }: { placement: "sides" | "inl
         <PinnedNote tilt="left" delay="0ms">
           {scripture && (
             <>
-              <NoteLabel icon={<BookOpen className="h-3 w-3" aria-hidden="true" />}>Today’s scripture</NoteLabel>
+              <NoteLabel icon={<Icon icon={BookOpen} size={24} className="h-3 w-3" />}>Today’s scripture</NoteLabel>
               <p style={HAND} className="mt-2 text-xl leading-snug text-white/90">
                 “{noteSnippet(scripture.text, 90)}”
               </p>
@@ -269,7 +269,7 @@ export default function HeroWordNotes({ placement }: { placement: "sides" | "inl
           )}
           {sermonWord && (
             <div className={scripture ? "mt-4 border-t border-white/10 pt-4" : ""}>
-              <NoteLabel icon={<Sparkles className="h-3 w-3" aria-hidden="true" />}>Word of the day</NoteLabel>
+              <NoteLabel icon={<Icon icon={WordOfTheDayIcon} size={12} />}>Word of the day</NoteLabel>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
                 <Word size="text-3xl">{sermonWord.word}</Word>
                 <WatchButton href={sermonWord.watchUrl} compact />
@@ -294,7 +294,7 @@ export default function HeroWordNotes({ placement }: { placement: "sides" | "inl
           className="opacity-0 animate-fade-in absolute right-full top-1/2 z-20 mr-10 hidden w-[250px] -translate-y-1/2 text-left xl:block"
         >
           <PinnedNote tilt="left" delay="0ms">
-            <NoteLabel icon={<BookOpen className="h-3 w-3" aria-hidden="true" />}>Today’s scripture</NoteLabel>
+            <NoteLabel icon={<Icon icon={BookOpen} size={24} className="h-3 w-3" />}>Today’s scripture</NoteLabel>
             <p style={HAND} className="mt-3 text-[22px] leading-snug text-white/90">
               “{noteSnippet(scripture.text)}”
             </p>
@@ -317,7 +317,7 @@ export default function HeroWordNotes({ placement }: { placement: "sides" | "inl
           className="opacity-0 animate-fade-in absolute left-full top-1/2 z-20 ml-10 hidden w-[250px] -translate-y-1/2 text-left xl:block"
         >
           <PinnedNote tilt="right" delay="-3s">
-            <NoteLabel icon={<Sparkles className="h-3 w-3" aria-hidden="true" />}>Word of the day</NoteLabel>
+            <NoteLabel icon={<Icon icon={WordOfTheDayIcon} size={12} />}>Word of the day</NoteLabel>
             <div className="mt-2">
               <Word size="text-3xl leading-tight">{sermonWord.word}</Word>
             </div>

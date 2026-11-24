@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageCircle, Loader2, Trash2, Send } from 'lucide-react';
+import { ChatCircle, CircleNotch, Icon, PaperPlaneTilt, Trash } from "@/components/icons";
 import { useSermonComments, useAddComment, useDeleteComment } from '@/lib/api';
 import { showToast } from '@/components/ui/toast/toast';
 import type { SermonComment } from '@/lib/api/sermon-types';
@@ -78,7 +78,7 @@ function Bubble({
           )}
           {isMine && (
             <button type="button" onClick={onDelete} className="text-[10px] font-semibold text-gray-400 hover:text-red-500 transition-colors inline-flex items-center gap-0.5">
-              <Trash2 size={9} /> Delete
+              <Icon icon={Trash} size={9} /> Delete
             </button>
           )}
         </div>
@@ -143,7 +143,7 @@ export default function CommentsPanel({
         <CommentsSkeleton />
       ) : total === 0 ? (
         <div className="flex flex-col items-center gap-2 py-10 text-center">
-          <MessageCircle size={20} className="text-gray-300 dark:text-gray-600" />
+          <Icon icon={ChatCircle} size={20} className="text-gray-300 dark:text-gray-600" />
           <p className="text-sm text-gray-400 dark:text-gray-500">No comments yet — be the first to share.</p>
         </div>
       ) : (
@@ -206,7 +206,7 @@ export default function CommentsPanel({
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#87102C] text-white hover:bg-[#6E0C24] disabled:opacity-40 transition-all"
               aria-label="Send"
             >
-              {addComment.isPending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+              {addComment.isPending ? <Icon icon={CircleNotch} size={15} className="animate-spin" /> : <Icon icon={PaperPlaneTilt} size={15} />}
             </button>
           </div>
         </div>

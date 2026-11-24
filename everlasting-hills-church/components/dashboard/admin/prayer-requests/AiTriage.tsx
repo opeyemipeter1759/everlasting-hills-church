@@ -1,4 +1,4 @@
-import { AlertTriangle, Sparkles } from "lucide-react";
+import { AlertTriangle, Tag } from "lucide-react";
 import type { PrayerRequestRow } from "@/lib/api/prayer-requests";
 import { URGENCY_STYLE } from "./shared";
 
@@ -7,7 +7,7 @@ export default function AiTriage({ r }: { r: PrayerRequestRow }) {
   if (!(r.aiCategory || r.aiUrgency || r.aiRouteTo)) return null;
   return (
     <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-[#FFF4F6]/50 dark:bg-white/[0.03] px-3 py-2">
-      <Sparkles size={11} className="shrink-0 text-[#87102C]/50 dark:text-[#e8768a]/50" aria-hidden="true" />
+      <Tag size={11} className="shrink-0 text-[#87102C]/50 dark:text-[#e8768a]/50" aria-hidden="true" />
       {r.aiUrgency && (
         <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${URGENCY_STYLE[r.aiUrgency]?.className ?? URGENCY_STYLE.routine.className}`}>
           {r.aiUrgency === "urgent" && <AlertTriangle size={9} />}

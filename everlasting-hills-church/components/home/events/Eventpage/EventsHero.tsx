@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Sparkles } from "lucide-react";
 
 export interface EventsHeroProps {
   eyebrow?: string;
@@ -28,7 +27,6 @@ export default function EventsHero({
 
       <div className="relative mx-auto max-w-6xl px-4 xs:px-5 text-center sm:px-8">
         <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-[#FFB3C1]">
-          <Sparkles size={13} />
           {eyebrow}
         </span>
         <h1 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight text-balance sm:text-5xl md:text-6xl">

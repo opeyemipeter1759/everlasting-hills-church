@@ -5,27 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import AddCellModal from "./AddCellModal";
-import {
-  Users,
-  BookOpen,
-  BookOpenCheck,
-  Flame,
-  HeartHandshake,
-  Home,
-  Heart,
-  ShieldCheck,
-  Sprout,
-  ChevronRight,
-  ChevronDown,
-  Plus,
-  Minus,
-} from "lucide-react";
+import { BookOpen, BookOpenText, CaretDown, CaretRight, Fire, HandHeart, Heart, House, Icon, Minus, Plant, Plus, ShieldCheck, Users } from "@/components/icons";
 
 // ── Benefits ──────────────────────────────────────────────────────────────────
 
 const BENEFITS = [
   { icon: ShieldCheck, title: "Power",              body: "The Holy Spirit moves in intimate spaces. When a small group gathers with open hearts, something shifts — in the room, and in every person present." },
-  { icon: Sprout,      title: "Transformation",     body: "Real change rarely happens in private. When people know your name and your story, growth stops being optional and starts becoming inevitable." },
+  { icon: Plant,      title: "Transformation",     body: "Real change rarely happens in private. When people know your name and your story, growth stops being optional and starts becoming inevitable." },
   { icon: Heart,       title: "Prayers",            body: "Every burden you carry, your cell carries too. Specific, fervent, consistent intercession — the kind that actually moves things — happens in small rooms." },
   { icon: BookOpen,    title: "Word",               body: "You won't just hear Scripture — you'll wrestle with it, apply it, and be held to it. Cell study turns Sunday's sermon into Monday's reality." },
   { icon: Users,       title: "Fellowship and Love", body: "Shared meals. Honest conversations. People who show up when life gets hard. This is the early church pattern — and it changes everything." },
@@ -35,23 +21,23 @@ const BENEFITS = [
 
 const PILLARS = [
   {
-    icon: BookOpenCheck,
+    icon: BookOpenText,
     title: "Truth Application",
     body: "We do not gather only to learn the truth. We gather to learn how to live it. Every study moves from the page to the practice, from what the Word says to what it means for your Monday morning.",
   },
   {
-    icon: Flame,
+    icon: Fire,
     title: "Power Centre",
     body: "“Is any among you afflicted? Let him pray.” The cell is where burdens are laid down and lifted in prayer. It is an avenue for the power of God to meet the weight every member carries.",
     verse: "James 5 : 13",
   },
   {
-    icon: HeartHandshake,
+    icon: HandHeart,
     title: "Welfare",
     body: "No one falls through the cracks. The cell is pastoral care up close, a place where needs are seen, carried, and met by people who genuinely know your name and your story.",
   },
   {
-    icon: Home,
+    icon: House,
     title: "Family",
     body: "This is where the crowd becomes kin. Sunday service members become family members, bound together not by a building but by shared life, shared meals, and shared faith.",
   },
@@ -118,7 +104,7 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
           {q}
         </span>
         <span className="flex-shrink-0 w-7 h-7 rounded-full border border-white/15 flex items-center justify-center mt-0.5 group-hover:border-church-accent/50 group-hover:text-church-accent text-white/40 transition-all">
-          {open ? <Minus size={13} /> : <Plus size={13} />}
+          {open ? <Icon icon={Minus} size={13} /> : <Icon icon={Plus} size={13} />}
         </span>
       </button>
       <AnimatePresence initial={false}>
@@ -222,13 +208,13 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
               href="/home-cell/find"
               className="inline-flex items-center gap-2 rounded-full bg-church-maroon px-8 py-4 text-sm font-black text-white tracking-wide transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/40"
             >
-              Find your cell <ChevronRight size={15} />
+              Find your cell <Icon icon={CaretRight} size={15} />
             </a>
             <button
               onClick={() => setShowAdd(true)}
               className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-black text-church-dark tracking-wide transition-all hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
             >
-              Register your cell <ChevronRight size={15} />
+              Register your cell <Icon icon={CaretRight} size={15} />
             </button>
           </motion.div>
         </div>
@@ -350,7 +336,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
                   </span>
                   <div>
                     <div className="w-11 h-11 rounded-2xl bg-church-maroon/15 flex items-center justify-center mb-5 text-church-accent group-hover:bg-church-maroon group-hover:scale-110 transition-all duration-300">
-                      <p.icon size={19} strokeWidth={1.8} />
+                      <Icon icon={p.icon} size={19} />
                     </div>
                     <h3 className="font-display font-black text-xl sm:text-2xl tracking-tight text-white mb-3 group-hover:text-church-accent transition-colors duration-300">
                       {p.title}
@@ -406,7 +392,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
                 className={`bg-church-dark p-8 sm:p-10 group hover:bg-[#110208] transition-colors duration-300 ${i === 4 ? "sm:col-span-2 lg:col-span-1" : ""}`}
               >
                 <div className="w-12 h-12 rounded-2xl bg-church-maroon/15 flex items-center justify-center mb-6 text-church-accent group-hover:bg-church-maroon group-hover:scale-110 transition-all duration-300">
-                  <b.icon size={20} strokeWidth={1.8} />
+                  <Icon icon={b.icon} size={20} />
                 </div>
                 <h3 className="font-display font-black text-xl tracking-tight text-white mb-3 group-hover:text-church-accent transition-colors duration-300">
                   {b.title}
@@ -550,7 +536,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
               href="/home-cell/find"
               className="inline-flex items-center gap-2 rounded-full bg-church-maroon px-9 py-4 font-black text-sm text-white tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/40 transition-all"
             >
-              Find a Cell Near You <ChevronRight size={15} />
+              Find a Cell Near You <Icon icon={CaretRight} size={15} />
             </Link>
           </motion.div>
         </div>

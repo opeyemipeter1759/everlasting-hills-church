@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, ShieldCheck, Sparkles, MessageSquare, Star, TrendingUp, Headphones, Bookmark, GraduationCap } from "lucide-react";
+import { Calendar, ShieldCheck, MessageSquare, TrendingUp, Headphones, Bookmark, GraduationCap, BadgeCheck, Mic } from "lucide-react";
 import type { ProfileViewModel } from "@/components/dashboard/profile/profile-view-model";
 import { useClasses } from "@/lib/api/classes";
 import { DarkInsightChip } from "./InsightChips";
@@ -58,13 +58,13 @@ export function StoryPanel({ profile, tenure, role }: StoryPanelProps) {
         <div className="space-y-3">
           <DarkInsightChip icon={Calendar} label="Tenure" value={tenure} />
           <DarkInsightChip icon={ShieldCheck} label="Role" value={role} />
-          <DarkInsightChip icon={Sparkles} label="Membership" value="Active" />
+          <DarkInsightChip icon={BadgeCheck} label="Membership" value="Active" />
         </div>
 
         {hasEngagementStats && (
           <div className="space-y-3 pt-4 border-t border-white/10">
             {prayers > 0 && <DarkInsightChip icon={MessageSquare} label="Prayers submitted" value={`${prayers}`} />}
-            {testimonies > 0 && <DarkInsightChip icon={Star} label="Testimonies" value={`${testimonies}`} />}
+            {testimonies > 0 && <DarkInsightChip icon={Mic} label="Testimonies" value={`${testimonies}`} />}
             {profile.attendanceRate != null && (
               <DarkInsightChip icon={TrendingUp} label="Attendance rate" value={`${profile.attendanceRate}%`} />
             )}

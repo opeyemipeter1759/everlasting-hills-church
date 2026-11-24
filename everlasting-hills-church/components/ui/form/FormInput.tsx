@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import type { LucideIcon } from "lucide-react";
+import { Icon, type IconComponent } from "@/components/icons";
 
 const inputBase =
   "w-full text-sm rounded-xl px-4 py-3 transition-all duration-200 " +
@@ -20,13 +20,13 @@ export const labelBase =
 interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   required?: boolean;
-  icon?: LucideIcon;
+  icon?: IconComponent;
   error?: string;
   hint?: string;
 }
 
 export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
-  function FormInput({ label, required, icon: Icon, error, hint, id, className, ...rest }, ref) {
+  function FormInput({ label, required, icon: Glyph, error, hint, id, className, ...rest }, ref) {
     const inputId = id ?? `f-${label.replace(/\s+/g, "-").toLowerCase()}`;
     return (
       <div>
@@ -39,18 +39,15 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
             ref={ref}
             aria-invalid={!!error}
             aria-describedby={error ? `${inputId}-err` : undefined}
-            className={`${inputBase} ${Icon ? "pr-11" : ""} ${
+            className={`${inputBase} ${Glyph ? "pr-11" : ""} ${
               error
                 ? "border-red-300 focus:border-red-500 focus:ring-red-500/15 dark:border-red-500/50 dark:focus:border-red-500/70"
                 : ""
             } ${className ?? ""}`}
             {...rest}
           />
-          {Icon && (
-            <Icon
-              size={16}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#87102C]/55 dark:text-[#FFB3C1]/50 pointer-events-none"
-            />
+          {Glyph && (
+            <Icon icon={Glyph} size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#87102C]/55 dark:text-[#FFB3C1]/50 pointer-events-none" />
           )}
         </div>
         {error ? (

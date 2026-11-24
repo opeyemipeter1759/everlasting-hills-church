@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Icon } from "@/components/icons";
 import { MEMBERSHIP_WEEKS } from "./membership-content";
 
 const TOTAL_LESSONS = MEMBERSHIP_WEEKS.reduce((n, w) => n + w.lessons.length, 0);
@@ -163,7 +163,7 @@ export default function CurriculumTabs() {
                 disabled={!prev}
                 className="cls-btn cls-btn-outline !px-4 !py-2 !text-sm"
               >
-                <ArrowLeft className="h-4 w-4" aria-hidden />
+                <Icon icon={ArrowLeft} size={24} className="h-4 w-4" />
                 {prev ? `Week ${prev.number}` : "Start"}
               </button>
               <button
@@ -173,7 +173,7 @@ export default function CurriculumTabs() {
                 className="cls-btn cls-btn-primary !px-4 !py-2 !text-sm"
               >
                 {next ? `Week ${next.number}: ${next.stage}` : "Final week"}
-                <ArrowRight className="h-4 w-4" aria-hidden />
+                <Icon icon={ArrowRight} size={24} className="h-4 w-4" />
               </button>
             </div>
           </div>

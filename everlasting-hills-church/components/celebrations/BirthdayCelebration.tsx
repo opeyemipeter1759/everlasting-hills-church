@@ -2,7 +2,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
+import { Icon, X } from "@/components/icons";
 import { useMe } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { isBirthdayToday } from "@/lib/birthday";
@@ -200,7 +200,7 @@ export default function BirthdayCelebration() {
                 aria-label="Close birthday celebration"
                 className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white"
               >
-                <X size={16} aria-hidden="true" />
+                <Icon icon={X} size={16} />
               </button>
               <p className="text-4xl" aria-hidden="true">🎂</p>
               <h2 id={titleId} className="mt-2 font-serif text-2xl font-bold text-[#87102C] dark:text-[#FFB3C1]">

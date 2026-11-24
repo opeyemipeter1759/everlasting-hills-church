@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Icon } from "@/components/icons";
 import PageHero from "@/components/marketing/PageHero";
 import { getStructuredContent } from "@/lib/cms-page";
 import { getAllSiteSettings, type Cta } from "@/lib/site-settings";
@@ -89,7 +89,7 @@ export default async function AboutPage({ searchParams }: { searchParams: { prev
           <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">{c.cta.heading}</h2>
           <p className="mx-auto mt-4 max-w-xl text-white/55">{c.cta.body}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/visit" className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-7 py-3.5 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:bg-[#6E0C24]">Plan a Visit<ArrowRight size={16} /></Link>
+            <Link href="/visit" className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-7 py-3.5 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:bg-[#6E0C24]">Plan a Visit<Icon icon={ArrowRight} size={16} /></Link>
             <Link href="/cultures" className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-7 py-3.5 text-sm font-semibold transition-colors hover:bg-white/5">Our Culture</Link>
           </div>
         </div>
