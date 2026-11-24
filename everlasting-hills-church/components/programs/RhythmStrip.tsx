@@ -1,22 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import type { ProgramCard } from "@/lib/programs";
 import { BRAND } from "./accents";
-import { byRhythm, rhythmLine } from "./live";
-import { useNow } from "./useNow";
+import { byRhythm, rhythmLine, type RhythmItem } from "./live";
+import { usePageNow } from "./now";
 
 /**
  * "The rhythm of the house": what is on now and what is next across every
  * program, in one band. Live programs first, then the soonest. Recomputed
- * every minute from the server's windows, so it is right whenever you look.
+ * every minute (the page's shared clock) from the server's windows, so it is
+ * right whenever you look.
  */
-export function RhythmStrip({ programs, renderedAt }: { programs: ProgramCard[]; renderedAt: string }) {
-  const now = useNow(renderedAt);
+export function RhythmStrip({ programs }: { programs: RhythmItem[] }) {
+  const now = usePageNow();
   if (!programs.length) return null;
   const items = byRhythm(programs, now).map((p) => ({ p, line: rhythmLine(p, now) }));
   return (
-    <section aria-labelledby="rhythm-heading" className="border-y border-white/10 bg-white/[0.03] backdrop-blur-sm">
+    <section aria-labelledby="rhythm-heading" className="border-y border-white/10 bg-white/[0.03]">
       <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
         <h2 id="rhythm-heading" className="text-[13px] font-medium text-white/60">
           The rhythm of the house

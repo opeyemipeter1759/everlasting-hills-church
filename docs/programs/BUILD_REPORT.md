@@ -222,3 +222,47 @@ Not checked by eye: the admin screens need a real sign-in, which I don't have lo
 Tests:
 - `metadata.test.ts`: Programs follows Sermons in the menu; confirmed dates become Events, with the attendance mode taken from the format; programs to be announced produce none.
 - The frontend Programs, admin and navbar tests are at 33 of 33, and the backend Programs suite at 42 of 42.
+
+## Phase 8: verification and handover
+
+### Performance (Lighthouse, mobile, simulated 4G and a 4x slower CPU)
+
+Measured on `/programs` from a production build served locally.
+
+| | Performance | LCP | Total blocking time | CLS | Accessibility | Best practices | SEO |
+|---|---|---|---|---|---|---|---|
+| First build | 50 | 4.8 s | 3.8 s | 0 | 100 | 96 | 100 |
+| Final build | 68 | 2.6 s | 2.2 s | 0 | 100 | 96 | 100 |
+| For comparison: `/pre-marital-counselling` | 66 | 2.9 s | 2.1 s | | | | |
+
+What changed between the two builds:
+- The cards are rendered on the server. Only the Live badge and the "when" line are client pieces, and they share one minute-ticking clock.
+- The entrance is a CSS animation rather than Framer Motion. The page's total JavaScript fell from 144 kB to 106 kB.
+- The rhythm strip gets only the fields it needs, so scripture text and descriptions are no longer serialized twice.
+- I removed `backdrop-blur` from cards that are already 94% opaque, and from the strip. The hero's large `blur-3xl` filter became a plain radial gradient, which looks the same. "Style & Layout" had been the largest main-thread cost.
+
+LCP is 2.6 s against the 2.5 s target, now behind the site's shared shell rather than this page. What is left:
+- React, the shared chunks, and the global footer sections that every public page carries. These account for the rest of the blocking time.
+- The anchor verse's serif font swapping in.
+
+Possible follow-ups: `font-display: optional` for DM Serif Display, and lighter global footer sections. Both affect the whole site, so I have not made them.
+
+### Tests and checks
+
+- **Backend Programs suite:** 42 of 42 (schema, occurrences, scripture, public API, admin API, all against Postgres where relevant).
+- **Full backend suite** against the test database: everything passes except three Follow Up tests (`first-timer-visits`, `overview-month`, `pipeline.repository`). They still expect a fourth visit to count as "Third timer", which an earlier Follow Up change made "Fourth timer". They are not related to this work.
+  - The prompt's list of known failures (`visitors.service.spec.ts`, `jwt.strategy.spec.ts`) no longer applies: both pass now.
+  - In one full run, five more suites timed out because a production build was running alongside. They pass when run alone.
+- **Backend lint** (`eslint src --quiet`): clean.
+- **Backend type-check:** clean at every phase.
+- **Full frontend suite:** 811 of 811 tests in 152 files pass.
+- **Frontend type-check, lint, file-length rule:** clean.
+- **Website production build:** succeeds. `/programs` also builds while the API is unreachable: it prerenders empty and is filled in by the next revalidation.
+- **Screenshots** at 390 and 1440 for both pages are in `docs/programs/screenshots/`.
+
+### Handover
+
+- Every phase is committed and pushed to `develop`, which the user merges into `master` by PR.
+- There is no PR from me: the user said to use one branch, and `gh` is not installed here.
+- The database is already migrated and seeded in production. Merging `develop` into `master` deploys the API and the pages.
+- Check the copy marked as written by me. Each open question at the top of this report can be settled in the dashboard, under Admin, then Programs.

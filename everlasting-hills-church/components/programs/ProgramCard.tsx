@@ -1,37 +1,29 @@
 import Link from "next/link";
 import type { ProgramCard as Program } from "@/lib/programs";
 import { SERIF, TYPE_LABEL } from "./accents";
-import { liveNow, nextStart, whenText } from "./live";
-import { LiveDot } from "./RhythmStrip";
+import { LiveBadge, WhenText } from "./CardLive";
 import { Wordmark } from "./Wordmark";
 
-/** When it is next, in words: live, a day and time, or "Date to be announced" / "April. Date to be announced". */
-export function whenLine(p: Program, now: Date): string {
-  const live = liveNow(p, now);
-  if (live.live) return live.session ? `On now: ${live.session}` : "On now";
-  const next = nextStart(p, now);
-  return next ? whenText(next, now) : p.schedule;
-}
+export { whenLine } from "./CardLive";
 
-/** One program on /programs. The whole card is the link to its page. */
-export function ProgramCard({ program: p, now }: { program: Program; now: Date }) {
-  const live = liveNow(p, now);
+/**
+ * One program on /programs, rendered on the server. Only the Live badge and
+ * the "when" line are client pieces, reading the page's shared clock (or the
+ * fixed `now` a preview or test gives). The whole card is the link.
+ */
+export function ProgramCard({ program: p, now }: { program: Program; now?: Date }) {
   const refs = p.scriptures.map((s) => s.reference).join(", ");
-  const footer = [refs, TYPE_LABEL[p.programType], whenLine(p, now)].filter(Boolean);
+  const live = { occurrences: p.occurrences, schedule: p.schedule };
+  const footer = [refs, TYPE_LABEL[p.programType]].filter(Boolean);
   return (
     <Link
       href={`/programs/${p.slug}`}
-      className={`group relative flex h-full flex-col rounded-[24px] bg-white/[0.94] p-2 text-[#111] shadow-[0_1px_0_rgba(255,255,255,0.4)_inset,0_24px_60px_-28px_rgba(0,0,0,0.8)] ring-1 backdrop-blur-xl ${live.live ? "ring-[#C8A04A]/70" : "ring-white/20"} transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A04A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808] motion-reduce:transition-none motion-reduce:hover:translate-y-0`}
+      className="group relative flex h-full flex-col rounded-[24px] bg-white/[0.94] p-2 text-[#111] shadow-[0_1px_0_rgba(255,255,255,0.4)_inset,0_24px_60px_-28px_rgba(0,0,0,0.8)] ring-1 ring-white/20 transition-transform duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A04A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#080808] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
       <div className="relative">
         <Wordmark program={p} eyebrow={p.eyebrow} heading={p.logoUrl ? undefined : "h3"} />
-        {live.live && (
-          <span className="absolute right-3 top-3 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-[12px] font-semibold tracking-wide text-[#111] shadow-sm" role="status">
-            <LiveDot />
-            Live
-          </span>
-        )}
       </div>
+      <LiveBadge program={live} now={now} />
       <div className="flex flex-1 flex-col px-4 pb-4 pt-5">
         {p.logoUrl && (
           <>
@@ -48,6 +40,8 @@ export function ProgramCard({ program: p, now }: { program: Program; now: Date }
               <span className={i === 0 && refs ? "text-[#7a5d1a]" : undefined}>{f}</span>
             </span>
           ))}
+          <span aria-hidden="true"> · </span>
+          <WhenText program={live} now={now} />
         </p>
       </div>
     </Link>

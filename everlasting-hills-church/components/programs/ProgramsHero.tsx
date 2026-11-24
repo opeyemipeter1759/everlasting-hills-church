@@ -7,7 +7,7 @@ export function ProgramsHero({ anchor }: { anchor: Scripture | null }) {
     <header className="relative overflow-hidden px-4 pb-10 pt-32 sm:px-6 sm:pb-14 sm:pt-40">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full opacity-70 blur-3xl"
+        className="pointer-events-none absolute -right-64 -top-64 h-[820px] w-[820px] opacity-70"
         style={{ background: `radial-gradient(circle, ${BRAND.deepBurgundy}, transparent 70%)` }}
       />
       <div className="relative mx-auto max-w-6xl">

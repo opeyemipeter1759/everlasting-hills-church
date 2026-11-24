@@ -6,7 +6,6 @@ import { ProgramCard } from "./ProgramCard";
 import { ProgramGroups } from "./ProgramGroups";
 import { RhythmStrip } from "./RhythmStrip";
 
-vi.mock("framer-motion", async (orig) => ({ ...(await orig<typeof import("framer-motion")>()), useReducedMotion: () => true }));
 afterEach(cleanup);
 
 // Monday 23 November 2026, 22:00 to 06:00 Lagos (21:00 to 05:00 UTC).
@@ -88,7 +87,7 @@ describe("the rhythm of the house", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(midnight);
     try {
-      render(<RhythmStrip programs={[homecoming, base]} renderedAt={midnight.toISOString()} />);
+      render(<RhythmStrip programs={[homecoming, base]} />);
       const items = within(screen.getByRole("list")).getAllByRole("link").map((a) => a.textContent);
       expect(items).toEqual(["Prayer Watch is live. The Watch-House is on now", "Homecoming Conference: April. Date to be announced"]);
     } finally {
@@ -99,10 +98,10 @@ describe("the rhythm of the house", () => {
 
 describe("the programs page body", () => {
   it("groups programs by cadence, and invites people elsewhere when there are none", () => {
-    render(<ProgramGroups programs={[homecoming, base]} renderedAt={morning.toISOString()} />);
+    render(<ProgramGroups programs={[homecoming, base]} />);
     expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Weekly", "Annual"]);
     cleanup();
-    render(<ProgramGroups programs={[]} renderedAt={morning.toISOString()} />);
+    render(<ProgramGroups programs={[]} />);
     expect(screen.getByText("No programs are published yet")).toBeTruthy();
   });
 });

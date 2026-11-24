@@ -45,7 +45,9 @@ export function whenText(start: Date, now: Date): string {
 }
 
 /** One line of "the rhythm of the house": what is on now, what is next, or when it will be announced. */
-export function rhythmLine(p: ProgramCard, now: Date): { text: string; live: boolean } {
+export type RhythmItem = Pick<ProgramCard, "slug" | "name" | "schedule" | "occurrences">;
+
+export function rhythmLine(p: RhythmItem, now: Date): { text: string; live: boolean } {
   const live = liveNow(p, now);
   if (live.live) return { text: live.session ? `${p.name} is live. ${live.session} is on now` : `${p.name} is live now`, live: true };
   const next = nextStart(p, now);
@@ -54,7 +56,7 @@ export function rhythmLine(p: ProgramCard, now: Date): { text: string; live: boo
 }
 
 /** Programs in the order the strip shows them: live first, then soonest, then still to be announced. */
-export function byRhythm(programs: ProgramCard[], now: Date): ProgramCard[] {
-  const rank = (p: ProgramCard) => (liveNow(p, now).live ? 0 : nextStart(p, now)?.getTime() ?? Number.MAX_SAFE_INTEGER);
+export function byRhythm<T extends RhythmItem>(programs: T[], now: Date): T[] {
+  const rank = (p: T) => (liveNow(p, now).live ? 0 : nextStart(p, now)?.getTime() ?? Number.MAX_SAFE_INTEGER);
   return [...programs].sort((a, b) => rank(a) - rank(b));
 }

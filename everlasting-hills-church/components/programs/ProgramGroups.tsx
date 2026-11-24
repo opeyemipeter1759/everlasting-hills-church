@@ -1,11 +1,7 @@
-"use client";
-
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import type { ProgramCadence, ProgramCard as Program } from "@/lib/programs";
-import { EASE, SERIF } from "./accents";
+import { SERIF } from "./accents";
 import { ProgramCard } from "./ProgramCard";
-import { useNow } from "./useNow";
 
 const GROUPS: { cadence: ProgramCadence; title: string }[] = [
   { cadence: "WEEKLY", title: "Weekly" },
@@ -14,10 +10,12 @@ const GROUPS: { cadence: ProgramCadence; title: string }[] = [
   { cadence: "CUSTOM", title: "Special" },
 ];
 
-/** The programs grouped by how often they come round. One staggered entrance, nothing after it. */
-export function ProgramGroups({ programs, renderedAt }: { programs: Program[]; renderedAt: string }) {
-  const now = useNow(renderedAt);
-  const still = useReducedMotion();
+/**
+ * The programs grouped by how often they come round, rendered on the server.
+ * One staggered CSS entrance (no animation library on this page), skipped
+ * when motion is reduced.
+ */
+export function ProgramGroups({ programs }: { programs: Program[] }) {
   if (!programs.length) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
@@ -47,14 +45,13 @@ export function ProgramGroups({ programs, renderedAt }: { programs: Program[]; r
             </h2>
             <ul className="grid gap-5 sm:grid-cols-2">
               {items.map((p) => (
-                <motion.li
+                <li
                   key={p.slug}
-                  initial={still ? false : { opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, ease: EASE, delay: still ? 0 : 0.06 * index++ }}
+                  className="animate-fade-up motion-reduce:animate-none"
+                  style={{ animationDelay: `${0.06 * index++}s`, animationFillMode: "both", animationTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)" }}
                 >
-                  <ProgramCard program={p} now={now} />
-                </motion.li>
+                  <ProgramCard program={p} />
+                </li>
               ))}
             </ul>
           </section>
