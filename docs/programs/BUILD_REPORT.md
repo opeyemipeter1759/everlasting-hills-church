@@ -52,3 +52,30 @@ Production:
 - The migration is purely additive, so I applied it with `prisma migrate deploy`.
 - I seeded the five programs for the church's tenant.
 - Book ids 1, 5, 23, 39 and 42 check out against production's `BibleBook` table, and WEB (the default translation) has the verses.
+
+## Phase 2: recurrence and occurrence service
+
+Built `ehc-backend/src/programs/program-occurrences.ts`. These are pure functions:
+- `occurrencesFor` gives the current and next occurrences;
+- `sessionWindows` gives each watch as real instants;
+- `describeSchedule` gives the schedule in words;
+- `eyebrowFor` gives the line above the name.
+
+How it works:
+- rrule walks local calendar dates, anchored on a fixed date. Each date becomes an instant through the Gatherings helper `buildGatheringOccurrenceStart`, which handles the timezone offset.
+- `startOffsetDays` places the Homecoming weekend (Friday to Sunday around the last Saturday of April).
+- Editions override the rule.
+- A program that is "to be announced" has no occurrences.
+
+Tests (`program-occurrences.spec.ts`), 14 of 14 passing:
+- the Prayer Watch rule, with no Wednesday;
+- the overnight watch live at 1 AM Tuesday, in The Watch-House;
+- 22:59, 23:00, 23:30 and 23:59 UTC;
+- the last UTC hour of a Wednesday, which is already Thursday in Lagos;
+- Dew of Heaven: last day of the month, 48 hours;
+- Homecoming: the last weekend of April 2027, Friday 23 April;
+- programs to be announced;
+- the Furnace editions overriding the rule;
+- the schedule in words for every preset.
+
+Decision: I fixed Dew of Heaven at 10 PM on the last day for 48 hours (open question 3).
