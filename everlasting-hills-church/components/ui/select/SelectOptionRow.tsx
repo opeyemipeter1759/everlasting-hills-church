@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, Icon } from "@/components/icons";
 import type { SelectOption } from "./types";
 
 /** One row of the open panel: dot, label, count, tick. */
@@ -47,9 +47,8 @@ export function SelectOptionRow({
           {option.hint}
         </span>
       )}
-      <Check
+      <Icon icon={Check}
         size={15}
-        aria-hidden="true"
         className={`flex-shrink-0 text-[#87102C] dark:text-[#FFB3C1] ${selected ? "" : "invisible"}`}
       />
     </div>

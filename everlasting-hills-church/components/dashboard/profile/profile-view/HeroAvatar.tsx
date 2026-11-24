@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
 
 export function HeroAvatar({ photoUrl, displayName, initials }: {
   photoUrl: string | null;
@@ -53,7 +53,7 @@ export function HeroAvatar({ photoUrl, displayName, initials }: {
         aria-hidden="true"
         className="pointer-events-none absolute -bottom-2 -right-2 flex h-11 w-11 items-center justify-center rounded-full border-[3px] border-[#5b172a] bg-[#f5dfba] text-[#782e45] shadow-lg"
       >
-        <Sparkles size={19} strokeWidth={1.5} />
+        <BadgeCheck size={19} strokeWidth={1.5} />
       </div>
     </div>
   );

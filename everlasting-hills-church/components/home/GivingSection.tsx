@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, Building2, Globe, HandCoins, Sprout, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, Buildings, Globe, HandCoins, Icon, type IconComponent, Plant } from "@/components/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { GivingContent } from "@/lib/site-settings";
@@ -25,11 +25,11 @@ import type { GivingContent } from "@/lib/site-settings";
 /** Fixed giving categories — icon + title only, not CMS-editable (the CMS's
  * own `impactTiles` field is a different, story-driven concept with no home
  * in this layout right now). */
-const GIVING_CATEGORIES: { title: string; icon: LucideIcon }[] = [
+const GIVING_CATEGORIES: { title: string; icon: IconComponent }[] = [
   { title: "Tithe & Offering", icon: HandCoins },
-  { title: "Building Project", icon: Building2 },
+  { title: "Building Project", icon: Buildings },
   { title: "Gospel Outreach", icon: Globe },
-  { title: "Seed", icon: Sprout },
+  { title: "Seed", icon: Plant },
 ];
 
 export default function GivingSection({ content }: { content: GivingContent }) {
@@ -52,7 +52,7 @@ export default function GivingSection({ content }: { content: GivingContent }) {
           {/* LEFT: headline + impact tiles */}
           <div className="flex flex-col">
             <span className="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/5 px-3 xs:px-3.5 py-1.5 text-[10px] uppercase tracking-[0.2em] xs:tracking-[0.3em] text-white/60 backdrop-blur-md">
-              <Sprout size={12} className="shrink-0 text-[#e8768a]" />
+              <Icon icon={Plant} size={12} className="shrink-0 text-[#e8768a]" />
               {content.eyebrow}
             </span>
 
@@ -75,7 +75,7 @@ export default function GivingSection({ content }: { content: GivingContent }) {
                   className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-white/8 bg-white/[0.03] px-3.5 py-3 xs:px-4 xs:py-3.5 hover:bg-white/[0.06] hover:border-white/15 transition-colors"
                 >
                   <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#87102C]/25 text-[#e8768a]">
-                    <category.icon size={15} aria-hidden="true" />
+                    <Icon icon={category.icon} size={15} />
                   </span>
                   <p className="min-w-0 break-words text-sm font-bold text-white leading-tight">{category.title}</p>
                 </li>
@@ -113,7 +113,7 @@ export default function GivingSection({ content }: { content: GivingContent }) {
               className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white text-[#87102C] px-4 xs:px-5 py-3.5 text-center font-bold text-sm hover:bg-amber-50 hover:-translate-y-0.5 transition-all shadow-lg shadow-black/20"
             >
               {content.cta.label}
-              <ArrowUpRight
+              <Icon icon={ArrowUpRight}
                 size={14}
                 className="opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
               />

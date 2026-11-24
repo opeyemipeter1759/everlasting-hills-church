@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  LayoutDashboard, User, CalendarCheck, BookOpen, Sparkles,
+  LayoutDashboard, User, CalendarCheck, BookOpen, Mic,
   Menu, X, Search, Bell, Settings,
 } from "lucide-react";
 import { auth } from "@/lib/api";
@@ -32,7 +32,7 @@ const NAV = [
   { label: "My Profile",       href: "/me",              icon: User,            exact: false },
   { label: "Attendance",       href: "/me",              icon: CalendarCheck,   exact: false },
   { label: "Prayer Requests",  href: "/prayer-request",  icon: BookOpen,        exact: false },
-  { label: "Testimonies",      href: "/testimony",       icon: Sparkles,        exact: false },
+  { label: "Testimonies",      href: "/testimony",       icon: Mic,             exact: false },
 ];
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────

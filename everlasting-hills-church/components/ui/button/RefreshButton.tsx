@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
+import { ArrowClockwise, Icon } from "@/components/icons";
 
 const VARIANT_CLASSES = {
   // Matches the refresh button already used across admin consoles (People, Roles, etc).
@@ -31,7 +31,7 @@ export default function RefreshButton({
       disabled={isRefreshing}
       className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold disabled:opacity-60 transition-colors ${VARIANT_CLASSES[variant]} ${className}`}
     >
-      <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
+      <Icon icon={ArrowClockwise} size={12} className={isRefreshing ? "animate-spin" : ""} />
       {label}
     </button>
   );

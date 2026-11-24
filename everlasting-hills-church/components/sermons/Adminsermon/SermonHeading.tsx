@@ -1,15 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import {
-  BookOpen,
-  CheckCircle2,
-  FileText,
-  Layers,
-  Mic2,
-  Plus,
-  Sparkles,
-} from 'lucide-react';
+import { BookOpen, CheckCircle, FileText, Icon, Microphone, Plus, Stack } from "@/components/icons";
 import { useSermonAdminOverview } from '@/lib/api';
 import type { StatCardProps } from '@/types';
 import { StatCard } from '@/components/ui/cards/StatCard';
@@ -18,7 +10,7 @@ import { StatCard } from '@/components/ui/cards/StatCard';
 const STATS: Omit<StatCardProps, 'value' | 'loading'>[] = [
   {
     label: 'Total Sermons',
-    icon: <BookOpen size={19} strokeWidth={2} />,
+    icon: <Icon icon={BookOpen} size={19} />,
     iconBg: 'bg-[#87102C]/10 dark:bg-[#87102C]/25',
     iconColor: 'text-[#87102C] dark:text-[#e8768a]',
     glowFrom: 'from-[#87102C]/20',
@@ -28,7 +20,7 @@ const STATS: Omit<StatCardProps, 'value' | 'loading'>[] = [
   },
   {
     label: 'Published',
-    icon: <CheckCircle2 size={19} strokeWidth={2} />,
+    icon: <Icon icon={CheckCircle} size={19} />,
     iconBg: 'bg-emerald-50 dark:bg-emerald-500/15',
     iconColor: 'text-emerald-600 dark:text-emerald-400',
     glowFrom: 'from-emerald-400/20',
@@ -38,7 +30,7 @@ const STATS: Omit<StatCardProps, 'value' | 'loading'>[] = [
   },
   {
     label: 'Drafts',
-    icon: <FileText size={19} strokeWidth={2} />,
+    icon: <Icon icon={FileText} size={19} />,
     iconBg: 'bg-amber-50 dark:bg-amber-500/15',
     iconColor: 'text-amber-600 dark:text-amber-400',
     glowFrom: 'from-amber-400/20',
@@ -48,7 +40,7 @@ const STATS: Omit<StatCardProps, 'value' | 'loading'>[] = [
   },
   {
     label: 'Series',
-    icon: <Layers size={19} strokeWidth={2} />,
+    icon: <Icon icon={Stack} size={19} />,
     iconBg: 'bg-violet-50 dark:bg-violet-500/15',
     iconColor: 'text-violet-600 dark:text-violet-400',
     glowFrom: 'from-violet-400/20',
@@ -58,7 +50,7 @@ const STATS: Omit<StatCardProps, 'value' | 'loading'>[] = [
   },
   {
     label: 'Singles',
-    icon: <Mic2 size={19} strokeWidth={2} />,
+    icon: <Icon icon={Microphone} size={19} />,
     iconBg: 'bg-sky-50 dark:bg-sky-500/15',
     iconColor: 'text-sky-600 dark:text-sky-400',
     glowFrom: 'from-sky-400/20',
@@ -88,7 +80,7 @@ export default function SermonHeading() {
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[#87102C]/25 dark:border-[#e8768a]/20 bg-[#87102C]/[0.03] dark:bg-[#e8768a]/[0.03] px-6 py-10 text-center sm:flex-row sm:justify-between sm:text-left">
           <div className="flex items-center gap-3.5">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#87102C]/10 dark:bg-[#e8768a]/10">
-              <BookOpen size={19} className="text-[#87102C] dark:text-[#e8768a]" strokeWidth={2} />
+              <Icon icon={BookOpen} size={19} className="text-[#87102C] dark:text-[#e8768a]" />
             </div>
             <div>
               <p className="font-sans text-sm font-bold text-gray-900 dark:text-white">
@@ -104,7 +96,7 @@ export default function SermonHeading() {
             onClick={() => router.push('/dashboard/pastor/sermons/new')}
             className="font-sans inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#87102C] px-4 py-2 text-xs font-bold text-white hover:bg-[#6E0C24] active:scale-[0.97] transition-all"
           >
-            <Plus size={13} strokeWidth={2.5} />
+            <Icon icon={Plus} size={13} weight="bold" />
             New Sermon
           </button>
         </div>

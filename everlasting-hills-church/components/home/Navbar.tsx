@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Icon, List, X } from "@/components/icons";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -207,7 +207,7 @@ export default function Navbar() {
                 aria-label="Toggle menu"
                 aria-expanded={menuOpen}
               >
-                {menuOpen ? <X size={22} /> : <Menu size={22} />}
+                <Icon icon={menuOpen ? X : List} size={24} />
               </button>
             </div>
           </div>

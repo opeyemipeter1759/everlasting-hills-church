@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { RefreshCw, Home } from "lucide-react";
+import { ArrowClockwise, House, Icon } from "@/components/icons";
 
 /**
  * Route-segment error boundary. Catches runtime errors in the app and offers a
@@ -44,14 +44,14 @@ export default function Error({
             onClick={reset}
             className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-7 py-3.5 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:bg-[#6E0C24]"
           >
-            <RefreshCw size={16} />
+            <Icon icon={ArrowClockwise} size={16} />
             Try Again
           </button>
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-7 py-3.5 text-sm font-semibold transition-colors hover:bg-white/5"
           >
-            <Home size={16} />
+            <Icon icon={House} size={16} />
             Back Home
           </Link>
         </div>

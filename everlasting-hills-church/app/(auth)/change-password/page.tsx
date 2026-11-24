@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { ShieldCheck } from "lucide-react";
+import { Icon, ShieldCheck } from "@/components/icons";
 import { auth, useChangePassword } from "@/lib/api";
 import { getFrontendSessionUser } from "@/lib/auth/frontend-session";
 import { openRecoveryLink } from "@/lib/auth/recovery-link";
@@ -84,7 +84,7 @@ export default function ChangePasswordPage() {
       {submitted ? (
         <div className="space-y-5 text-center py-6">
           <div className="w-14 h-14 rounded-full bg-[#FFE8ED] flex items-center justify-center mx-auto">
-            <ShieldCheck size={24} className="text-[#87102C]" />
+            <Icon icon={ShieldCheck} size={24} className="text-[#87102C]" />
           </div>
           <h2 className="text-lg font-bold text-gray-900">Password updated</h2>
           <p className="text-sm text-gray-500">

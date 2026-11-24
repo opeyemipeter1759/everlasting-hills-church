@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { CircleNotch, Icon } from "@/components/icons";
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 interface AuthSubmitButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> {
@@ -20,7 +20,7 @@ export function AuthSubmitButton({ loading, loadingText, disabled, children, ...
     >
       {loading ? (
         <>
-          <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+          <Icon icon={CircleNotch} size={16} className="animate-spin" />
           {loadingText ?? children}
         </>
       ) : children}

@@ -1,7 +1,7 @@
 'use client';
 import { Dropdown } from '@/components/ui/dropdown/Dropdown';
 import { DropdownItem } from '@/components/ui/dropdown/DropdownItem';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, Icon } from "@/components/icons";
 import React, { useState } from 'react';
 //import { useSelector } from 'react-redux';
 //import { RootState } from '@/store';
@@ -26,7 +26,7 @@ export default function UserDropdown() {
         className="flex items-center bg-[#055A52] px-4 font-medium py-2 rounded-full text-sm font-sans text-white-100 dark:text-gray-400 dropdown-toggle "
       >
         Quick Actions
-        <ArrowDown /*  isOpen={isOpen} */ />
+        <Icon icon={ArrowDown} size={24} />
       </button>
 
       <Dropdown

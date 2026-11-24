@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, CalendarClock, Check, ChevronDown, MapPin } from "lucide-react";
+import { ArrowRight, CalendarDots, CaretDown, Check, Icon, MapPin } from "@/components/icons";
 import { useClassHome, type ClassHome, type LessonStatus } from "@/lib/api/classes";
 import { ClassTheme } from "./theme";
 import Arches from "./Arches";
@@ -117,7 +117,7 @@ function ClassHomeView({ home, slug }: { home: ClassHome; slug: string }) {
                         </span>
                         {w.subtitle && <span className="mt-1 block italic text-black/60 dark:text-white/60">{w.subtitle}</span>}
                       </span>
-                      <ChevronDown className={`mt-8 h-5 w-5 flex-none text-black/40 transition-transform duration-300 dark:text-white/50 ${open ? "rotate-180" : ""}`} aria-hidden />
+                      <Icon icon={CaretDown} size={24} className={`mt-8 h-5 w-5 flex-none text-black/40 transition-transform duration-300 dark:text-white/50 ${open ? "rotate-180" : ""}`} />
                     </button>
 
                     {verse && (
@@ -143,7 +143,7 @@ function ClassHomeView({ home, slug }: { home: ClassHome; slug: string }) {
                               >
                                 <LessonMark status={l.status} />
                                 <LessonText week={w.number} number={l.number} title={l.title} description={l.description} />
-                                <ArrowRight className="mt-1 h-4 w-4 flex-none text-black/30 transition-transform group-hover:translate-x-0.5 dark:text-white/40" aria-hidden />
+                                <Icon icon={ArrowRight} size={24} className="mt-1 h-4 w-4 flex-none text-black/30 transition-transform group-hover:translate-x-0.5 dark:text-white/40" />
                               </Link>
                             )}
                           </li>
@@ -175,7 +175,7 @@ function ClassHomeView({ home, slug }: { home: ClassHome; slug: string }) {
               )}
               {e.cohort.nextSession && (
                 <p className="mt-3 flex items-start gap-2 text-sm text-black/70 dark:text-white/70">
-                  <CalendarClock className="mt-0.5 h-4 w-4 flex-none text-[var(--color-burgundy)] dark:text-white/70" aria-hidden />
+                  <Icon icon={CalendarDots} size={24} className="mt-0.5 h-4 w-4 flex-none text-[var(--color-burgundy)] dark:text-white/70" />
                   <span>
                     {e.cohort.nextSession.title}, {formatDate(e.cohort.nextSession.startsAt, true)}
                   </span>
@@ -183,7 +183,7 @@ function ClassHomeView({ home, slug }: { home: ClassHome; slug: string }) {
               )}
               {e.cohort.nextSession?.location && (
                 <p className="mt-2 flex items-center gap-2 text-sm text-black/60 dark:text-white/60">
-                  <MapPin className="h-4 w-4" aria-hidden /> {e.cohort.nextSession.location}
+                  <Icon icon={MapPin} size={24} className="h-4 w-4" /> {e.cohort.nextSession.location}
                 </p>
               )}
             </div>
@@ -256,7 +256,7 @@ function StatusPanel({ home, base }: { home: ClassHome; base: string }) {
         </div>
         {e.next ? (
           <Link href={`${base}/${e.next.week}/${e.next.slug}`} className="cls-btn cls-btn-primary mt-5 w-full sm:w-auto">
-            {e.completedLessons === 0 ? "Begin" : "Continue"} <ArrowRight className="h-4 w-4" aria-hidden />
+            {e.completedLessons === 0 ? "Begin" : "Continue"} <Icon icon={ArrowRight} size={24} className="h-4 w-4" />
           </Link>
         ) : e.cohort && e.cohort.minSessions > e.cohort.sessionsAttended ? (
           <p className="mt-4 text-sm text-white/70">
@@ -301,7 +301,7 @@ function Station({ state, number }: { state: WeekState; number: number }) {
             : "border-[var(--color-pink-border)] bg-white text-black/40 dark:border-white/20 dark:bg-[var(--color-ink)] dark:text-white/40"
       }`}
     >
-      {state === "complete" ? <Check className="h-4 w-4" /> : number}
+      {state === "complete" ? <Icon icon={Check} size={24} className="h-4 w-4" /> : number}
     </span>
   );
 }
@@ -315,7 +315,7 @@ function StateChip({ state, previous }: { state: WeekState; previous: number }) 
 
 function LessonMark({ status }: { status: LessonStatus }) {
   const base = "mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full border";
-  if (status === "done") return <span className={`${base} border-[var(--color-burgundy)] bg-[var(--color-burgundy)] text-white`}><Check className="h-3.5 w-3.5" aria-hidden /><span className="sr-only">Complete</span></span>;
+  if (status === "done") return <span className={`${base} border-[var(--color-burgundy)] bg-[var(--color-burgundy)] text-white`}><Icon icon={Check} size={24} className="h-3.5 w-3.5" /><span className="sr-only">Complete</span></span>;
   if (status === "in_progress") return <span className={`${base} border-[var(--color-burgundy)]`}><span className="h-2.5 w-2.5 rounded-full bg-[var(--color-burgundy)]" /><span className="sr-only">In progress</span></span>;
   if (status === "not_started") return <span className={`${base} border-[var(--color-burgundy)]/60`}><span className="sr-only">Ready to start</span></span>;
   return <span className={`${base} border-dashed border-black/20 dark:border-white/20`}><span className="sr-only">Opens after the lesson before it</span></span>;

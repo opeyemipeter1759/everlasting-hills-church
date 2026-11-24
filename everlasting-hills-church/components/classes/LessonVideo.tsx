@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { CheckCircle2, Maximize, Minimize, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { ArrowCounterClockwise, ArrowsIn, ArrowsOut, CheckCircle, Icon, Pause, Play, SpeakerHigh, SpeakerX } from "@/components/icons";
 import type { CreatePlayer, PlayerHandle, PlayerState } from "./video/player-adapter";
 import { createYouTubePlayer } from "./video/youtube-adapter";
 import Arches from "./Arches";
@@ -361,11 +361,11 @@ export default function LessonVideo({
               <Screen title={title}>
                 {watched ? (
                   <>
-                    <CheckCircle2 className="h-10 w-10 text-[var(--color-gold)]" aria-hidden />
+                    <Icon icon={CheckCircle} size={24} className="h-10 w-10 text-[var(--color-gold)]" />
                     <p className="cls-display mt-4 text-3xl text-white sm:text-4xl">Lesson watched</p>
                     <p className="mt-2 text-white/65">Write your summary below.</p>
                     <button type="button" onClick={replay} className="cls-btn cls-btn-glass mt-5 !px-5 !py-2.5 !text-sm">
-                      <RotateCcw className="h-4 w-4" aria-hidden /> Watch again
+                      <Icon icon={ArrowCounterClockwise} size={24} className="h-4 w-4" /> Watch again
                     </button>
                   </>
                 ) : confirmLate ? (
@@ -373,7 +373,7 @@ export default function LessonVideo({
                     <p className="cls-display text-2xl text-white sm:text-3xl">Some of this lesson was not counted</p>
                     <p className="mt-2 max-w-sm text-white/65">Watch it through again, without skipping, and your summary will open.</p>
                     <button type="button" onClick={replay} className="cls-btn cls-btn-primary mt-5 !px-5 !py-2.5 !text-sm">
-                      <RotateCcw className="h-4 w-4" aria-hidden /> Watch again
+                      <Icon icon={ArrowCounterClockwise} size={24} className="h-4 w-4" /> Watch again
                     </button>
                   </>
                 ) : (
@@ -393,10 +393,10 @@ export default function LessonVideo({
       {/* The only controls. The progress bar shows where you have been and never lets you move ahead. */}
       <div className="flex items-center gap-1.5 px-2 py-2 sm:gap-2 sm:px-3">
         <button type="button" onClick={togglePlay} aria-label={isPlaying ? "Pause" : "Play"} className={iconButton}>
-          {isPlaying ? <Pause className="h-4 w-4 fill-current" aria-hidden /> : <Play className="h-4 w-4 fill-current" aria-hidden />}
+          {isPlaying ? <Icon icon={Pause} size={24} className="h-4 w-4" weight="fill" /> : <Icon icon={Play} size={24} className="h-4 w-4" weight="fill" />}
         </button>
         <button type="button" onClick={() => seek(time - 10)} disabled={phase !== "ready"} aria-label="Back 10 seconds" className={iconButton}>
-          <RotateCcw className="h-4 w-4" aria-hidden />
+          <Icon icon={ArrowCounterClockwise} size={24} className="h-4 w-4" />
         </button>
         <div
           role="progressbar"
@@ -420,7 +420,7 @@ export default function LessonVideo({
           {clock(time)} / {clock(duration)}
         </span>
         <button type="button" onClick={toggleMute} disabled={phase !== "ready"} aria-label={muted ? "Unmute" : "Mute"} className={iconButton}>
-          {muted || volume === 0 ? <VolumeX className="h-4 w-4" aria-hidden /> : <Volume2 className="h-4 w-4" aria-hidden />}
+          {muted || volume === 0 ? <Icon icon={SpeakerX} size={24} className="h-4 w-4" /> : <Icon icon={SpeakerHigh} size={24} className="h-4 w-4" />}
         </button>
         <input
           type="range"
@@ -435,7 +435,7 @@ export default function LessonVideo({
         />
         {canFullscreen && (
           <button type="button" onClick={toggleFullscreen} aria-label={fullscreen ? "Leave full screen" : "Full screen"} className={iconButton}>
-            {fullscreen ? <Minimize className="h-4 w-4" aria-hidden /> : <Maximize className="h-4 w-4" aria-hidden />}
+            {fullscreen ? <Icon icon={ArrowsIn} size={24} className="h-4 w-4" /> : <Icon icon={ArrowsOut} size={24} className="h-4 w-4" />}
           </button>
         )}
       </div>
@@ -464,7 +464,7 @@ function PlayButton({ label }: { label: string }) {
       aria-label={label}
       className="relative z-30 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-burgundy)] text-white shadow-lg transition-transform duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-ink)] sm:h-20 sm:w-20"
     >
-      <Play className="ml-1 h-7 w-7 fill-white sm:h-8 sm:w-8" aria-hidden />
+      <Icon icon={Play} size={24} className="ml-1 h-7 w-7 text-white sm:h-8 sm:w-8" weight="fill" />
     </button>
   );
 }

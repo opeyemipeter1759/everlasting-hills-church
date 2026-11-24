@@ -1,4 +1,4 @@
-import { BookOpen, Instagram, Mail } from "lucide-react";
+import { BookOpen, EnvelopeSimple, Icon, InstagramLogo } from "@/components/icons";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import PastorPortraitPlaceholder from "./PastorPortraitPlaceholder";
 import type { Pastor } from "./pastor-content";
@@ -64,7 +64,7 @@ export default function PastorProfileCard({ pastor, index }: { pastor: Pastor; i
               </div>
               <figure className="mt-8 flex gap-4 rounded-xl border border-[#87102C]/10 bg-white p-5 shadow-sm">
                 <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#87102C]/[0.08] text-[#87102C]">
-                  <BookOpen size={16} />
+                  <Icon icon={BookOpen} size={16} />
                 </span>
                 <div>
                   <blockquote className="text-sm italic leading-relaxed text-[#444]">&ldquo;{pastor.scriptureText}&rdquo;</blockquote>
@@ -80,7 +80,7 @@ export default function PastorProfileCard({ pastor, index }: { pastor: Pastor; i
                       href={`mailto:${pastor.email}`}
                       className="inline-flex items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-[#333] transition-colors hover:border-[#87102C]/30 hover:text-[#87102C]"
                     >
-                      <Mail size={15} />
+                      <Icon icon={EnvelopeSimple} size={15} />
                       Email
                     </a>
                   )}
@@ -91,7 +91,7 @@ export default function PastorProfileCard({ pastor, index }: { pastor: Pastor; i
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-sm font-medium text-[#333] transition-colors hover:border-[#87102C]/30 hover:text-[#87102C]"
                     >
-                      <Instagram size={15} />
+                      <Icon icon={InstagramLogo} size={15} />
                       Instagram
                     </a>
                   )}

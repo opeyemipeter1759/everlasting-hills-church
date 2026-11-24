@@ -1,6 +1,6 @@
 "use client";
 
-import { PlayCircle } from "lucide-react";
+import { Icon, PlayCircle } from "@/components/icons";
 import { useHillsConfession } from "./useHillsConfession";
 
 /**
@@ -40,7 +40,7 @@ export default function HillsConfession({ date }: { date: string }) {
             rel="noopener noreferrer"
             className="inline-flex min-h-11 items-center gap-1.5 font-semibold text-white/85 underline-offset-4 hover:text-white hover:underline"
           >
-            <PlayCircle size={16} aria-hidden="true" />
+            <Icon icon={PlayCircle} size={16} />
             Watch “{sermon.sermonTitle}”
           </a>
         </p>

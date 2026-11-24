@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Clock, FileText, Loader2, Mail, MapPin, Send, Sparkles, Users, X } from "lucide-react";
+import { Check, Clock, FileText, Loader2, Mail, MapPin, Send, Users, X, PenLine } from "lucide-react";
 import Modal from "@/components/ui/overlay/Modal";
 import FileUpload from "@/components/ui/form/FileUpload";
 import type { PersonRole } from "@/lib/api/people";
@@ -143,14 +143,14 @@ export default function AnnouncementComposerModal({
                 onClick={() => setAiOpen(true)}
                 className="inline-flex items-center gap-2 rounded-xl border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/[0.08] px-4 py-2.5 text-sm font-semibold text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-500/15 transition-colors"
               >
-                <Sparkles size={15} />
+                <PenLine size={15} />
                 Draft with Gemini AI
               </button>
             ) : (
               <div className="rounded-2xl border border-violet-200 dark:border-violet-500/25 bg-violet-50/60 dark:bg-violet-500/[0.06] p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="flex items-center gap-2 text-sm font-semibold text-violet-800 dark:text-violet-200">
-                    <Sparkles size={14} /> Describe your announcement idea
+                    <PenLine size={14} /> Describe your announcement idea
                   </p>
                   <button type="button" onClick={() => { setAiOpen(false); setAiError(""); }} className="text-violet-400 hover:text-violet-600 dark:hover:text-violet-200">
                     <X size={16} />
@@ -170,7 +170,7 @@ export default function AnnouncementComposerModal({
                   disabled={!aiIdea.trim() || aiLoading}
                   className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                  {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <PenLine size={14} />}
                   {aiLoading ? "Drafting…" : "Generate Draft"}
                 </button>
                 <p className="text-[11px] text-violet-400 dark:text-violet-500">

@@ -1,10 +1,10 @@
-import { Feather, Maximize2, Minimize2, Repeat2, SpellCheck, Wand2, type LucideIcon } from "lucide-react";
+import { Feather, Maximize2, Minimize2, Repeat2, SpellCheck, type LucideIcon, PenLine } from "lucide-react";
 import type { RewriteAction, WritingAction, WritingAssistResult } from "@/lib/api/writing-assist";
 
 /** The rewrites the assistant offers, in menu order. */
 export const AI_ACTIONS: { action: RewriteAction; label: string; hint: string; busy: string; Icon: LucideIcon }[] = [
   { action: "fix", label: "Fix spelling & grammar", hint: "Correct mistakes, keep your words", busy: "Checking spelling and grammar…", Icon: SpellCheck },
-  { action: "improve", label: "Improve writing", hint: "Clearer, smoother, more engaging", busy: "Improving the writing…", Icon: Wand2 },
+  { action: "improve", label: "Improve writing", hint: "Clearer, smoother, more engaging", busy: "Improving the writing…", Icon: PenLine },
   { action: "rephrase", label: "Paraphrase", hint: "Same meaning, different words", busy: "Paraphrasing…", Icon: Repeat2 },
   { action: "simplify", label: "Simplify language", hint: "Plain English anyone can follow", busy: "Simplifying…", Icon: Feather },
   { action: "shorten", label: "Make shorter", hint: "Keep the main points", busy: "Making it shorter…", Icon: Minimize2 },

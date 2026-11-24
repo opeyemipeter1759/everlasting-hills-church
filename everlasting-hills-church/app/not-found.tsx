@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, ArrowLeft } from "lucide-react";
+import { ArrowLeft, House, Icon } from "@/components/icons";
 
 export const metadata = {
   title: "Page Not Found — Everlasting Hills Church",
@@ -29,14 +29,14 @@ export default function NotFound() {
             href="/"
             className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-7 py-3.5 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:bg-[#6E0C24]"
           >
-            <Home size={16} />
+            <Icon icon={House} size={16} />
             Back Home
           </Link>
           <Link
             href="/sermons"
             className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-7 py-3.5 text-sm font-semibold transition-colors hover:bg-white/5"
           >
-            <ArrowLeft size={16} />
+            <Icon icon={ArrowLeft} size={16} />
             Browse Sermons
           </Link>
         </div>

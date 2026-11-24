@@ -1,8 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { ArrowRight, Icon } from "@/components/icons";
+import { FOCUS_RING } from "./focus-ring";
+import { MenuGlyph } from "./MenuGlyph";
 import { isPathActive, MEGA_THRESHOLD, type NavLink } from "./nav-links";
 
 interface Props {
@@ -37,7 +39,6 @@ export default function NavDropdownPanel({ link, variant, pathname, onNavigate }
         >
           <div className={`p-2 ${mega ? "grid grid-cols-2 gap-x-1 gap-y-0.5" : "flex flex-col gap-0.5"}`}>
             {children.map((child) => {
-              const Icon = child.icon;
               const childActive = isPathActive(pathname, child.href);
               return (
                 <Link
@@ -46,31 +47,21 @@ export default function NavDropdownPanel({ link, variant, pathname, onNavigate }
                   role="menuitem"
                   aria-current={childActive ? "page" : undefined}
                   onClick={onNavigate}
-                  className={`group flex items-center gap-3 rounded-lg px-2.5 py-2 outline-none transition-colors duration-150 hover:bg-[#FAF5F6] focus-visible:bg-[#FAF5F6] focus-visible:ring-2 focus-visible:ring-burgundy/30 ${
-                    childActive ? "bg-[#FAF5F6]" : ""
+                  className={`group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors duration-150 motion-reduce:transition-none hover:bg-burgundy/[0.04] focus-visible:bg-burgundy/[0.04] ${FOCUS_RING} ${
+                    childActive ? "bg-burgundy/[0.05]" : ""
                   }`}
                 >
-                  {Icon && (
-                    <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border shadow-[0_1px_2px_rgba(16,24,40,0.05)] transition-colors duration-150 ${
-                        childActive
-                          ? "border-burgundy/20 bg-burgundy text-white"
-                          : "border-[#EEE6E8] bg-white text-[#6B5A5E] group-hover:border-burgundy/25 group-hover:text-burgundy"
-                      }`}
-                    >
-                      <Icon size={17} strokeWidth={1.75} />
-                    </span>
-                  )}
+                  {child.icon && <MenuGlyph icon={child.icon} active={childActive} />}
                   <span className="min-w-0">
                     <span
-                      className={`block text-[13.5px] font-semibold leading-5 tracking-[-0.005em] ${
-                        childActive ? "text-burgundy" : "text-[#1A1A1A] group-hover:text-burgundy"
+                      className={`block text-[13.5px] font-semibold leading-5 tracking-[-0.005em] transition-colors duration-150 motion-reduce:transition-none ${
+                        childActive ? "text-burgundy" : "text-brand-black/85 group-hover:text-brand-black group-focus-visible:text-brand-black"
                       }`}
                     >
                       {child.label}
                     </span>
                     {child.description && (
-                      <span className="block truncate text-[12.5px] leading-[18px] text-[#7A7175]">{child.description}</span>
+                      <span className="block truncate text-[12.5px] leading-[18px] text-brand-muted">{child.description}</span>
                     )}
                   </span>
                 </Link>
@@ -79,14 +70,14 @@ export default function NavDropdownPanel({ link, variant, pathname, onNavigate }
           </div>
           {link.footer && (
             <div className="flex items-center justify-between gap-4 border-t border-[#F1EAEC] bg-[#FCF9FA] px-4 py-3">
-              <span className="text-[12.5px] text-[#7A7175]">{link.footer.text}</span>
+              <span className="text-[12.5px] text-brand-muted">{link.footer.text}</span>
               <Link
                 href={link.footer.href}
                 onClick={onNavigate}
-                className="group/cta inline-flex items-center gap-1 text-[12.5px] font-semibold text-burgundy hover:text-[#6E0C24]"
+                className={`group/cta inline-flex items-center gap-1 rounded text-[12.5px] font-semibold text-burgundy hover:text-burgundy-dark ${FOCUS_RING}`}
               >
                 {link.footer.label}
-                <ArrowRight size={13} className="transition-transform duration-150 group-hover/cta:translate-x-0.5" />
+                <Icon icon={ArrowRight} size={13} className="transition-transform duration-150 motion-reduce:transition-none group-hover/cta:translate-x-0.5" />
               </Link>
             </div>
           )}

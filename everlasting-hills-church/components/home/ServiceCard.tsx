@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, MapPin, Calendar, Youtube, type LucideIcon } from "lucide-react";
+import { Calendar, Clock, Icon, type IconComponent, MapPin, YoutubeLogo } from "@/components/icons";
 import ScrollReveal from "./ScrollReveal";
 import { CHURCH } from "../../config/config";
 import type { ServiceSlot } from "@/lib/site-settings";
@@ -30,7 +30,7 @@ const DAY_PLURAL: Record<ServiceSlot["day"], string> = {
  * icon (it's typically the main/Sunday service), midweek gets Calendar.
  * Identity, not data — stays in code.
  */
-function iconFor(index: number): LucideIcon {
+function iconFor(index: number): IconComponent {
   if (index === 0) return Clock;
   return Calendar;
 }
@@ -81,10 +81,7 @@ export default function ServiceCards({
                 card.isActive ? "bg-[#87102C]" : "bg-[#FFE8ED]"
               }`}
             >
-              <card.icon
-                size={18}
-                className={card.isActive ? "text-white" : "text-[#87102C]"}
-              />
+              <Icon icon={card.icon} size={18} className={card.isActive ? "text-white" : "text-[#87102C]"} />
             </div>
 
             <div className="flex-1 min-w-0">
@@ -122,7 +119,7 @@ export default function ServiceCards({
                   rel="noopener noreferrer"
                   className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#FFE8ED] text-[#87102C] text-xs font-semibold hover:bg-[#FFCDD7] transition-colors"
                 >
-                  <Youtube size={13} />
+                  <Icon icon={YoutubeLogo} size={13} />
                   Watch on YouTube
                 </a>
               )}

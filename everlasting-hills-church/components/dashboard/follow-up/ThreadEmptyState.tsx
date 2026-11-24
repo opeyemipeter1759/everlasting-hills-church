@@ -1,12 +1,12 @@
 "use client";
 
-import { MessageSquarePlus, PhoneCall, Sparkles, UserRoundCheck } from "lucide-react";
+import { MessageSquarePlus, PhoneCall, UserRoundCheck, StickyNote } from "lucide-react";
 
 /** Openers for the first message, so nobody faces a blank box. */
 const STARTERS = [
   { icon: PhoneCall, label: "Called — no answer", text: "Called today, no answer. Will try again tomorrow." },
   { icon: UserRoundCheck, label: "Reached them", text: "Spoke to *NAME* today — they're doing well and plan to come on Sunday." },
-  { icon: Sparkles, label: "Something to note", text: "" },
+  { icon: StickyNote, label: "Something to note", text: "" },
 ];
 
 /**

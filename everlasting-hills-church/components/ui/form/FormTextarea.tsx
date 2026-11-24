@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import type { LucideIcon } from "lucide-react";
+import { Icon, type IconComponent } from "@/components/icons";
 
 const inputBase =
   "w-full text-sm rounded-xl px-4 py-3 transition-all duration-200 " +
@@ -19,7 +19,7 @@ const labelBase =
 
 interface FormTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string;
-  icon?: LucideIcon;
+  icon?: IconComponent;
   error?: string;
   hint?: string;
   maxLengthHint?: number;
@@ -27,7 +27,7 @@ interface FormTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaEle
 }
 
 export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
-  function FormTextarea({ label, icon: Icon, error, hint, maxLengthHint, value, id, className, ...rest }, ref) {
+  function FormTextarea({ label, icon: Glyph, error, hint, maxLengthHint, value, id, className, ...rest }, ref) {
     const inputId = id ?? `t-${label.replace(/\s+/g, "-").toLowerCase()}`;
     const used = typeof value === "string" ? value.length : 0;
     return (
@@ -36,11 +36,8 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
           {label}
         </label>
         <div className="relative">
-          {Icon && (
-            <Icon
-              size={16}
-              className="absolute left-4 top-4 text-[#87102C]/55 dark:text-[#FFB3C1]/50 pointer-events-none"
-            />
+          {Glyph && (
+            <Icon icon={Glyph} size={16} className="absolute left-4 top-4 text-[#87102C]/55 dark:text-[#FFB3C1]/50 pointer-events-none" />
           )}
           <textarea
             id={inputId}
@@ -48,7 +45,7 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
             value={value}
             aria-invalid={!!error}
             aria-describedby={error ? `${inputId}-err` : undefined}
-            className={`${inputBase} resize-y min-h-[120px] leading-relaxed ${Icon ? "pl-11" : ""} ${
+            className={`${inputBase} resize-y min-h-[120px] leading-relaxed ${Glyph ? "pl-11" : ""} ${
               error
                 ? "border-red-300 focus:border-red-500 focus:ring-red-500/15 dark:border-red-500/50 dark:focus:border-red-500/70"
                 : ""

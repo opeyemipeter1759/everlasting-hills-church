@@ -2,6 +2,78 @@
   "extends": ["next/core-web-vitals"],
   "plugins": ["@typescript-eslint"],
   "rules": {
-    "react/no-unescaped-entities": "warn"
-  }
+    "react/no-unescaped-entities": "warn",
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "lucide-react",
+            "message": "The public site draws icons with <Icon> from @/components/icons. lucide-react is for the dashboard only."
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["@phosphor-icons/react", "@phosphor-icons/react/*"],
+            "message": "Import icons from @/components/icons, the one file that names the icon library."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["app/dashboard/**", "components/dashboard/**", "layout/**", "config/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lucide-react",
+                "importNames": ["Sparkles", "Sparkle", "Stars", "Wand", "Wand2", "WandSparkles", "Bot", "BotMessageSquare", "BotOff", "BrainCircuit", "Zap", "ZapOff"],
+                "message": "No icons that suggest AI or magic. Pick one for what the thing is or does."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["@phosphor-icons/react", "@phosphor-icons/react/*"],
+                "message": "Import icons from @/components/icons, the one file that names the icon library."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["components/icons/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              { "name": "lucide-react", "message": "The icon set is Phosphor; keep lucide-react out of components/icons." },
+              { "name": "@phosphor-icons/react", "message": "Import each icon from its own @phosphor-icons/react/dist/ssr module." }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "@phosphor-icons/react/dist/ssr/Sparkle",
+                  "@phosphor-icons/react/dist/ssr/MagicWand",
+                  "@phosphor-icons/react/dist/ssr/Robot",
+                  "@phosphor-icons/react/dist/ssr/Lightning",
+                  "@phosphor-icons/react/dist/ssr/LightningA",
+                  "@phosphor-icons/react/dist/ssr/LightningSlash",
+                  "@phosphor-icons/react/dist/ssr/StarFour",
+                  "@phosphor-icons/react/dist/ssr/ShootingStar",
+                  "@phosphor-icons/react/dist/csr/*"
+                ],
+                "message": "No icons that suggest AI or magic, and import each icon from its own dist/ssr module."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

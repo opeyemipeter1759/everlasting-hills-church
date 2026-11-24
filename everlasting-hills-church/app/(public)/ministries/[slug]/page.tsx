@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Crown, Heart, Zap, Users, ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Crown, Heart, Icon, TeensIcon, Users } from "@/components/icons";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import WhoItsFor from "@/components/ministries/WhoItsFor";
 import type { Metadata } from "next";
@@ -112,7 +112,7 @@ const MINISTRIES = {
     close: "You belong here exactly as you are.",
   },
   teens: {
-    icon: Zap,
+    icon: TeensIcon,
     name: "Teen's Ministry",
     heroImage: "/images/church_congregation_4_1779193639860.png",
     heroLabel: "The Next Generation",
@@ -249,7 +249,7 @@ export default async function MinistryDetailPage({
   });
   const m = { ...content, icon: base.icon, heroImage: content.heroImage ?? base.heroImage };
 
-  const Icon = m.icon;
+  const Glyph = m.icon;
 
   return (
     <main>
@@ -293,7 +293,7 @@ export default async function MinistryDetailPage({
               href="/ministries"
               className="inline-flex items-center gap-2 text-white/35 text-xs font-semibold uppercase tracking-widest mb-16 hover:text-white/65 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFB3C1] rounded"
             >
-              <ArrowLeft size={13} />
+              <Icon icon={ArrowLeft} size={13} />
               All Ministries
             </Link>
           </ScrollReveal>
@@ -330,7 +330,7 @@ export default async function MinistryDetailPage({
               <ScrollReveal delay={0.32}>
                 <div className="mt-10 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-3">
                   <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#87102C]/50">
-                    <Icon size={14} strokeWidth={2} className="text-[#FFB3C1]" />
+                    <Icon icon={Glyph} size={14} className="text-[#FFB3C1]" />
                   </span>
                   <span className="text-white/50 text-sm">{m.name}</span>
                 </div>
@@ -349,7 +349,7 @@ export default async function MinistryDetailPage({
 
                   {/* Giant watermark icon */}
                   <div className="pointer-events-none absolute bottom-0 right-0 translate-x-6 translate-y-6 opacity-[0.08]">
-                    <Icon size={260} strokeWidth={0.5} className="text-white" />
+                    <Icon icon={Glyph} size={260} weight="light" className="text-white" />
                   </div>
 
                   {/* Verse content */}
@@ -434,7 +434,7 @@ export default async function MinistryDetailPage({
               <ScrollReveal delay={0.25}>
                 <div className="rounded-2xl bg-white border border-[#E7CDD3] p-4 xs:p-6 flex items-center gap-4 shadow-sm">
                   <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFE8ED]">
-                    <Icon size={20} strokeWidth={1.8} className="text-[#87102C]" />
+                    <Icon icon={Glyph} size={20} className="text-[#87102C]" />
                   </span>
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.13em] xs:tracking-[0.25em] text-[#87102C] mb-1">
@@ -529,11 +529,7 @@ export default async function MinistryDetailPage({
                     className={`relative mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl
                       ${i === 1 ? "bg-white/15" : "bg-[#FFE8ED]"}`}
                   >
-                    <Icon
-                      size={18}
-                      strokeWidth={1.8}
-                      className={i === 1 ? "text-white" : "text-[#87102C]"}
-                    />
+                    <Icon icon={Glyph} size={18} className={i === 1 ? "text-white" : "text-[#87102C]"} />
                   </div>
 
                   <h3
@@ -567,7 +563,7 @@ export default async function MinistryDetailPage({
 
         {/* Watermark icon */}
         <div className="pointer-events-none absolute bottom-0 right-0 translate-x-16 translate-y-8 opacity-[0.04] z-0">
-          <Icon size={420} strokeWidth={0.4} className="text-white" />
+          <Icon icon={Glyph} size={420} weight="light" className="text-white" />
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
@@ -594,7 +590,7 @@ export default async function MinistryDetailPage({
                   href="/ministries"
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-7 py-3.5 text-sm font-semibold text-white hover:bg-white/10 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFB3C1]"
                 >
-                  <ArrowLeft size={14} />
+                  <Icon icon={ArrowLeft} size={14} />
                   All Ministries
                 </Link>
                 <Link
@@ -602,7 +598,7 @@ export default async function MinistryDetailPage({
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-[#87102C] px-7 py-3.5 text-sm font-semibold text-white hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#87102C]/30 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFB3C1]"
                 >
                   Visit Us Sunday
-                  <ArrowRight size={14} />
+                  <Icon icon={ArrowRight} size={14} />
                 </Link>
               </div>
             </ScrollReveal>

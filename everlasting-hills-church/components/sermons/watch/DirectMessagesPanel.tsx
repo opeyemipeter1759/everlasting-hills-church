@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Send, Search, X, PenLine, HelpCircle, ChevronDown, Inbox } from 'lucide-react';
+import { CaretDown, CircleNotch, Icon, MagnifyingGlass, PaperPlaneTilt, PencilLine, Question, Tray, X } from "@/components/icons";
 import { useSermonDirectMessages, useSendDirectMessage, useMemberSearch } from '@/lib/api';
 import { showToast } from '@/components/ui/toast/toast';
 import { timeAgo, Avatar } from './chatUi';
 import type { SermonDirectMessage, DirectMessageType, MemberPickerResult } from '@/lib/api/sermon-types';
 
-const TYPES: { id: DirectMessageType; label: string; icon: typeof PenLine }[] = [
-  { id: 'NOTE', label: 'Share a Note', icon: PenLine },
-  { id: 'QUESTION', label: 'Ask a Question', icon: HelpCircle },
+const TYPES: { id: DirectMessageType; label: string; icon: typeof PencilLine }[] = [
+  { id: 'NOTE', label: 'Share a Note', icon: PencilLine },
+  { id: 'QUESTION', label: 'Ask a Question', icon: Question },
 ];
 
 /** Search-as-you-type picker for who a note/question is addressed to. */
@@ -33,7 +33,7 @@ function RecipientPicker({
           {selected.firstName} {selected.lastName}
         </span>
         <button type="button" onClick={onClear} aria-label="Clear selected recipient" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-          <X size={14} />
+          <Icon icon={X} size={14} />
         </button>
       </div>
     );
@@ -41,7 +41,7 @@ function RecipientPicker({
 
   return (
     <div className="relative">
-      <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+      <Icon icon={MagnifyingGlass} size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
@@ -51,7 +51,7 @@ function RecipientPicker({
       {q.trim().length >= 2 && (
         <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#242426] shadow-lg py-1">
           {isFetching ? (
-            <div className="flex justify-center py-3"><Loader2 size={14} className="animate-spin text-gray-300" /></div>
+            <div className="flex justify-center py-3"><Icon icon={CircleNotch} size={14} className="animate-spin text-gray-300" /></div>
           ) : !results || results.length === 0 ? (
             <p className="text-xs text-gray-400 text-center py-3">No members found</p>
           ) : (
@@ -132,7 +132,7 @@ function ThreadCard({
           <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{message.content}</p>
         </div>
         <span className="text-[10px] text-gray-400 shrink-0">{timeAgo(message.createdAt)}</span>
-        <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        <Icon icon={CaretDown} size={14} className={`text-gray-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`} />
       </button>
 
       {expanded && (
@@ -172,7 +172,7 @@ function ThreadCard({
               disabled={sendMessage.isPending || !reply.trim()}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#87102C] text-white hover:bg-[#6E0C24] disabled:opacity-40 transition-all"
             >
-              {sendMessage.isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+              {sendMessage.isPending ? <Icon icon={CircleNotch} size={12} className="animate-spin" /> : <Icon icon={PaperPlaneTilt} size={12} />}
             </button>
           </div>
         </div>
@@ -217,7 +217,7 @@ export default function DirectMessagesPanel({
       <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/60 dark:bg-white/[0.02] p-4 space-y-3">
         <div className="flex items-center gap-1 rounded-lg bg-gray-100 dark:bg-white/5 p-1 w-fit">
           {TYPES.map((t) => {
-            const Icon = t.icon;
+            const Glyph = t.icon;
             const active = type === t.id;
             return (
               <button
@@ -228,7 +228,7 @@ export default function DirectMessagesPanel({
                   active ? 'bg-white dark:bg-[#2a2a2e] text-[#87102C] dark:text-[#e8768a] shadow-sm' : 'text-gray-500 dark:text-gray-400'
                 }`}
               >
-                <Icon size={12} /> {t.label}
+                <Icon icon={Glyph} size={12} /> {t.label}
               </button>
             );
           })}
@@ -251,8 +251,8 @@ export default function DirectMessagesPanel({
             disabled={sendMessage.isPending || !content.trim() || !recipient}
             className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-lg bg-[#87102C] text-white hover:bg-[#6E0C24] disabled:opacity-40 transition-all"
           >
-            {sendMessage.isPending && <Loader2 size={12} className="animate-spin" />}
-            <Send size={12} /> Send {type === 'QUESTION' ? 'Question' : 'Note'}
+            {sendMessage.isPending && <Icon icon={CircleNotch} size={12} className="animate-spin" />}
+            <Icon icon={PaperPlaneTilt} size={12} /> Send {type === 'QUESTION' ? 'Question' : 'Note'}
           </button>
         </div>
       </div>
@@ -260,11 +260,11 @@ export default function DirectMessagesPanel({
       {/* ── Threads ──────────────────────────────────────────────── */}
       {isLoading ? (
         <div className="flex justify-center py-6">
-          <Loader2 size={18} className="animate-spin text-gray-300" />
+          <Icon icon={CircleNotch} size={18} className="animate-spin text-gray-300" />
         </div>
       ) : !messages || messages.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-8 text-center">
-          <Inbox size={20} className="text-gray-300 dark:text-gray-600" />
+          <Icon icon={Tray} size={20} className="text-gray-300 dark:text-gray-600" />
           <p className="text-sm text-gray-400 dark:text-gray-500">No private notes or questions yet.</p>
         </div>
       ) : (

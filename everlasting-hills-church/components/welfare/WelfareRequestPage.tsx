@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useForm } from "react-hook-form";
-import { ChevronLeft, HeartHandshake, Loader2 } from "lucide-react";
+import { CaretLeft, CircleNotch, HandHeart, Icon } from "@/components/icons";
 import { useSubmitWelfareRequest } from "@/lib/api/welfare";
 import WelfareProgress from "./WelfareProgress";
 import WelfareSuccess from "./WelfareSuccess";
@@ -110,7 +110,7 @@ export default function WelfareRequestPage() {
       {/* Hero */}
       <section className="mx-auto max-w-2xl px-5 text-center">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FFF4F6] text-[#87102C] shadow-sm shadow-[#87102C]/10">
-          <HeartHandshake size={24} aria-hidden="true" />
+          <Icon icon={HandHeart} size={24} />
         </span>
         <h1
           className="mt-5 text-4xl font-normal leading-[1.05] tracking-tight text-[#2B1114] sm:text-5xl"
@@ -175,7 +175,7 @@ export default function WelfareRequestPage() {
                       onClick={goBack}
                       className="inline-flex min-h-12 items-center gap-1.5 rounded-xl px-4 text-sm font-bold text-[#2B1114] transition-colors hover:bg-[#FFF4F6]"
                     >
-                      <ChevronLeft size={16} aria-hidden="true" />
+                      <Icon icon={CaretLeft} size={16} />
                       Back
                     </button>
                   ) : (
@@ -197,7 +197,7 @@ export default function WelfareRequestPage() {
                       disabled={submit.isPending}
                       className="inline-flex min-h-12 flex-1 max-w-[200px] items-center justify-center gap-2 rounded-xl bg-[#87102C] px-6 text-sm font-bold text-white transition-colors hover:bg-[#6f0d24] disabled:opacity-60 sm:flex-none"
                     >
-                      {submit.isPending ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : null}
+                      {submit.isPending ? <Icon icon={CircleNotch} size={16} className="animate-spin" /> : null}
                       {submit.isPending ? "Sending…" : "Submit request"}
                     </button>
                   )}

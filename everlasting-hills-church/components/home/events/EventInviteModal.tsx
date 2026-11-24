@@ -1,6 +1,6 @@
 "use client";
 
-import { Share2 } from "lucide-react";
+import { Icon, ShareNetwork } from "@/components/icons";
 import Modal from "@/components/ui/overlay/Modal";
 import type { EventSummary } from "@/types";
 import { formatEventDateRange } from "@/components/events/detail/event-format";
@@ -38,7 +38,7 @@ export default function EventInviteModal({ event, onClose }: EventInviteModalPro
           onClick={handleShareLink}
           className="flex w-full items-center justify-center gap-2 rounded-full border border-[#E7CDD3] py-3 text-sm font-bold text-[#87102C] transition-all hover:bg-[#FFF4F6]"
         >
-          <Share2 size={15} />
+          <Icon icon={ShareNetwork} size={15} />
           {copied ? "Link copied!" : "Copy invite link"}
         </button>
       </div>

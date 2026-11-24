@@ -1,4 +1,4 @@
-import { BookOpen, CheckCircle2, CircleDashed, Flame, Moon, Sparkles, type LucideIcon } from "lucide-react";
+import { BookOpen, CheckCircle2, CircleDashed, Flame, Moon, type LucideIcon, Sprout } from "lucide-react";
 import type { ReadingMonitorData } from "@/lib/api/admin-reading";
 import { plural, TONE, type Filter } from "./shared";
 
@@ -16,7 +16,7 @@ function tilesFor(stats: ReadingMonitorData["stats"], finishedSomething: number)
   return [
     { label: "Reading", value: stats.reading, detail: `of ${stats.activeMembers} members read in the last 7 days`, icon: BookOpen, tone: "brand", filter: "READING" },
     { label: "Days read this week", value: stats.readingsThisWeek, detail: `by the ${plural(stats.reading, "person", "people")} reading`, icon: Flame, tone: "plain", filter: "READING" },
-    { label: "Just started", value: stats.justStarted ?? 0, detail: "Began a plan this week, nothing read yet", icon: Sparkles, tone: "plain", filter: "NEW" },
+    { label: "Just started", value: stats.justStarted ?? 0, detail: "Began a plan this week, nothing read yet", icon: Sprout, tone: "plain", filter: "NEW" },
     { label: "Gone quiet", value: stats.quiet, detail: "A plan over a week old, nothing read in 7 days", icon: Moon, tone: stats.quiet ? "warn" : "plain", filter: "QUIET" },
     { label: "No plan", value: stats.notStarted, detail: "Not on any plan right now", icon: CircleDashed, tone: "plain", filter: "NOT_STARTED" },
     { label: "Plans finished", value: stats.plansCompleted, detail: `by ${plural(finishedSomething, "member")}`, icon: CheckCircle2, tone: "good", filter: "HAS_FINISHED" },

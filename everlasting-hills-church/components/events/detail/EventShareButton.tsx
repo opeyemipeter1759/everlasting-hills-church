@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Share2 } from "lucide-react";
+import { Check, Icon, ShareNetwork } from "@/components/icons";
 import { useState } from "react";
 import { showToast } from "@/components/ui/toast/toast";
 import type { EventDetail } from "@/types";
@@ -29,7 +29,7 @@ export default function EventShareButton({ event }: { event: EventDetail }) {
     }
   }
 
-  return <button type="button" onClick={share} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/30 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#10080b]">{copied ? <Check size={16} /> : <Share2 size={16} />} Share event</button>;
+  return <button type="button" onClick={share} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/30 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#10080b]">{copied ? <Icon icon={Check} size={16} /> : <Icon icon={ShareNetwork} size={16} />} Share event</button>;
 }
 
 function formatClock(value: string) {

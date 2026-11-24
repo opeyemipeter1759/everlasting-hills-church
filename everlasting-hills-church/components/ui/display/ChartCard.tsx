@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { Download, Loader2 } from "lucide-react";
+import { CircleNotch, DownloadSimple, Icon } from "@/components/icons";
 import { downloadSvgAsPng } from "@/lib/export-png";
 
 interface ChartCardProps {
@@ -34,7 +34,7 @@ function ExportBtn({
       disabled={busy}
       className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-500 transition-colors hover:text-gray-800 disabled:opacity-50 dark:border-white/10 dark:text-gray-400 dark:hover:text-white"
     >
-      {busy ? <Loader2 size={9} className="animate-spin" /> : <Download size={9} />} {label}
+      {busy ? <Icon icon={CircleNotch} size={9} className="animate-spin" /> : <Icon icon={DownloadSimple} size={9} />} {label}
     </button>
   );
 }

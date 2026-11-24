@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowDown, ChevronDown, Sparkles } from "lucide-react";
+import { ArrowDown, CaretDown, Icon } from "@/components/icons";
 import { HEAVEN_ON_EARTH } from "./event-constants";
 
 /**
@@ -90,7 +90,6 @@ export default function HeroExperience() {
           transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 backdrop-blur-md px-4 py-2 text-xs tracking-[0.15em] xs:tracking-[0.3em] uppercase font-semibold text-white/75 mb-8"
         >
-          <Sparkles size={12} className="text-[#FFB3C1]" />
           A Gathering · Everlasting Hills
         </motion.p>
 
@@ -126,7 +125,7 @@ export default function HeroExperience() {
             className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#87102C] text-sm font-bold hover:bg-[#FFE8ED] hover:shadow-2xl hover:shadow-black/40 hover:-translate-y-0.5 transition-all duration-200"
           >
             Reserve My Seat
-            <ArrowDown size={14} />
+            <Icon icon={ArrowDown} size={14} />
           </a>
           <a
             href="#details"
@@ -161,7 +160,7 @@ export default function HeroExperience() {
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/40 hover:text-white/80 transition-colors"
       >
         <span className="text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] font-semibold">Scroll</span>
-        <ChevronDown size={18} className="animate-bounce" />
+        <Icon icon={CaretDown} size={18} className="animate-bounce" />
       </motion.a>
 
       {/* Local keyframes — kept inline so the page is self-contained */}

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Clock, Mail, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, EnvelopeSimple, Icon, XCircle } from "@/components/icons";
 import { useApplications, useDecideApplication, type Application } from "@/lib/api/classes";
 import { showToast } from "@/components/ui/toast/toast";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
@@ -208,7 +208,7 @@ function ApplicationDetail({ application: a, onBack, onDecided }: { application:
     <article className="rounded-[20px] border border-[var(--color-pink-border)] bg-white dark:border-white/10 dark:bg-white/[0.04]">
       <header className="border-b border-[var(--color-pink-border)] p-5 dark:border-white/10">
         <button type="button" onClick={onBack} className="mb-3 inline-flex min-h-9 items-center gap-1.5 text-sm text-black/60 lg:hidden dark:text-white/60">
-          <ArrowLeft size={15} aria-hidden="true" /> All applications
+          <Icon icon={ArrowLeft} size={15} /> All applications
         </button>
         <div className="flex flex-wrap items-center gap-4">
           <Avatar a={a} size={56} />
@@ -221,7 +221,7 @@ function ApplicationDetail({ application: a, onBack, onDecided }: { application:
           <div className="flex flex-wrap gap-2">
             {a.Member.email && (
               <a href={`mailto:${a.Member.email}`} className="cls-btn cls-btn-outline !px-3 !py-1.5 !text-sm" aria-label={`Email ${a.Member.firstName}`}>
-                <Mail size={14} aria-hidden="true" /> Email
+                <Icon icon={EnvelopeSimple} size={14} /> Email
               </a>
             )}
             <Link href={`/dashboard/admin/members/${a.Member.id}`} className="cls-btn cls-btn-outline !px-3 !py-1.5 !text-sm">
@@ -300,21 +300,21 @@ function ApplicationDetail({ application: a, onBack, onDecided }: { application:
                 }}
                 className="cls-btn cls-btn-outline !px-5 !py-2.5"
               >
-                <XCircle size={16} aria-hidden="true" /> Decline
+                <Icon icon={XCircle} size={16} /> Decline
               </button>
               <button type="button" disabled={decide.isPending} onClick={() => submit(true)} className="cls-btn cls-btn-primary !px-5 !py-2.5">
-                <CheckCircle2 size={16} aria-hidden="true" /> {decide.isPending ? "Saving…" : "Approve"}
+                <Icon icon={CheckCircle} size={16} /> {decide.isPending ? "Saving…" : "Approve"}
               </button>
             </div>
           </section>
         ) : (
           <section className="flex items-start gap-3 border-t border-[var(--color-pink-border)] pt-5 dark:border-white/10">
             {a.status === "DECLINED" ? (
-              <XCircle size={20} className="mt-0.5 shrink-0 text-black/50 dark:text-white/50" aria-hidden="true" />
+              <Icon icon={XCircle} size={20} className="mt-0.5 shrink-0 text-black/50 dark:text-white/50" />
             ) : a.status === "WAITING" ? (
-              <Clock size={20} className="mt-0.5 shrink-0 text-amber-600" aria-hidden="true" />
+              <Icon icon={Clock} size={20} className="mt-0.5 shrink-0 text-amber-600" />
             ) : (
-              <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
+              <Icon icon={CheckCircle} size={20} className="mt-0.5 shrink-0 text-emerald-600" />
             )}
             <div className="text-sm">
               <p className="font-semibold text-[var(--color-ink)] dark:text-white">

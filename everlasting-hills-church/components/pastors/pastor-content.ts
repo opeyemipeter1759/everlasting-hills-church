@@ -1,4 +1,4 @@
-import { BookOpen, Heart, Sprout, type LucideIcon } from "lucide-react";
+import { BookOpen, Heart, type IconComponent, Plant } from "@/components/icons";
 
 export interface Pastor {
   id: string;
@@ -50,8 +50,8 @@ export const PASTORS: Pastor[] = [
   },
 ];
 
-export const VALUES: { icon: LucideIcon; title: string; text: string }[] = [
+export const VALUES: { icon: IconComponent; title: string; text: string }[] = [
   { icon: BookOpen, title: "Rooted in the Word", text: "Clear, practical teaching that helps every believer grow deep and live it out." },
   { icon: Heart, title: "A shepherd's heart", text: "Care for every member — in seasons of joy, in seasons of need, and everything between." },
-  { icon: Sprout, title: "Raising the next generation", text: "Mentoring leaders and planting young people firmly in the house of God." },
+  { icon: Plant, title: "Raising the next generation", text: "Mentoring leaders and planting young people firmly in the house of God." },
 ];

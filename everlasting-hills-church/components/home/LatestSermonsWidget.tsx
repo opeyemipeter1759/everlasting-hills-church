@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Play, BookOpen, Headphones, ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen, Headphones, Icon, Play } from "@/components/icons";
 
 type Sermon = {
   id: string;
@@ -46,7 +46,7 @@ export default function LatestSermonsWidget({
             href="/sermons"
             className="flex items-center gap-1.5 text-sm font-semibold text-[#87102C] dark:text-[#e8768a] hover:gap-2.5 transition-all whitespace-nowrap flex-shrink-0"
           >
-            Full archive <ArrowRight size={14} />
+            Full archive <Icon icon={ArrowRight} size={14} />
           </Link>
         </div>
 
@@ -81,7 +81,7 @@ export default function LatestSermonsWidget({
                   {featured.scriptureRef && ` · ${featured.scriptureRef}`}
                 </p>
                 <span className="self-start flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-lg bg-white text-[#87102C] mt-1">
-                  {featured.audioUrl ? <><Play size={12} fill="currentColor" /> Listen Now</> : <><BookOpen size={12} /> Read More</>}
+                  {featured.audioUrl ? <><Icon icon={Play} size={12} weight="fill" /> Listen Now</> : <><Icon icon={BookOpen} size={12} /> Read More</>}
                 </span>
               </div>
             </Link>
@@ -108,7 +108,7 @@ export default function LatestSermonsWidget({
                     </div>
                   ) : (
                     <div className="w-16 aspect-video rounded-lg bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center flex-shrink-0">
-                      <BookOpen size={14} className="text-[#87102C]/40" />
+                      <Icon icon={BookOpen} size={14} className="text-[#87102C]/40" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -120,7 +120,7 @@ export default function LatestSermonsWidget({
                     </p>
                     {s.audioUrl && (
                       <span className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
-                        <Headphones size={10} /> {s.playCount} plays
+                        <Icon icon={Headphones} size={10} /> {s.playCount} plays
                       </span>
                     )}
                   </div>

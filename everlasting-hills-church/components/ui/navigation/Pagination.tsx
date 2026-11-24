@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CaretLeft, CaretRight, Icon } from "@/components/icons";
 
 interface PaginationProps {
   page: number;
@@ -37,7 +37,7 @@ export function Pagination({ page, pageCount, onPageChange, className = "" }: Pa
         aria-label="Previous page"
         className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7CDD3] dark:border-white/10 text-[#87102C] dark:text-white/70 transition-colors hover:bg-[#FFF4F6] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-30"
       >
-        <ChevronLeft size={15} />
+        <Icon icon={CaretLeft} size={15} />
       </button>
 
       {pages.map((p, i) =>
@@ -69,7 +69,7 @@ export function Pagination({ page, pageCount, onPageChange, className = "" }: Pa
         aria-label="Next page"
         className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7CDD3] dark:border-white/10 text-[#87102C] dark:text-white/70 transition-colors hover:bg-[#FFF4F6] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-30"
       >
-        <ChevronRight size={15} />
+        <Icon icon={CaretRight} size={15} />
       </button>
     </div>
   );

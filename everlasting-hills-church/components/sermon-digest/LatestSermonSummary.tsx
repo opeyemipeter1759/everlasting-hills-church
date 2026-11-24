@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, ChevronDown, PlayCircle, Sparkles } from "lucide-react";
+import { BookOpen, CaretDown, Icon, PlayCircle, WordOfTheDayIcon } from "@/components/icons";
 import { serviceLabel, useLatestSummary } from "@/lib/sermon-digest";
 
 /**
@@ -55,7 +55,7 @@ export default function LatestSermonSummary({ compact = false }: { compact?: boo
         {compact && (
           <button type="button" onClick={() => setExpanded((open) => !open)} aria-expanded={expanded} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#87102C] hover:underline dark:text-rose-300">
             {expanded ? "Show less" : "Read full summary"}
-            <ChevronDown size={14} aria-hidden="true" className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
+            <Icon icon={CaretDown} size={14} className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
           </button>
         )}
 
@@ -78,7 +78,7 @@ export default function LatestSermonSummary({ compact = false }: { compact?: boo
         {full && data.bibleReferences.length > 0 && (
           <div className="mt-5">
             <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
-              <BookOpen size={15} aria-hidden="true" />
+              <Icon icon={BookOpen} size={15} />
               Scriptures read
             </h3>
             <ul className="mt-2 flex flex-wrap gap-2">
@@ -94,7 +94,7 @@ export default function LatestSermonSummary({ compact = false }: { compact?: boo
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 bg-gray-50 px-5 py-3 sm:px-6 dark:border-white/10 dark:bg-white/[0.03]">
         <p className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
-          <Sparkles size={14} className="text-[#87102C] dark:text-[#f5d49a]" aria-hidden="true" />
+          <Icon icon={WordOfTheDayIcon} size={14} className="text-burgundy dark:text-[#f5d49a]" />
           Word of the Day: <strong className="text-gray-900 dark:text-white">{data.wordOfTheDay.word}</strong>
         </p>
         <a
@@ -103,7 +103,7 @@ export default function LatestSermonSummary({ compact = false }: { compact?: boo
           rel="noopener noreferrer"
           className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#87102C] px-4 text-sm font-semibold text-white transition hover:bg-[#6d0d24]"
         >
-          <PlayCircle size={16} aria-hidden="true" />
+          <Icon icon={PlayCircle} size={16} />
           Watch the sermon
         </a>
       </div>

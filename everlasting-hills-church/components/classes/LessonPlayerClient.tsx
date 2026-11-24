@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, PlayCircle, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle, Icon, PlayCircle, X } from "@/components/icons";
 import {
   useLesson,
   useSaveSummary,
@@ -61,7 +61,7 @@ function Part({
         </div>
         {done && (
           <span className="cls-chip flex-none">
-            <Check className="h-3.5 w-3.5" aria-hidden /> Done
+            <Icon icon={Check} size={24} className="h-3.5 w-3.5" /> Done
           </span>
         )}
       </div>
@@ -157,7 +157,7 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
         href={base}
         className={`inline-flex items-center gap-1.5 rounded text-sm text-black/60 hover:text-[var(--color-burgundy)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-burgundy)] dark:text-white/60 dark:hover:text-white`}
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden /> {view.class.title}
+        <Icon icon={ArrowLeft} size={24} className="h-4 w-4" /> {view.class.title}
       </Link>
 
       <header className="cls-reveal mt-6 max-w-3xl">
@@ -201,7 +201,7 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
                             : "border-[var(--color-pink-border)] dark:border-white/25"
                         }`}
                       >
-                        {s.done && <Check className="h-3.5 w-3.5" />}
+                        {s.done && <Icon icon={Check} size={24} className="h-3.5 w-3.5" />}
                       </span>
                       <span className={s.done ? "text-black/50 line-through decoration-black/20 dark:text-white/45" : ink}>{s.label}</span>
                     </a>
@@ -212,7 +212,7 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
             {view.next && (
               <p className="mt-5 flex items-start gap-2 border-t border-[var(--color-pink-border)] pt-4 text-sm text-black/60 dark:border-white/10 dark:text-white/60">
                 {progress.completed ? (
-                  <ArrowRight className="mt-0.5 h-4 w-4 flex-none text-[var(--color-burgundy)] dark:text-[var(--color-gold)]" aria-hidden />
+                  <Icon icon={ArrowRight} size={24} className="mt-0.5 h-4 w-4 flex-none text-[var(--color-burgundy)] dark:text-[var(--color-gold)]" />
                 ) : (
                   <span aria-hidden="true" className="mt-1.5 h-2 w-2 flex-none rounded-full border border-current" />
                 )}
@@ -251,7 +251,7 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
                 </p>
                 {progress.videoDone && (
                   <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)]">
-                    <CheckCircle2 className="h-4 w-4" aria-hidden /> You have watched this
+                    <Icon icon={CheckCircle} size={24} className="h-4 w-4" /> You have watched this
                   </span>
                 )}
               </div>
@@ -311,7 +311,7 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
               <p className="flex items-center gap-1.5 text-xs tabular-nums text-black/50 dark:text-white/50" aria-live="polite">
                 {normalizedLength >= SUMMARY_MIN_CHARS ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-[var(--color-gold)]" aria-hidden /> {normalizedLength} characters
+                    <Icon icon={Check} size={24} className="h-3.5 w-3.5 text-[var(--color-gold)]" /> {normalizedLength} characters
                   </>
                 ) : (
                   <>
@@ -348,7 +348,7 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
           <nav className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between" aria-label="Lessons">
             {view.previous ? (
               <Link href={`${base}/${view.previous.week}/${view.previous.slug}`} className="cls-btn cls-btn-outline">
-                <ArrowLeft className="h-4 w-4" aria-hidden /> {view.previous.title}
+                <Icon icon={ArrowLeft} size={24} className="h-4 w-4" /> {view.previous.title}
               </Link>
             ) : (
               <span />
@@ -356,7 +356,7 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
             {view.next ? (
               progress.completed ? (
                 <Link href={`${base}/${view.next.week}/${view.next.slug}`} className="cls-btn cls-btn-primary">
-                  {view.next.title} <ArrowRight className="h-4 w-4" aria-hidden />
+                  {view.next.title} <Icon icon={ArrowRight} size={24} className="h-4 w-4" />
                 </Link>
               ) : (
                 <span className="rounded-full bg-black/[0.04] px-3 py-1 text-sm text-black/55 dark:bg-white/10 dark:text-white/60">
@@ -366,7 +366,7 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
             ) : (
               progress.completed && (
                 <Link href={base} className="cls-btn cls-btn-primary">
-                  Back to the class <ArrowRight className="h-4 w-4" aria-hidden />
+                  Back to the class <Icon icon={ArrowRight} size={24} className="h-4 w-4" />
                 </Link>
               )
             )}
@@ -447,9 +447,9 @@ function QuizBlock({
                   {q.prompt}
                   {result &&
                     (outcome ? (
-                      <Check className="ml-2 inline h-4 w-4 text-green-600" aria-label="Right" />
+                      <Icon icon={Check} size={24} className="ml-2 inline h-4 w-4 text-green-600" label="Right" />
                     ) : (
-                      <X className="ml-2 inline h-4 w-4 text-red-600" aria-label="Not quite" />
+                      <Icon icon={X} size={24} className="ml-2 inline h-4 w-4 text-red-600" label="Not quite" />
                     ))}
                 </legend>
                 <div className="mt-3 space-y-2">

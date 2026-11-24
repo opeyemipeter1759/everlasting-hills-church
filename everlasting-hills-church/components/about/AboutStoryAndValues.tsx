@@ -1,4 +1,4 @@
-import { Compass, Heart, Target } from "lucide-react";
+import { Icon, Compass, Heart, Target } from "@/components/icons";
 
 interface AboutStoryAndValuesProps {
   story: { heading: string; paragraphs: string[] };
@@ -56,7 +56,7 @@ export default function AboutStoryAndValues({ story, cards }: AboutStoryAndValue
           </div>
           <div className="grid gap-5 md:grid-cols-3 md:gap-6">
             {cards.map((card, i) => {
-              const Icon = CARD_ICONS[i] ?? Heart;
+              const Glyph = CARD_ICONS[i] ?? Heart;
               const featured = i === 1;
               return (
                 <article
@@ -77,7 +77,7 @@ export default function AboutStoryAndValues({ story, cards }: AboutStoryAndValue
                     <span className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl ${
                       featured ? "bg-white/15 text-white" : "bg-[#87102C]/10 text-[#87102C]"
                     }`}>
-                      <Icon size={22} strokeWidth={1.8} aria-hidden="true" />
+                      <Icon icon={Glyph} size={22} />
                     </span>
                     <span className={`text-xs font-bold tracking-[0.18em] ${
                       featured ? "text-white/55" : "text-[#87102C]/50"

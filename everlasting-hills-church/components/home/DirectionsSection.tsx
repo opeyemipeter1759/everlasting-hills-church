@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Mail, MapPin, Navigation, Radio, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Broadcast, EnvelopeSimple, Icon, MapPin, NavigationArrow } from "@/components/icons";
 import { getNextService, isLiveNow } from "../../utils/ServiceUtils";
 import { useDirections } from "../../utils/UseDirection";
 import DirectionsModal from "./DirectionModal";
@@ -71,10 +71,7 @@ export default function DirectionsSection({ content }: { content: DirectionsCont
                   : "border-white/10 bg-white/5 text-white/60"
               }`}
             >
-              <Radio
-                size={12}
-                className={live ? "animate-pulse text-emerald-300" : "text-white/40"}
-              />
+              <Icon icon={Broadcast} size={12} className={live ? "animate-pulse text-emerald-300" : "text-white/40"} />
               {live ? "Service is live now" : `Next: ${next.label}`}
             </div>
 
@@ -107,9 +104,9 @@ export default function DirectionsSection({ content }: { content: DirectionsCont
                 onClick={directions.handleGetDirections}
                 className="group inline-flex items-center gap-2.5 rounded-2xl bg-white text-[#87102C] px-5 py-3 font-bold text-sm hover:bg-amber-50 hover:-translate-y-0.5 transition-all shadow-lg shadow-black/20"
               >
-                <Navigation size={15} />
+                <Icon icon={NavigationArrow} size={15} />
                 {content.ctaLabel}
-                <ArrowUpRight
+                <Icon icon={ArrowUpRight}
                   size={14}
                   className="opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
                 />
@@ -119,7 +116,7 @@ export default function DirectionsSection({ content }: { content: DirectionsCont
                 className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white font-medium transition-colors"
               >
                 {content.secondaryCta.label}
-                <ArrowUpRight size={13} />
+                <Icon icon={ArrowUpRight} size={13} />
               </a>
             </div>
           </div>
@@ -148,7 +145,7 @@ function AddressTile({ address, label }: { address: string; label: string }) {
     <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0e0407]/70 p-5 backdrop-blur-sm hover:border-white/20 transition-colors">
       <div className="flex items-start gap-3.5">
         <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#87102C]/25 text-[#e8768a] flex items-center justify-center">
-          <MapPin size={16} />
+          <Icon icon={MapPin} size={16} />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/40 mb-1.5">
@@ -175,7 +172,7 @@ function NextServiceTile({
 
       <div className="flex items-start gap-3.5 pl-2">
         <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#87102C]/25 text-[#e8768a] flex items-center justify-center">
-          <Radio size={16} className={live ? "animate-pulse" : ""} />
+          <Icon icon={Broadcast} size={16} className={live ? "animate-pulse" : ""} />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/40 mb-1.5">
@@ -196,7 +193,7 @@ function EmailTile({ email }: { email: string }) {
       className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0e0407]/70 p-5 backdrop-blur-sm hover:border-white/20 transition-colors flex items-start gap-3.5"
     >
       <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#87102C]/25 text-[#e8768a] flex items-center justify-center">
-        <Mail size={16} />
+        <Icon icon={EnvelopeSimple} size={16} />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/40 mb-1.5">

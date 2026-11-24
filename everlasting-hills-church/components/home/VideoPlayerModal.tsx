@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { X, Maximize2, Share2, MessageCircle, ThumbsUp, Bell, ExternalLink } from "lucide-react";
+import { ArrowsOut, ArrowSquareOut, Bell, ChatCircle, Icon, ShareNetwork, ThumbsUp, X } from "@/components/icons";
 import type { YouTubeVideo } from "@/types";
 
 interface VideoPlayerModalProps {
@@ -99,7 +99,7 @@ export default function VideoPlayerModal({ video, onClose }: VideoPlayerModalPro
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Close player"
           >
-            <X className="h-5 w-5" />
+            <Icon icon={X} size={24} className="h-5 w-5" />
           </button>
         </div>
 
@@ -118,19 +118,19 @@ export default function VideoPlayerModal({ video, onClose }: VideoPlayerModalPro
 
             <div className="flex flex-wrap items-center gap-3 border-t border-white/8 px-5 py-4 sm:px-6">
               <button type="button" onClick={handleFullscreen} className={actionButtonClass}>
-                <Maximize2 className="h-4 w-4" />
+                <Icon icon={ArrowsOut} size={24} className="h-4 w-4" />
                 Full screen
               </button>
               <button type="button" onClick={handleShare} className={actionButtonClass}>
-                <Share2 className="h-4 w-4" />
+                <Icon icon={ShareNetwork} size={24} className="h-4 w-4" />
                 Share
               </button>
               <a href={video.channelUrl} target="_blank" rel="noreferrer" className={actionButtonClass}>
-                <Bell className="h-4 w-4" />
+                <Icon icon={Bell} size={24} className="h-4 w-4" />
                 Subscribe
               </a>
               <a href={video.watchUrl} target="_blank" rel="noreferrer" className={actionButtonClass}>
-                <ExternalLink className="h-4 w-4" />
+                <Icon icon={ArrowSquareOut} size={24} className="h-4 w-4" />
                 Open on YouTube
               </a>
             </div>

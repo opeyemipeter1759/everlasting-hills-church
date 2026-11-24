@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Icon, Minus, TrendDown, TrendUp } from "@/components/icons";
 
 interface TrendBadgeProps {
   value: number;
@@ -15,7 +15,7 @@ export function TrendBadge({ value, suffix = "%", label = "vs last period", size
   if (value === 0) {
     return (
       <span className={`inline-flex items-center gap-0.5 ${textSize} font-semibold text-gray-400`}>
-        <Minus size={iconSize} /> No change
+        <Icon icon={Minus} size={iconSize} /> No change
       </span>
     );
   }
@@ -23,7 +23,7 @@ export function TrendBadge({ value, suffix = "%", label = "vs last period", size
   const isUp = value > 0;
   return (
     <span className={`inline-flex items-center gap-0.5 ${textSize} font-bold ${isUp ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-      {isUp ? <TrendingUp size={iconSize} /> : <TrendingDown size={iconSize} />}
+      {isUp ? <Icon icon={TrendUp} size={iconSize} /> : <Icon icon={TrendDown} size={iconSize} />}
       {isUp ? "+" : "-"}{abs}{suffix} {label}
     </span>
   );

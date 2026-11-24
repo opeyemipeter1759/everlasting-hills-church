@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle } from "lucide-react";
+import { Icon, Warning } from "@/components/icons";
 import  { Loader } from "@/components/header/icons";
 
 export type ConfirmDialogTone = "danger" | "warning" | "info";
@@ -75,7 +75,7 @@ export default function ConfirmDialog({
         <div className="p-4 sm:p-6">
           <div className="flex items-start gap-3 sm:gap-4">
             <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${styles.iconWrap}`}>
-              <AlertTriangle size={20} className={styles.icon} />
+              <Icon icon={Warning} size={20} className={styles.icon} />
             </div>
             <div className="flex-1 min-w-0">
               <h2 id="confirm-title" className="text-base font-bold text-gray-900 dark:text-white">{title}</h2>

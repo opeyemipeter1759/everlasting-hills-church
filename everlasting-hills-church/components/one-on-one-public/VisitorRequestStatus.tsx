@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MailCheck } from "lucide-react";
+import { EnvelopeSimpleOpen, Icon } from "@/components/icons";
 import Loader from "@/components/ui/feedback/Loader";
 import {
   useAcceptVisitorProposal,
@@ -51,7 +51,7 @@ export default function VisitorRequestStatus({ token }: { token: string }) {
     return (
       <div className={card}>
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FFE8ED] text-[#87102C] dark:bg-[#87102C]/25 dark:text-[#FFB3C1]">
-          <MailCheck size={22} aria-hidden="true" />
+          <Icon icon={EnvelopeSimpleOpen} size={22} />
         </span>
         <h2 className="font-serif text-3xl font-bold text-[#111] dark:text-white">Confirm your request</h2>
         <p className="text-[15px] text-[#3B2A2E] dark:text-white/80">

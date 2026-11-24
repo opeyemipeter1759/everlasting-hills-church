@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, EnvelopeSimple, Icon } from "@/components/icons";
 import { apiClient } from "@/lib/api/axios";
 import AuthSplitScreen from "@/components/auth/AuthSplitScreen";
 import { AuthDivider } from "@/components/auth/AuthDivider";
@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
         <div className="space-y-5">
           <div className="flex flex-col items-center gap-4 py-6">
             <div className="w-14 h-14 rounded-full bg-[#FFE8ED] flex items-center justify-center">
-              <Mail size={24} className="text-[#87102C]" />
+              <Icon icon={EnvelopeSimple} size={24} className="text-[#87102C]" />
             </div>
             <div className="text-center max-w-sm">
               <h2 className="text-lg font-bold text-gray-900 mb-2">Check your inbox</h2>
@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
             href="/login"
             className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors"
           >
-            <ArrowLeft size={16} />
+            <Icon icon={ArrowLeft} size={16} />
             Back to sign in
           </Link>
         </div>
@@ -96,7 +96,7 @@ export default function ForgotPasswordPage() {
             href="/login"
             className="flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-[#87102C] transition-colors"
           >
-            <ArrowLeft size={14} />
+            <Icon icon={ArrowLeft} size={14} />
             Back to sign in
           </Link>
         </form>

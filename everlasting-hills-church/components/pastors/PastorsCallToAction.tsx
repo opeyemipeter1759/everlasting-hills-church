@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, MessageCircle, Users } from "lucide-react";
+import { ArrowRight, BookOpen, ChatCircle, Icon, Users } from "@/components/icons";
 
 export default function PastorsCallToAction() {
   return (
@@ -20,7 +20,7 @@ export default function PastorsCallToAction() {
           <CtaCard href="/visit" icon={Users} title="Plan a visit" text="Know what to expect on Sunday." primary />
           <CtaCard
             href="/talk-to-a-pastor"
-            icon={MessageCircle}
+            icon={ChatCircle}
             title="Talk to a pastor"
             text="Book a one-on-one session."
           />
@@ -39,7 +39,7 @@ export default function PastorsCallToAction() {
 
 function CtaCard({
   href,
-  icon: Icon,
+  icon: Glyph,
   title,
   text,
   primary,
@@ -62,13 +62,16 @@ function CtaCard({
       } ${className}`}
     >
       <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/10">
-        <Icon size={18} />
+        <Icon icon={Glyph} size={18} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold">{title}</span>
         <span className="block text-xs text-white/60">{text}</span>
       </span>
-      <ArrowRight size={16} className="flex-shrink-0 opacity-60 transition-transform group-hover:translate-x-0.5" />
+      <Icon icon={ArrowRight}
+        size={16}
+        className="flex-shrink-0 opacity-60 transition-transform group-hover:translate-x-0.5"
+      />
     </Link>
   );
 }

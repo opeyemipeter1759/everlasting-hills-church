@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, Search, Building2, Info, X, Landmark } from "lucide-react";
+import { Bank, Buildings, Check, Copy, Icon, Info, MagnifyingGlass, X } from "@/components/icons";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import GiveHero from "@/components/give/GiveHero";
 
@@ -171,7 +171,7 @@ export default function GiveClient({
               </div>
 
               <div className="relative w-full sm:w-72">
-                <Search
+                <Icon icon={MagnifyingGlass}
                   size={15}
                   className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#b8a8ac]"
                 />
@@ -197,7 +197,7 @@ export default function GiveClient({
             >
               {filtered.length === 0 ? (
                 <div className="mt-10 rounded-2xl border border-dashed border-[#E7CDD3] bg-[#FFF4F6]/50 py-16 text-center">
-                  <Info className="mx-auto mb-3 text-[#87102C]/40" size={28} />
+                  <Icon icon={Info} className="mx-auto mb-3 text-[#87102C]/40" size={28} />
                   <p className="font-medium text-[#8a7e80]">
                     No account matches “{query}”.
                   </p>
@@ -239,7 +239,7 @@ export default function GiveClient({
           >
             <span className="flex items-center gap-2 text-sm font-semibold text-[#111]">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#87102C] text-white">
-                <Check size={13} />
+                <Icon icon={Check} size={13} />
               </span>
               Copied · {toast}
             </span>
@@ -298,7 +298,7 @@ function WireModal({ acc, onClose }: { acc: Account; onClose: () => void }) {
             aria-label="Close wire instructions"
             className="flex h-8 w-8 items-center justify-center rounded-full text-[#8a7e80] transition-colors hover:bg-[#FFF4F6] hover:text-[#87102C]"
           >
-            <X size={18} />
+            <Icon icon={X} size={18} />
           </button>
         </div>
 
@@ -331,9 +331,9 @@ function WireModal({ acc, onClose }: { acc: Account; onClose: () => void }) {
                         {f.value}
                         {!placeholder &&
                           (copiedField === key ? (
-                            <Check size={13} className="shrink-0 text-[#87102C]" />
+                            <Icon icon={Check} size={13} className="shrink-0 text-[#87102C]" />
                           ) : (
-                            <Copy size={13} className="shrink-0 text-[#b8a8ac]" />
+                            <Icon icon={Copy} size={13} className="shrink-0 text-[#b8a8ac]" />
                           ))}
                       </span>
                     </button>
@@ -388,7 +388,7 @@ function AccountCard({
             </span>
           ) : (
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#FFE8ED] text-[#87102C]">
-              <Building2 size={20} />
+              <Icon icon={Buildings} size={20} />
             </span>
           )}
           <span className="rounded-full bg-[#FFF4F6] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#87102C]">
@@ -427,14 +427,11 @@ function AccountCard({
             >
               {copied ? (
                 <>
-                  <Check size={14} /> Copied
+                  <Icon icon={Check} size={14} /> Copied
                 </>
               ) : (
                 <>
-                  <Copy
-                    size={14}
-                    className="transition-transform group-hover:-translate-y-0.5"
-                  />
+                  <Icon icon={Copy} size={14} className="transition-transform group-hover:-translate-y-0.5" />
                   Tap to copy
                 </>
               )}
@@ -449,7 +446,7 @@ function AccountCard({
               onClick={onShowWire}
               className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#87102C] hover:underline"
             >
-              <Landmark size={14} />
+              <Icon icon={Bank} size={14} />
               Wire Instructions
             </button>
           )}

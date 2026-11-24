@@ -1,5 +1,4 @@
 import {
-  Sparkles,
   LayoutDashboard,
   User,
   CheckCircle,
@@ -34,6 +33,7 @@ import {
   HandCoins,
   ClipboardCheck,
   Award,
+  Sunrise,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -151,7 +151,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Sermon Analytics",  href: "/dashboard/pastor/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },
       { label: "Follow-ups",        href: "/dashboard/pastor/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
       { label: "Testimonials",      href: "/dashboard/pastor/testimonials",       icon: MessageSquare,  minRole: "PASTOR" },
-      { label: "Decisions for Christ", href: "/dashboard/pastor/salvation",       icon: Sparkles,       minRole: "PASTOR" },
+      { label: "Decisions for Christ", href: "/dashboard/pastor/salvation",       icon: Sunrise,       minRole: "PASTOR" },
       // Who is reading and who has gone quiet is a pastoral question. Admins
       // keep it: the minimum role is unchanged from when it sat under Administration.
       { label: "Bible Reading",     href: "/dashboard/admin/reading",      icon: BookOpen,       minRole: "ADMIN" },

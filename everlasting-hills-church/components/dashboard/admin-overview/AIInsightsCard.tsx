@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Loader2, RefreshCw, Sparkles, TrendingDown, TrendingUp, UserCheck } from "lucide-react";
+import { ArrowRight, Loader2, RefreshCw, TrendingDown, TrendingUp, UserCheck, Lightbulb } from "lucide-react";
 import DashboardCard, { type DashboardCardChrome } from "./DashboardCard";
 import type { AttendancePoint } from "@/lib/mock/admin-dashboard.mock";
 import type { InsightsResponse } from "@/app/api/ai/insights/route";
@@ -61,7 +61,7 @@ export default function AIInsightsCard({ trend, fallback, ...chrome }: Props) {
     <DashboardCard
       kicker="Gemini AI"
       title="AI Insights"
-      icon={Sparkles}
+      icon={Lightbulb}
       action={action}
       {...chrome}
     >
@@ -74,7 +74,7 @@ export default function AIInsightsCard({ trend, fallback, ...chrome }: Props) {
       ) : data?.summary ? (
         <div className="mb-4 rounded-xl border border-violet-100 bg-violet-50/60 px-4 py-3 dark:border-violet-500/15 dark:bg-violet-500/[0.07]">
           <p className="flex items-start gap-2 text-xs leading-relaxed text-violet-800 dark:text-violet-200">
-            <Sparkles size={13} className="mt-0.5 flex-shrink-0 text-violet-500" />
+            <Lightbulb size={13} className="mt-0.5 flex-shrink-0 text-violet-500" />
             {data.summary}
           </p>
         </div>

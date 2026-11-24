@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Icon } from "@/components/icons";
 import type { CarouselSlide } from "./types";
 
 interface EditorialCardProps {
@@ -79,7 +79,7 @@ export default function EditorialCard({
         </p>
         <span className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-white/90 sm:mt-4 sm:text-xs">
           Learn More
-          <ArrowRight size={14} />
+          <Icon icon={ArrowRight} size={14} />
         </span>
       </motion.div>
     </motion.div>
