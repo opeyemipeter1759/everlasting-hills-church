@@ -79,3 +79,22 @@ Tests (`program-occurrences.spec.ts`), 14 of 14 passing:
 - the schedule in words for every preset.
 
 Decision: I fixed Dew of Heaven at 10 PM on the last day for 48 hours (open question 3).
+
+## Phase 3: public API and ICS
+
+Built:
+- : published only, this church only. Each card has its schedule in words, its eyebrow, , , , occurrence and session windows as instants, and resolved scripture text.
+- : adds the story, venue, stream, watches, and editions split into upcoming and archive.
+- : the rule itself when it maps one to one, else each dated occurrence. It answers 404 while the dates are to be announced.
+
+How it works:
+- Scripture references are parsed against , and the text is read from  (default translation, labelled) in one query.
+- Lists cache for 60 seconds, because the live state changes by the hour.
+
+Tests, 28 of 28 passing across the module ( and ):
+- order;
+- drafts and other churches hidden (404 too);
+- the card fields;
+- The Watch-House live at 1 AM on a Tuesday;
+- Furnace '26 in the archive and '27 upcoming;
+- the calendar file, with the Lagos TZID and the rule, and 404 while to be announced.
