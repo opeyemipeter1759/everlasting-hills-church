@@ -60,6 +60,7 @@ export default function EventSpotlight({ events }: { events: EventSummary[] }) {
                 event={event}
                 onNeedsRsvpModal={() => setRsvpModalEvent(event)}
                 registeredEvents={registeredEvents}
+                compact
               />
             </ScrollReveal>
           ))}

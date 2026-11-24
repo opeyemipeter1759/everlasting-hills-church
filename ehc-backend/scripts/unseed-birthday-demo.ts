@@ -1,6 +1,6 @@
 /**
  * Reverts scripts/seed-birthday-demo.ts: deletes the demo members/greetings and
- * clears the super admin's demo birthday. Run with `npx ts-node scripts/unseed-birthday-demo.ts`.
+ * clears the super admin's demo birthday. Run with `npx ts-node scripts/unseed-birthday-demo.ts <super-admin-email>`.
  */
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
@@ -9,9 +9,9 @@ const prisma = new PrismaClient();
 
 async function main() {
   const tenantId = process.env.DEFAULT_TENANT_ID;
-  const superAdminEmail = process.env.DEFAULT_SUPER_ADMIN_EMAIL?.toLowerCase();
+  const superAdminEmail = process.argv[2]?.trim().toLowerCase();
   if (!tenantId || !superAdminEmail) {
-    throw new Error('DEFAULT_TENANT_ID / DEFAULT_SUPER_ADMIN_EMAIL not set in .env');
+    throw new Error('Usage: unseed-birthday-demo.ts <super-admin-email>; DEFAULT_TENANT_ID must be set in .env');
   }
 
   const dummyMembers = await prisma.member.findMany({

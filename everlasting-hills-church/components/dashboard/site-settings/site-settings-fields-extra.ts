@@ -21,15 +21,3 @@ export const directions: FieldDef[] = [
   { kind: "text", key: "ctaLabel", label: "\"Get directions\" button label", help: "The button triggers maps/geolocation directly — no link to set" },
   cta("secondaryCta", "Secondary button"),
 ];
-
-export const setman: FieldDef[] = [
-  { kind: "boolean", key: "visible", label: "Show this section on the homepage" },
-  { kind: "text", key: "label", label: "Section label", help: "Small eyebrow above the headline" },
-  { kind: "text", key: "headline", label: "Headline" },
-  { kind: "text", key: "headlineAccent", label: "Headline accent (burgundy second line)" },
-  { kind: "list", key: "paragraphs", label: "Message", help: "One paragraph per line (up to 5)" },
-  { kind: "image", key: "photo", label: "Portrait", help: "Tall portrait works best (4:5). Leave empty to show the church monogram.", nullable: true },
-  { kind: "text", key: "name", label: "Name", help: "e.g. Pastor John Doe" },
-  { kind: "text", key: "title", label: "Title / role", help: "Shown under the name" },
-  cta("cta", "Button"),
-];

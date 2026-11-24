@@ -17,7 +17,7 @@ export default function FallbackArt({ title }: { title?: string }) {
       />
       <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
         {title ? (
-          <p className="line-clamp-2 text-2xl font-black uppercase leading-tight tracking-[0.08em] text-white/85 drop-shadow">
+          <p className="line-clamp-2 text-lg font-bold uppercase leading-tight tracking-[0.08em] text-white/85 drop-shadow">
             {title}
           </p>
         ) : (

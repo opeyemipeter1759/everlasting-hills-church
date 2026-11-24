@@ -45,3 +45,16 @@ describe('document uploads environment', () => {
     expect(() => validateEnv({ ...valid, DOCUMENT_UPLOADS_ENABLED: 'yes' })).toThrow('DOCUMENT_UPLOADS_ENABLED');
   });
 });
+
+describe('Super Admin bootstrap environment', () => {
+  it('does not retain the legacy default-account credentials', () => {
+    const env = validateEnv({
+      ...valid,
+      DEFAULT_SUPER_ADMIN_EMAIL: 'dummy-admin@example.invalid',
+      DEFAULT_SUPER_ADMIN_PASSWORD: 'not-a-real-password',
+    });
+
+    expect(env).not.toHaveProperty('DEFAULT_SUPER_ADMIN_EMAIL');
+    expect(env).not.toHaveProperty('DEFAULT_SUPER_ADMIN_PASSWORD');
+  });
+});

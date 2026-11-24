@@ -1,6 +1,6 @@
 /**
  * One-off demo seed for the birthday feature. Not wired into any build/CI step —
- * run manually with `npx ts-node scripts/seed-birthday-demo.ts` and delete afterward.
+ * run manually with `npx ts-node scripts/seed-birthday-demo.ts <super-admin-email>` and delete afterward.
  */
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
@@ -17,14 +17,14 @@ function dateOffsetFromToday(days: number): Date {
 
 async function main() {
   const tenantId = process.env.DEFAULT_TENANT_ID;
-  const superAdminEmail = process.env.DEFAULT_SUPER_ADMIN_EMAIL?.toLowerCase();
+  const superAdminEmail = process.argv[2]?.trim().toLowerCase();
   if (!tenantId || !superAdminEmail) {
-    throw new Error('DEFAULT_TENANT_ID / DEFAULT_SUPER_ADMIN_EMAIL not set in .env');
+    throw new Error('Usage: seed-birthday-demo.ts <super-admin-email>; DEFAULT_TENANT_ID must be set in .env');
   }
 
   const superAdminMember = await prisma.member.findFirst({ where: { tenantId, email: superAdminEmail } });
   if (!superAdminMember) {
-    throw new Error(`No Member found for ${superAdminEmail} — log in once first so the bootstrap seed runs.`);
+    throw new Error(`No Member found for ${superAdminEmail} — log in once first so the profile exists.`);
   }
 
   await prisma.member.update({
