@@ -175,3 +175,37 @@ The backend Programs suite is at 42 of 42, with the anchor added.
 Checks:
 - I checked the pages by eye against a local backend running on the test database, with five programs and verses copied from production. Screenshots are taken in Phase 8.
 - Fixed along the way: the name appearing twice on each card and on the detail hero, the groups looking empty, and a muddy hero cover.
+
+## Phase 6: admin UI
+
+I invoked the frontend-design skill before the admin form.
+
+The plan:
+- It uses the existing dashboard kit: the same cards, buttons, themed `Select` and `ConfirmDialog`, in light and dark.
+- The one distinctive piece is a live, sticky preview of the public card beside the form. It uses the real public card component, with the Programs typefaces loaded on the admin route, so what the admin sees is what visitors get.
+
+Routes:
+- `/dashboard/admin/programs`, the list;
+- `/dashboard/admin/programs/new`, to create;
+- `/dashboard/admin/programs/[id]`, to edit.
+
+I used `/dashboard/admin/programs` rather than the prompt's `/dashboard/programs`, because every admin screen lives under `/dashboard/admin`, which already carries the Admin route rule. The page-access map entry follows it. Programs is in the dashboard sidebar after Gatherings, and in the permissions nav list.
+
+The list:
+- drag a row, or use the up and down buttons, to reorder;
+- the reorder shows at once and is put back if the server refuses;
+- status chips, a Featured toggle, and amber "needs attention" chips (date to be announced, working name, scripture needing confirmation).
+
+The editor is in sections: Basics, Schedule, Scripture, Sessions, Editions, Media, Call to action, Visibility.
+- **Schedule builder.** There are six presets: weekly on chosen days, monthly on the last day, monthly on day N, yearly on the last weekend of a month, yearly in a month with dates per edition, and date to be announced. Each maps to exactly one accepted rule and back, so no one types an RRULE. The server works out the schedule in words and the next three dates live as it changes.
+- **Scripture picker.** Book names autocomplete from the Bible tables. "Check" verifies the reference and shows its text before it can be added. Each scripture can be marked "needs confirmation".
+- **Story.** Plain paragraphs separated by blank lines, stored as simple HTML and cleaned again by the API. I chose this over a rich editor.
+- **Media.** Logo and cover upload to R2 through the existing endpoint. The accent is one of the four brand tokens.
+- **Saving.** Save sends a PATCH with only the changed fields, and replaces only the lists that changed. Publishing waits until changes are saved.
+- **Unsaved changes.** The browser warns before the page is closed, and Back asks before leaving.
+
+Tests, 18 of 18 across the Programs frontend:
+- `schedule-presets.test.ts`: each preset produces the right RRULE, every preset round-trips, and an unknown rule never becomes a guess;
+- `programs-admin.test.tsx`: the attention chips; moving a row sends the new order; Save sends only the changed field and leaves untouched lists alone; a list is replaced only when it changed; the story text converts to HTML and back, safely.
+
+Not checked by eye: the admin screens need a real sign-in, which I don't have locally. They are covered by the component tests.

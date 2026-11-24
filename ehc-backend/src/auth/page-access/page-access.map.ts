@@ -66,7 +66,7 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
   },
   { href: '/dashboard/admin/follow-up-routing', role: Role.ADMIN, paths: ['/routing-rules'] },
   { href: '/dashboard/admin/gatherings', role: Role.ADMIN, paths: ['/gatherings'] },
-  { href: '/dashboard/programs', role: Role.ADMIN, paths: ['/programs', '/uploads/image'] },
+  { href: '/dashboard/admin/programs', role: Role.ADMIN, paths: ['/programs', '/uploads/image'] },
   { href: '/dashboard/admin/home-cell', role: Role.ADMIN, paths: ['/home-cell'] },
   { href: '/dashboard/admin/inventory', role: Role.ADMIN, paths: ['/inventory', '/departments', '/uploads/image'] },
   { href: '/dashboard/admin/members', role: Role.ADMIN, paths: ['/members', '/users', '/assignments', '/units'] },
