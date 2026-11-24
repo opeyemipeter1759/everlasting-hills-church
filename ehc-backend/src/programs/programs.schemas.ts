@@ -56,7 +56,13 @@ const ENUMS = {
  * omitted field is left alone.
  */
 const fields = {
-  slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use lowercase letters, numbers and dashes').max(60),
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use lowercase letters, numbers and dashes')
+    .max(60)
+    .refine((s) => s !== 'anchor', '"anchor" is used by the Programs page itself; pick another'),
   name: text(80).min(1, 'Give the program a name'),
   nameStatus: ENUMS.nameStatus,
   eyebrow: optionalText(80),

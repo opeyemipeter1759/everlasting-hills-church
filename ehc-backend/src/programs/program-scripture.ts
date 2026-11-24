@@ -65,10 +65,14 @@ export interface ResolvedScripture {
  * OR of primary-key ranges). A reference with no verses in the table resolves
  * to null text rather than failing the page.
  */
-export async function resolveScriptures(prisma: PrismaService, refs: ScriptureRef[]): Promise<ResolvedScripture[]> {
+export async function resolveScriptures(prisma: PrismaService, refs: ScriptureRef[], translationCode?: string): Promise<ResolvedScripture[]> {
   if (!refs.length) return [];
+  const pickTranslation = async () => {
+    const asked = translationCode ? await prisma.bibleTranslation.findUnique({ where: { code: translationCode }, select: { id: true, code: true } }) : null;
+    return asked ?? prisma.bibleTranslation.findFirst({ where: { isDefault: true }, select: { id: true, code: true } });
+  };
   const [translation, books] = await Promise.all([
-    prisma.bibleTranslation.findFirst({ where: { isDefault: true }, select: { id: true, code: true } }),
+    pickTranslation(),
     prisma.bibleBook.findMany({ where: { id: { in: [...new Set(refs.map((r) => r.bookId))] } }, select: { id: true, name: true } }),
   ]);
   const names = new Map(books.map((b) => [b.id, b.name]));

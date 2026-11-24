@@ -132,3 +132,46 @@ Tests (`programs-admin.http.db.spec.ts`, with the real RolesGuard), 13 of 13 pas
 - the schedule preview, including the to-be-announced case.
 
 The whole module is now at 41 of 41.
+
+## Phase 5: public UI
+
+I invoked the frontend-design skill before the first component.
+
+The plan:
+- The boldness goes into typographic covers. Without a logo, each card's cover is the program's name in DM Serif Display, over a glow in its brand accent (burgundy, gold, crimson or deep burgundy).
+- No stock imagery, so the cards add almost nothing to download on 4G.
+- Everything else stays quiet: white frosted cards on black, left aligned, one staggered entrance, and the live pulse as the only ongoing motion.
+- The brief's fixed points are honoured: the small-caps cadence eyebrow, the palette, the two typefaces and the motion ease.
+
+`/programs`:
+- A hero ("Our appointed times"), with Genesis 49:26 as a quiet anchor.
+- "The rhythm of the house": live programs first, then the soonest, then those still to be announced. It is recomputed every minute from the server's windows.
+- Groups for Weekly, Monthly, Annual and Special, each as a row with its heading beside the cards.
+- A loading skeleton shaped like the cards, an empty state and an error state.
+
+`/programs/[slug]`:
+- The hero cover is the page heading, with the call to action, a stream link and Add to calendar.
+- The scripture block is the emotional centre: full verse text with the translation named, stepping down a size for long passages.
+- The schedule in words, the next three dates in WAT, and the calendar file.
+- The watches, with the one on now marked.
+- Editions, with Furnace '26 (Dominion) in the archive.
+- The long description, cleaned on the server before it was saved.
+
+Decisions:
+- **Anchor verse in the KJV.** The verse is read from the KJV because its "unto the utmost bound of the everlasting hills" is where the church's name comes from. The default WEB reads "ancient hills". This needed a new public endpoint, `GET /public/programs/anchor`, so "anchor" is now a reserved slug.
+- **Fonts are self-hosted** from `app/fonts` (DM Serif Display, Instrument Sans) with `next/font/local`, like the root layout's fonts. `next/font/google` fails at build time here, and Google Fonts was unreachable from this machine during the build.
+- **Clock.** A minute-ticking hook starts from the server's render time, so the first client render matches the server HTML.
+
+Tests, 6 of 6 passing (`components/programs/programs.test.tsx`):
+- Live and the watch on now;
+- the next time, in words, before it starts;
+- the to-be-announced copy, the working name, and a program with no scripture;
+- the rhythm strip's order and wording;
+- grouping and the empty state;
+- the Lagos-time wording helpers.
+
+The backend Programs suite is at 42 of 42, with the anchor added.
+
+Checks:
+- I checked the pages by eye against a local backend running on the test database, with five programs and verses copied from production. Screenshots are taken in Phase 8.
+- Fixed along the way: the name appearing twice on each card and on the detail hero, the groups looking empty, and a muddy hero cover.
