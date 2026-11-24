@@ -83,18 +83,52 @@ Decision: I fixed Dew of Heaven at 10 PM on the last day for 48 hours (open ques
 ## Phase 3: public API and ICS
 
 Built:
-- : published only, this church only. Each card has its schedule in words, its eyebrow, , , , occurrence and session windows as instants, and resolved scripture text.
-- : adds the story, venue, stream, watches, and editions split into upcoming and archive.
-- : the rule itself when it maps one to one, else each dated occurrence. It answers 404 while the dates are to be announced.
+- `GET /public/programs`: published only, this church only. Each card has its schedule in words, its eyebrow, `nextOccurrence`, `isLiveNow`, `liveSession`, occurrence and session windows as instants, and resolved scripture text.
+- `GET /public/programs/:slug`: adds the story, venue, stream, watches, and editions split into upcoming and archive.
+- `GET /public/programs/:slug/calendar.ics`: the rule itself when it maps one to one, else each dated occurrence. It answers 404 while the dates are to be announced.
 
 How it works:
-- Scripture references are parsed against , and the text is read from  (default translation, labelled) in one query.
+- Scripture references are parsed against `BibleBook`, and the text is read from `BibleVerse` (default translation, labelled) in one query.
 - Lists cache for 60 seconds, because the live state changes by the hour.
 
-Tests, 28 of 28 passing across the module ( and ):
+Tests, 28 of 28 passing across the module (`program-scripture.spec.ts` and `programs-public.http.db.spec.ts`):
 - order;
 - drafts and other churches hidden (404 too);
 - the card fields;
 - The Watch-House live at 1 AM on a Tuesday;
 - Furnace '26 in the archive and '27 upcoming;
 - the calendar file, with the Lagos TZID and the rule, and 404 while to be announced.
+
+## Phase 4: admin API
+
+The admin API is `/programs`, behind `@Roles(Role.ADMIN)`. Roles come from assignment rows (`effectiveRoles`), and the hierarchy lets Admin, Admin Head, Pastor and Super Admin through.
+
+Routes:
+- list, get, create (saved as a draft), update;
+- publish, unpublish, archive, delete (a published program must be unpublished or archived first);
+- `PATCH /programs/order`;
+- replace scriptures, sessions and editions;
+- `POST /programs/schedule-preview`;
+- `GET /programs/bible-books` and `GET /programs/scripture-check` for the picker.
+
+Rules:
+- The update schema is the create fields with no defaults, made optional. A PATCH that leaves a field out cannot reset it, and a test proves it.
+- Long descriptions are cleaned on the server against an allowlist.
+- Stream, logo, cover and recording links must be https. The CTA may also be a path on this site.
+- Only rules the schedule presets produce are accepted.
+- Every write calls the existing revalidation hook with the tag `programs:<tenantId>` and the path `/programs`.
+- Publish, unpublish, archive and delete each write an `AuditLog` row.
+- The page-access map gains `/dashboard/programs`, so a page permission opens the API calls the page makes.
+- The OpenAPI contract and the frontend's generated types are regenerated.
+
+Tests (`programs-admin.http.db.spec.ts`, with the real RolesGuard), 13 of 13 passing:
+- the six roles: Super Admin, Pastor and Admin get in; Unit Lead, Member and Visitor get 403;
+- the list is ordered, scoped to this church, with attention flags;
+- a PATCH leaves every omitted field alone;
+- HTML is cleaned, http links are refused, and a duplicate slug gets 409;
+- each status change leaves an audit row and triggers revalidation;
+- reorder refuses another church's id;
+- scriptures are checked against the Bible, and sessions and editions are replaced;
+- the schedule preview, including the to-be-announced case.
+
+The whole module is now at 41 of 41.

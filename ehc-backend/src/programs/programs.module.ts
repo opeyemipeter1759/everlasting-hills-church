@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { IcsBuilderService } from '../calendar/services/ics-builder.service';
+import { CmsRevalidateService } from '../cms/services/cms-revalidate.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { ProgramsAdminController } from './programs-admin.controller';
+import { ProgramsAdminService } from './programs-admin.service';
 import { ProgramsPublicController } from './programs-public.controller';
 import { ProgramsPublicService } from './programs-public.service';
 
@@ -11,7 +14,7 @@ import { ProgramsPublicService } from './programs-public.service';
  */
 @Module({
   imports: [PrismaModule],
-  controllers: [ProgramsPublicController],
-  providers: [ProgramsPublicService, IcsBuilderService],
+  controllers: [ProgramsPublicController, ProgramsAdminController],
+  providers: [ProgramsPublicService, ProgramsAdminService, IcsBuilderService, CmsRevalidateService],
 })
 export class ProgramsModule {}
