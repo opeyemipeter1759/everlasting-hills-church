@@ -1,3 +1,4 @@
+import Image from "next/image";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import { PICNIC_FALLBACK, type PicnicContent } from "./picnic-content";
 import { INK } from "./picnic-styles";
@@ -24,8 +25,15 @@ export default function PicnicGames({ c }: { c: PicnicContent }) {
           {games.map((game, i) => (
             <li key={`${game.name}-${i}`}>
               <ScrollReveal delay={(i % 4) * 0.06} className="h-full">
-                <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-white p-6 shadow-[0_18px_40px_-30px_rgba(27,23,20,0.55)] ring-1 ring-[#1B1714]/[0.07] transition-transform duration-300 hover:-translate-y-1">
-                  <span className="gingham absolute inset-x-0 top-0 h-1.5 opacity-80" aria-hidden="true" />
+                <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-[0_18px_40px_-30px_rgba(27,23,20,0.55)] ring-1 ring-[#1B1714]/[0.07] transition-transform duration-300 hover:-translate-y-1">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#EFE6D6]">
+                    {game.image ? (
+                      <Image src={game.image} alt={game.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 280px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    ) : (
+                      <div className="gingham h-full w-full opacity-60" aria-hidden="true" />
+                    )}
+                  </div>
+                  <div className="flex flex-1 flex-col p-6">
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="font-serif text-3xl leading-none text-[#87102C]">{String(i + 1).padStart(2, "0")}</span>
                     {game.forWho?.trim() && (
@@ -34,6 +42,7 @@ export default function PicnicGames({ c }: { c: PicnicContent }) {
                   </div>
                   <h3 className={`mt-5 text-lg font-semibold leading-snug ${INK}`}>{game.name}</h3>
                   <p className="mt-2 text-[15px] leading-relaxed text-[#1B1714]/65">{game.description}</p>
+                  </div>
                 </article>
               </ScrollReveal>
             </li>

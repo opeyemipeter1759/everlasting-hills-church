@@ -5,7 +5,7 @@ import PicnicGames from "./PicnicGames";
 import PicnicHero from "./PicnicHero";
 import PicnicRsvp from "./PicnicRsvp";
 import PicnicShare from "./PicnicShare";
-import { PHOTOS } from "./picnic-config";
+import { GAME_PHOTO_CREDITS, PHOTOS } from "./picnic-config";
 import { TBA_DATE, dateParts, type PicnicContent } from "./picnic-content";
 
 export default function PicnicLanding({ c }: { c: PicnicContent }) {
@@ -51,7 +51,7 @@ export default function PicnicLanding({ c }: { c: PicnicContent }) {
             Unsplash
           </a>{" "}
           by{" "}
-          {Object.values(PHOTOS).map((p, i, all) => (
+          {[...Object.values(PHOTOS), ...GAME_PHOTO_CREDITS].map((p, i, all) => (
             <span key={p.src}>
               <a href={p.page} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
                 {p.by}

@@ -86,14 +86,14 @@ export function GiftRegisterModal({ open, onClose, title, subtitle, children }: 
               aria-modal="true"
               aria-labelledby={titleId}
               tabIndex={-1}
-              className="pointer-events-auto relative grid w-full max-w-4xl overflow-hidden rounded-3xl bg-[#FFFDF8] shadow-[0_40px_100px_-30px_rgba(20,12,6,0.7)] outline-none ring-1 ring-black/5 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] dark:bg-[#1c1a18] dark:ring-white/10"
+              className="pointer-events-auto relative flex max-h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-[#FFFDF8] shadow-[0_40px_100px_-30px_rgba(20,12,6,0.7)] outline-none ring-1 ring-black/5 md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] dark:bg-[#1c1a18] dark:ring-white/10"
               initial={still ? { opacity: 0 } : { opacity: 0, scale: 0.92, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={still ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 12 }}
               transition={{ type: "spring", stiffness: 340, damping: 26 }}
             >
               <GiftModalAside />
-              <div className="relative px-5 pb-6 pt-6 sm:px-8 sm:pb-8 sm:pt-8">
+              <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pt-6 sm:px-7 md:max-h-[80vh]">
                 <button
                   type="button"
                   onClick={onClose}
@@ -103,11 +103,11 @@ export function GiftRegisterModal({ open, onClose, title, subtitle, children }: 
                   <X size={18} />
                 </button>
                 <p className="pr-10 text-sm font-medium text-[#87102C] dark:text-[#FFB3C1]">Picnic &amp; gift exchange</p>
-                <h2 id={titleId} className="mt-1 pr-10 font-serif text-[1.9rem] leading-[1.1] text-[#1B1714] dark:text-white">
+                <h2 id={titleId} className="mt-1 pr-10 font-serif text-[1.6rem] leading-[1.15] text-[#1B1714] sm:text-[1.75rem] dark:text-white">
                   {title}
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed text-[#1B1714]/65 dark:text-white/60">{subtitle}</p>
-                <div className="mt-6">{children}</div>
+                <p className="mt-1.5 max-w-md text-sm leading-relaxed text-[#1B1714]/65 dark:text-white/60">{subtitle}</p>
+                <div className="mt-5 flex-1">{children}</div>
               </div>
             </motion.div>
           </div>

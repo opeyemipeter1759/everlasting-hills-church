@@ -15,7 +15,9 @@ const dateOnly = z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD'
 
 const ActivitySchema = z.object({ title: text(80), body: text(400) });
 /** A game on the day; admins add as many as they like. */
-const GameSchema = z.object({ name: text(80), description: text(400), forWho: optionalText(40) });
+/** A relative path or an absolute URL (Unsplash, R2 uploads); null = the gingham panel. */
+const imageUrl = z.string().trim().max(2000).refine((v) => v.startsWith('/') || /^https?:\/\//i.test(v), 'Must be a relative path or absolute URL').nullable().optional();
+const GameSchema = z.object({ name: text(80), description: text(400), forWho: optionalText(40), image: imageUrl });
 
 export const PicnicSchema = z.object({
   kicker: text(120),
@@ -72,14 +74,14 @@ export const DEFAULT_PICNIC: PicnicContent = {
   gamesTitle: 'Something for every age.',
   gamesIntro: 'Join in, cheer from the blanket, or keep score. Prizes for the winners, bragging rights for everyone else.',
   games: [
-    { name: 'Sack race', description: 'Into the sack and hop for the line. Children first, then the brave grown-ups.', forWho: 'Everyone' },
-    { name: 'Tug of war', description: 'Men against women, or one unit against another. Hold the rope; the grass is soft.', forWho: 'Adults' },
-    { name: 'Egg-and-spoon race', description: 'Steady hands win. Drop the egg and it\'s back to the start.', forWho: 'Children' },
-    { name: 'Musical chairs', description: 'One chair short every round, and the music stops when you least expect it.', forWho: 'Everyone' },
-    { name: 'Ayo and Ludo', description: 'Board games on the mats for anyone who would rather sit and plot.', forWho: 'Everyone' },
-    { name: 'Five-a-side football', description: 'A small pitch, small goals and very big opinions.', forWho: 'Teens and adults' },
-    { name: 'Bible quiz', description: 'Teams, a buzzer and questions from Genesis to Revelation.', forWho: 'Everyone' },
-    { name: 'Face painting and colouring', description: 'A quiet corner with crayons and colours for the little ones.', forWho: 'Children' },
+    { name: 'Sack race', description: 'Into the sack and hop for the line. Children first, then the brave grown-ups.', forWho: 'Everyone', image: 'https://images.unsplash.com/photo-1756113438470-2b1f166801b4?auto=format&fit=crop&w=800&q=80' },
+    { name: 'Tug of war', description: 'Men against women, or one unit against another. Hold the rope; the grass is soft.', forWho: 'Adults', image: 'https://images.unsplash.com/photo-1748698534410-867798220fa8?auto=format&fit=crop&w=800&q=80' },
+    { name: 'Egg-and-spoon race', description: 'Steady hands win. Drop the egg and it\'s back to the start.', forWho: 'Children', image: null },
+    { name: 'Musical chairs', description: 'One chair short every round, and the music stops when you least expect it.', forWho: 'Everyone', image: 'https://images.unsplash.com/photo-1603501266047-f4a2f093503b?auto=format&fit=crop&w=800&q=80' },
+    { name: 'Ayo and Ludo', description: 'Board games on the mats for anyone who would rather sit and plot.', forWho: 'Everyone', image: 'https://images.unsplash.com/photo-1761716475708-ef98183ccb62?auto=format&fit=crop&w=800&q=80' },
+    { name: 'Five-a-side football', description: 'A small pitch, small goals and very big opinions.', forWho: 'Teens and adults', image: 'https://images.unsplash.com/photo-1622659097509-4d56de14539e?auto=format&fit=crop&w=800&q=80' },
+    { name: 'Bible quiz', description: 'Teams, a buzzer and questions from Genesis to Revelation.', forWho: 'Everyone', image: null },
+    { name: 'Face painting and colouring', description: 'A quiet corner with crayons and colours for the little ones.', forWho: 'Children', image: 'https://images.unsplash.com/photo-1764662367028-9d70a9942d95?auto=format&fit=crop&w=800&q=80' },
   ],
   bring: ['A blanket or a mat', 'Something to share (if you can)', 'A hat — the Ibadan sun is no joke', 'Someone who needs a church family'],
   bringClose: '…and your appetite.',

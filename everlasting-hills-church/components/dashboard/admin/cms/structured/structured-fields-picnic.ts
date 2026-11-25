@@ -38,6 +38,7 @@ export const picnicFields: FieldDef[] = [
     fields: [
       { kind: "text", key: "name", label: "Game" },
       { kind: "textarea", key: "description", label: "What happens" },
+      { kind: "image", key: "image", label: "Photo", nullable: true, help: "Leave blank for a plain gingham panel" },
       { kind: "text", key: "forWho", label: "Who it's for", nullable: true, help: 'e.g. "Children", "Everyone". Leave blank to hide.' },
     ],
   },

@@ -69,11 +69,11 @@ export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: 
         </div>
       </fieldset>
 
-      <div className="mt-5 rounded-2xl bg-[#F6EFE2] p-4 dark:bg-white/[0.04]">
+      <div className="mt-4 rounded-2xl bg-[#F6EFE2] px-4 py-3.5 dark:bg-white/[0.04]">
         <p className="text-sm font-semibold text-[#1B1714] dark:text-white">How the gift exchange works</p>
-        <ol className="mt-3 grid gap-3 sm:grid-cols-3">
+        <ol className="mt-2.5 space-y-2">
           {STEPS.map((step, i) => (
-            <li key={step} className="flex gap-2.5 text-[13px] leading-snug text-[#1B1714]/70 dark:text-white/60">
+            <li key={step} className="flex items-center gap-3 text-[13px] leading-snug text-[#1B1714]/70 dark:text-white/60">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1E3A2A] font-serif text-xs text-[#FBF4E6]">
                 {i + 1}
               </span>
@@ -83,8 +83,8 @@ export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: 
         </ol>
       </div>
 
-      <div className="mt-6 flex flex-col gap-4 border-t border-[#1B1714]/10 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
-        <div aria-live="polite" className="text-sm">
+      <div className="sticky bottom-0 -mx-5 mt-5 flex flex-col gap-3 border-t border-[#1B1714]/10 bg-[#FFFDF8] px-5 py-4 sm:-mx-7 sm:flex-row sm:items-center sm:justify-between sm:px-7 dark:border-white/10 dark:bg-[#1c1a18]">
+        <div aria-live="polite" className="min-w-0 text-sm leading-snug">
           <span className="text-[#1B1714]/55 dark:text-white/50">You&apos;re signing up for</span>
           <span className="block font-semibold text-[#1B1714] dark:text-white">{summary}</span>
           <AnimatePresence initial={false}>
@@ -101,7 +101,7 @@ export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: 
           </AnimatePresence>
         </div>
 
-        <div className="flex flex-col-reverse gap-2 sm:flex-row">
+        <div className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row">
           <button
             type="button"
             disabled={saving}
