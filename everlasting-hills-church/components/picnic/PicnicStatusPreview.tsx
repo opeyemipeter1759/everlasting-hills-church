@@ -1,30 +1,76 @@
 import Image from "next/image";
-import { PHOTOS, PICNIC } from "./picnic-config";
+import { PHOTOS, PICNIC, formatPicnicDate, picnicDate } from "./picnic-config";
 
-/** A phone-shaped mock of the status image, so people see what they'll post. */
-export default function StatusPreview({ firstName, dateLong }: { firstName: string | null; dateLong: string }) {
+const SITE_HOST = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_APP_URL ?? "").host;
+  } catch {
+    return "www.everlastinghills.church";
+  }
+})();
+
+/**
+ * A phone-shaped mock of the status card (picnic-status-image.ts), laid out in
+ * the same proportions — positions are percentages of the 1080×1920 canvas and
+ * type is in container-width units — so what people see is what they post.
+ */
+export default function StatusPreview({ firstName }: { firstName: string | null; dateLong: string }) {
+  const d = formatPicnicDate(picnicDate());
   return (
     <div className="order-1 mx-auto w-full max-w-[300px] lg:order-2">
       <div className="relative rotate-[2deg] rounded-[2.4rem] bg-[#1B1714] p-2.5 shadow-[0_40px_80px_-30px_rgba(27,23,20,0.55)]">
-        <div className="relative aspect-[9/16] overflow-hidden rounded-[1.9rem] bg-[#F7F0E3]">
-          <div className="absolute inset-x-0 top-0 h-[58%]">
-            <Image src={PHOTOS.hero.src} alt="" fill sizes="300px" className="object-cover" />
-            <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/45 to-transparent" />
-            <p className="absolute left-4 top-4 text-[7px] font-bold uppercase tracking-[0.3em] text-white">
-              Everlasting Hills Church
-            </p>
+        <div className="relative aspect-[9/16] overflow-hidden rounded-[1.9rem] bg-[#F7F0E3] [container-type:inline-size]">
+          <div className="absolute inset-[2.6%] rounded-[2.6cqw] border border-[#1B1714]/15" />
+
+          {/* Church lockup, as in the navbar */}
+          <div className="absolute left-[5.9%] top-[4%] flex items-center gap-[1.6cqw]">
+            <Image src="/logoblack.png" alt="" width={40} height={40} className="h-[8.9cqw] w-[8.9cqw]" />
+            <div className="leading-none">
+              <p className="text-[3.7cqw] font-bold text-[#111]">Everlasting Hills</p>
+              <p className="mt-[0.8cqw] text-[2.6cqw] font-semibold uppercase tracking-[0.2em] text-[#87102C]">Church</p>
+            </div>
           </div>
-          <div className="gingham-sm absolute inset-x-0 top-[55%] h-[6%]" />
-          <div className="absolute inset-x-0 bottom-0 top-[60%] bg-[#F7F0E3] px-5 pt-4">
-            <p className="font-[family-name:var(--nf-dancing)] text-lg leading-none text-[#87102C]">
+
+          {/* Inset photo + fine gingham ribbon */}
+          <div className="absolute left-[5.9%] right-[5.9%] top-[11.5%] h-[44.8%] overflow-hidden rounded-[3.3cqw]">
+            <Image src={PHOTOS.hero.src} alt="" fill sizes="300px" className="object-cover" />
+          </div>
+          <div className="gingham-sm absolute left-[5.9%] right-[5.9%] top-[55.4%] h-[1.5%] [background-size:2.6cqw_2.6cqw]" />
+
+          {/* Title */}
+          <div className="absolute left-[5.9%] top-[59%]">
+            <p className="text-[4.4cqw] font-medium leading-none text-[#87102C]">
               {firstName ? `${firstName} is going to` : "I'm going to"}
             </p>
-            <p className="mt-1.5 font-serif text-[2.1rem] font-bold leading-[0.95] text-[#1B1714]">
-              The EHC <span className="italic">Picnic.</span>
+            <p className="mt-[1.2cqw] font-serif text-[11.8cqw] font-semibold leading-[1.02] text-[#1B1714]">
+              The EHC
+              <br />
+              <span className="text-[#87102C]">Picnic.</span>
             </p>
-            <div className="mt-3 h-px bg-[#1E3A2A]" />
-            <p className="mt-2.5 text-[10px] font-semibold text-[#1B1714]">{dateLong}</p>
-            <p className="mt-0.5 text-[8px] text-[#1B1714]/55">{PICNIC.venue ?? "Bring a blanket. Bring a friend."}</p>
+          </div>
+
+          {/* Ticket stub */}
+          <div className="absolute left-[5.9%] right-[5.9%] top-[79.7%] flex h-[11.7%] overflow-hidden rounded-[2.2cqw] bg-white">
+            <div className="flex w-[20.6%] flex-col items-center justify-center bg-[#87102C] text-[#F7F0E3]">
+              <span className="text-[2.2cqw] font-semibold uppercase tracking-[0.2em]">{d.weekdayShort}</span>
+              <span className="font-serif text-[7.8cqw] font-semibold leading-none">{d.day}</span>
+              <span className="text-[2.2cqw] font-semibold uppercase tracking-[0.2em]">{d.monthShort}</span>
+            </div>
+            <div className="flex flex-1 flex-col justify-center gap-[1.4cqw] border-l border-dashed border-[#1B1714]/20 pl-[3.7cqw]">
+              <p className="text-[3.3cqw] font-semibold leading-tight text-[#1B1714]">
+                <span className="block text-[2cqw] tracking-[0.25em] text-[#1B1714]/55">WHEN</span>
+                {d.weekday}, {Number(d.day)} {d.month}
+              </p>
+              <p className="text-[3.3cqw] font-semibold leading-tight text-[#1B1714]">
+                <span className="block text-[2cqw] tracking-[0.25em] text-[#1B1714]/55">WHERE</span>
+                {PICNIC.venue ?? "Venue to be announced"}
+              </p>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="absolute left-[5.9%] right-[5.9%] top-[93.7%] border-t border-[#1B1714]/15 pt-[1.8cqw] text-center">
+            <span className="text-[2.9cqw] font-bold text-[#87102C]">{SITE_HOST}{PICNIC.path}</span>
           </div>
         </div>
       </div>

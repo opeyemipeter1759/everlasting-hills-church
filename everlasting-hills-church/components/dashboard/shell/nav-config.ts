@@ -31,7 +31,7 @@ import {
   HandCoins,
   ClipboardCheck,
   Award,
-  Sunrise,
+  Sunrise, Gift,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -117,6 +117,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/admin/events",        icon: CalendarDays,  minRole: "ADMIN" },
+      { label: "Picnic & Gift Exchange", href: "/dashboard/admin/gift-exchange", icon: Gift, minRole: "ADMIN" },
       { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },
       // The queue already existed, reachable only from a tab inside Articles.
       { label: "Article Approvals", href: "/dashboard/articles/review", icon: ClipboardCheck, minRole: "ADMIN" },

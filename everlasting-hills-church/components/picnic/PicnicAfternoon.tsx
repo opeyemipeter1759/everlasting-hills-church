@@ -38,21 +38,21 @@ export default function PicnicAfternoon() {
               <div className="relative aspect-[5/4] overflow-hidden rounded-[2px]">
                 <Image src={PHOTOS.family.src} alt={PHOTOS.family.alt} fill sizes="(max-width: 1024px) 100vw, 560px" className="object-cover" />
               </div>
-              <p className="absolute -bottom-6 right-4 max-w-[15rem] rotate-[-2deg] bg-[#F2B33D] px-4 py-3 font-[family-name:var(--nf-dancing)] text-xl leading-snug text-[#1B1714] shadow-md sm:right-[-1.5rem]">
+              <p className="absolute -bottom-6 right-4 max-w-[15rem] rotate-[-2deg] bg-[#87102C] px-4 py-3 text-[15px] font-medium leading-snug text-[#F7F0E3] shadow-md sm:right-[-1.5rem]">
                 Aunties, uncles, little ones — everybody&apos;s invited.
               </p>
             </div>
           </ScrollReveal>
 
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#87102C]">The afternoon</p>
+            <p className="text-sm font-medium text-[#87102C]">The afternoon</p>
             <h2 className={`mt-4 font-serif text-4xl leading-[1.05] tracking-tight ${INK} sm:text-5xl`}>
-              Nothing fancy. <span className="italic">Just us,</span> outside.
+              Nothing fancy. Just us, outside.
             </h2>
             <ol className="mt-10 divide-y divide-[#1B1714]/10 border-y border-[#1B1714]/10">
               {AFTERNOON.map((item) => (
                 <li key={item.n} className="grid grid-cols-[3.5rem_1fr] gap-4 py-6">
-                  <span className="font-serif text-3xl italic text-[#87102C]/70">{item.n}</span>
+                  <span className="font-serif text-2xl text-[#87102C]">{item.n}</span>
                   <div>
                     <h3 className={`text-lg font-semibold ${INK}`}>{item.title}</h3>
                     <p className="mt-1.5 text-[15px] leading-relaxed text-[#1B1714]/65">{item.body}</p>
@@ -64,18 +64,17 @@ export default function PicnicAfternoon() {
         </div>
       </section>
 
-      {/* ── Scripture over the savanna at sunset ─────────────────────────── */}
+      {/* ── Scripture over a picnic spread ──────────────────────────────── */}
       <section className="relative isolate flex h-[600px] items-end overflow-hidden sm:h-[760px] lg:h-[860px]">
-        <Image src={PHOTOS.unity.src} alt={PHOTOS.unity.alt} fill sizes="100vw" quality={92} className="-z-10 object-cover object-[center_45%]" />
+        <Image src={PHOTOS.unity.src} alt={PHOTOS.unity.alt} fill sizes="100vw" quality={92} className="-z-10 object-cover object-[center_60%]" />
         {/* Warm dark shade from the ground up: the sunset stays golden, the verse stays readable. */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#140C06]/85 via-[#140C06]/30 via-35% to-transparent" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#140C06]/90 via-[#140C06]/45 via-40% to-[#140C06]/5" />
         <ScrollReveal className="w-full">
           <blockquote className="mx-auto max-w-4xl px-5 pb-16 text-center sm:px-8 sm:pb-20">
             <p className="text-balance font-serif text-3xl leading-[1.2] text-[#FBF4E6] [text-shadow:0_2px_24px_rgba(20,12,6,0.6)] sm:text-5xl">
-              &ldquo;Behold, how good and how pleasant it is for brethren to dwell together in{" "}
-              <span className="italic text-[#F2C46A]">unity!</span>&rdquo;
+              &ldquo;Behold, how good and how pleasant it is for brethren to dwell together in unity!&rdquo;
             </p>
-            <footer className="mt-6 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#FBF4E6]/75">Psalm 133:1</footer>
+            <footer className="mt-6 text-[15px] font-medium text-[#FBF4E6]/80">Psalm 133:1</footer>
           </blockquote>
         </ScrollReveal>
       </section>

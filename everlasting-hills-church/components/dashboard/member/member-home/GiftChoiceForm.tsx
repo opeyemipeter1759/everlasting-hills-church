@@ -7,8 +7,8 @@ import type { GiftChoice } from "@/lib/api/gift-exchange";
 import { btnPrimary, btnSecondary, iconBg, iconCl, itemTitle, metaText } from "./tokens";
 
 export const GIFT_OPTIONS: { key: keyof GiftChoice; label: string; hint: string; Icon: LucideIcon }[] = [
+  { key: "picnic", label: "Picnic", hint: "Food, games and fellowship on the grass. Includes the gift exchange.", Icon: UtensilsCrossed },
   { key: "giftExchange", label: "Gift exchange", hint: "Bring a wrapped gift and swap with another member.", Icon: Gift },
-  { key: "picnic", label: "Picnic", hint: "Food and fellowship with the church family.", Icon: UtensilsCrossed },
 ];
 
 interface Props {
@@ -20,7 +20,10 @@ interface Props {
   onCancel: () => void;
 }
 
-/** Tick the gift exchange, the picnic, or both. At least one is required. Shown inside the register modal. */
+/**
+ * Choose the picnic (which always includes the gift exchange) or the gift exchange on its own.
+ * Ticking the picnic locks the gift exchange on. Shown inside the register modal.
+ */
 export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: Props) {
   const [choice, setChoice] = useState<GiftChoice>(initial);
   const nothingPicked = !choice.giftExchange && !choice.picnic;
@@ -34,10 +37,11 @@ export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: 
       }}
     >
       <fieldset>
-        <legend className={`mb-3 ${metaText}`}>Pick one or both.</legend>
+        <legend className={`mb-3 ${metaText}`}>Coming to the picnic? The gift exchange is included.</legend>
         <div className="space-y-2.5">
           {GIFT_OPTIONS.map(({ key, label, hint, Icon }, i) => {
-            const checked = choice[key];
+            const locked = key === "giftExchange" && choice.picnic;
+            const checked = choice[key] || locked;
             return (
               <motion.label
                 key={key}
@@ -45,7 +49,7 @@ export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: 
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, ease: "easeOut", delay: 0.15 + i * 0.08 }}
                 whileTap={still ? undefined : { scale: 0.98 }}
-                className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#87102C]/30 ${
+                className={`flex ${locked ? "cursor-default" : "cursor-pointer"} items-center gap-3 rounded-xl border p-3.5 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#87102C]/30 ${
                   checked
                     ? "border-[#87102C] bg-[#FFF5F7] dark:border-[#FFB3C1]/50 dark:bg-[#87102C]/15"
                     : "border-[#E7CDD3] hover:border-[#87102C]/40 dark:border-white/10 dark:hover:border-white/25"
@@ -54,7 +58,14 @@ export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: 
                 <input
                   type="checkbox"
                   checked={checked}
-                  onChange={(e) => setChoice((c) => ({ ...c, [key]: e.target.checked }))}
+                  disabled={locked}
+                  onChange={(e) =>
+                    setChoice((c) =>
+                      key === "picnic" && e.target.checked
+                        ? { picnic: true, giftExchange: true }
+                        : { ...c, [key]: e.target.checked },
+                    )
+                  }
                   className="sr-only"
                 />
                 <motion.span
@@ -66,7 +77,7 @@ export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: 
                 </motion.span>
                 <span className="min-w-0 flex-1">
                   <span className={`block ${itemTitle}`}>{label}</span>
-                  <span className={`block ${metaText}`}>{hint}</span>
+                  <span className={`block ${metaText}`}>{locked ? "Included with the picnic." : hint}</span>
                 </span>
                 <span
                   aria-hidden="true"

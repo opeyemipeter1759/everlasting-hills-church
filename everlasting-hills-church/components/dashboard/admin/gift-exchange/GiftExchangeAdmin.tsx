@@ -6,11 +6,12 @@ import { useGiftEntries, type GiftEntriesFilter } from "@/lib/api/gift-exchange"
 import GiftAdminHero from "./GiftAdminHero";
 import GiftStats, { type GiftFilter } from "./GiftStats";
 import GiftEntryRow from "./GiftEntryRow";
+import PublicPicnicSignups from "./PublicPicnicSignups";
 
 const TITLES: Record<GiftFilter | "all", string> = {
-  all: "Everyone who signed up",
+  all: "Members who signed up",
   GIFT_EXCHANGE: "Gift exchange: will be paired",
-  PICNIC: "Coming to the picnic",
+  PICNIC: "Members coming to the picnic",
   REJECTED: "Rejected: not taking part",
 };
 
@@ -21,7 +22,7 @@ const QUERY: Record<GiftFilter, GiftEntriesFilter> = {
   REJECTED: { status: "REJECTED" },
 };
 
-/** The gift exchange & picnic at a glance: when it is, how many are in for each, and everyone who signed up. */
+/** The picnic & gift exchange at a glance: when it is, members who signed up, and public picnic sign-ups. */
 export default function GiftExchangeAdmin() {
   const [filter, setFilter] = useState<GiftFilter | null>(null);
   const [query, setQuery] = useState("");
@@ -60,7 +61,7 @@ export default function GiftExchangeAdmin() {
             <p className="text-sm font-semibold text-gray-700 dark:text-white/80">
               {query ? "Nobody matches that search." : filter ? "Nobody here yet." : "Nobody has signed up yet."}
             </p>
-            {!query && !filter && <p className="mt-1 text-xs text-gray-500 dark:text-white/45">Members sign up from the Gift exchange &amp; picnic card on their dashboard.</p>}
+            {!query && !filter && <p className="mt-1 text-xs text-gray-500 dark:text-white/45">Members sign up from the Picnic &amp; gift exchange card on their dashboard.</p>}
           </div>
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-white/[0.06]">
@@ -68,6 +69,8 @@ export default function GiftExchangeAdmin() {
           </ul>
         )}
       </section>
+
+      <PublicPicnicSignups />
     </div>
   );
 }

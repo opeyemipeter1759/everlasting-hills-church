@@ -77,9 +77,9 @@ export default function PicnicShare({ dateLong }: { dateLong: string }) {
   return (
     <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-20">
       <div className="order-2 lg:order-1">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#87102C]">Spread the word</p>
+        <p className="text-sm font-medium text-[#87102C]">Spread the word</p>
         <h2 className="mt-4 font-serif text-4xl leading-[1.05] tracking-tight text-[#1B1714] sm:text-5xl">
-          Put it on your <span className="italic">status.</span>
+          Put it on your status.
         </h2>
         <p className="mt-5 max-w-md text-[16px] leading-relaxed text-[#1B1714]/65">
           We&apos;ve made you a status card{firstName ? ` with your name on it, ${firstName}` : ""}. Share it to WhatsApp or
@@ -91,7 +91,7 @@ export default function PicnicShare({ dateLong }: { dateLong: string }) {
             type="button"
             onClick={shareStatus}
             disabled={phase === "working"}
-            className="inline-flex items-center justify-center gap-2.5 rounded-full bg-[#87102C] px-7 py-3.5 text-[15px] font-semibold text-white transition-transform hover:-translate-y-0.5 disabled:opacity-70"
+            className="inline-flex items-center justify-center gap-2.5 rounded-full bg-[#87102C] px-7 py-3.5 text-[15px] font-medium text-white transition-transform hover:-translate-y-0.5 disabled:opacity-70"
           >
             {phase === "working" ? <Icon icon={CircleNotch} size={17} className="animate-spin" /> : <Icon icon={ShareNetwork} size={17} />}
             {phase === "working" ? "Making your card…" : "Share to my status"}
@@ -100,7 +100,7 @@ export default function PicnicShare({ dateLong }: { dateLong: string }) {
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2.5 rounded-full border border-[#1B1714]/15 bg-white px-7 py-3.5 text-[15px] font-semibold text-[#1B1714] transition-colors hover:border-[#1B1714]/30"
+            className="inline-flex items-center justify-center gap-2.5 rounded-full border border-[#1B1714]/15 bg-white px-7 py-3.5 text-[15px] font-medium text-[#1B1714] transition-colors hover:border-[#1B1714]/30"
           >
             <WhatsAppGlyph /> Send on WhatsApp
           </a>

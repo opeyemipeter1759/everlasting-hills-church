@@ -54,10 +54,10 @@ export const PHOTOS = {
     page: "https://unsplash.com/photos/picnic-blanket-with-grapes-apples-hat-and-flowers-on-grass-R6QLiEQwROc",
   },
   unity: {
-    src: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=3840&q=92",
-    alt: "A lone acacia tree on green savanna under a golden sunset, mountains behind",
-    by: "Damian Patkowski",
-    page: "https://unsplash.com/photos/tree-between-green-land-during-golden-hour-T-LfvX-7IVg",
+    src: "https://images.unsplash.com/photo-1652169892293-ba174ef19931?auto=format&fit=crop&w=3840&q=92",
+    alt: "A picnic spread on a cream blanket — hamper, straw hat, teacups and flowers — under a blossoming tree",
+    by: "Svitlana",
+    page: "https://unsplash.com/photos/NjQ_gzJfeiw",
   },
 } as const;
 

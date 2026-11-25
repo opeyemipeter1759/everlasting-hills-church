@@ -90,7 +90,7 @@ export function GiftRegisterModal({ open, onClose, title, dayLabel, children }: 
               exit={still ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 12 }}
               transition={{ type: "spring", stiffness: 340, damping: 26 }}
             >
-              <GiftPartyHeader titleId={titleId} kicker="Gift exchange & picnic" title={title} dayLabel={dayLabel} level="h2" className="pr-12" />
+              <GiftPartyHeader titleId={titleId} kicker="Picnic & gift exchange" title={title} dayLabel={dayLabel} level="h2" className="pr-12" />
               <button
                 type="button"
                 onClick={onClose}

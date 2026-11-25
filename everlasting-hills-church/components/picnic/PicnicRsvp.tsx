@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api/axios";
 import { PICNIC } from "./picnic-config";
 import { primaryBtn } from "./picnic-styles";
 import Countdown from "./PicnicCountdown";
+import PicnicHeadcount from "./PicnicHeadcount";
 
 /** Remembers on this device that someone registered, so a revisit shows "you're in". */
 export const RSVP_STORAGE_KEY = "ehc-picnic-rsvp";
@@ -17,8 +18,8 @@ interface Saved {
 }
 
 const field =
-  "w-full rounded-xl border border-[#F7F0E3]/20 bg-[#F7F0E3]/[0.06] px-4 py-3 text-[15px] text-[#F7F0E3] placeholder:text-[#F7F0E3]/35 focus:border-[#F2B33D] focus:outline-none focus:ring-2 focus:ring-[#F2B33D]/30";
-const label = "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.2em] text-[#F7F0E3]/55";
+  "w-full rounded-xl border border-[#F7F0E3]/20 bg-[#F7F0E3]/[0.06] px-4 py-3 text-[15px] text-[#F7F0E3] placeholder:text-[#F7F0E3]/40 focus:border-[#F7F0E3]/70 focus:outline-none focus:ring-2 focus:ring-[#F7F0E3]/20";
+const label = "mb-1.5 block text-sm font-medium text-[#F7F0E3]/80";
 
 /**
  * Open registration — anyone can sign up, no account needed. Saved as an RSVP on
@@ -80,7 +81,7 @@ export default function PicnicRsvp({ fallbackDate }: { fallbackDate: string }) {
       <div>
         <Countdown target={fallbackDate} />
         <p className="mt-8 flex items-center gap-3 font-serif text-2xl text-[#F7F0E3]">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F2B33D] text-[#1E3A2A]">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F7F0E3] text-[#1E3A2A]">
             <Icon icon={Check} size={18} weight="bold" />
           </span>
           You&apos;re on the list, {first}.
@@ -95,7 +96,7 @@ export default function PicnicRsvp({ fallbackDate }: { fallbackDate: string }) {
             setSaved(null);
             setForm({ fullName: "", phone: "", email: "", attendees: 1 });
           }}
-          className="mt-5 text-sm text-[#F7F0E3]/55 underline decoration-[#F7F0E3]/25 underline-offset-4 hover:text-[#F7F0E3]"
+          className="mt-5 text-sm text-[#F7F0E3]/65 underline decoration-[#F7F0E3]/30 underline-offset-4 hover:text-[#F7F0E3]"
         >
           Register someone else
         </button>
@@ -121,13 +122,7 @@ export default function PicnicRsvp({ fallbackDate }: { fallbackDate: string }) {
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="picnic-count" className={label}>How many of you are coming?</label>
-          <select id="picnic-count" value={form.attendees} onChange={(e) => set("attendees", Number(e.target.value))} className={`${field} appearance-none`}>
-            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n} className="text-[#1B1714]">
-                {n === 1 ? "Just me" : `${n} people`}
-              </option>
-            ))}
-          </select>
+          <PicnicHeadcount id="picnic-count" value={form.attendees} onChange={(n) => set("attendees", n)} className={field} />
         </div>
       </div>
       <button type="submit" disabled={busy} className={`${primaryBtn} mt-7 w-full sm:w-auto`}>
@@ -135,7 +130,7 @@ export default function PicnicRsvp({ fallbackDate }: { fallbackDate: string }) {
         {busy ? "Saving your spot…" : "Count me in"}
         {!busy && <Icon icon={ArrowRight} size={16} />}
       </button>
-      <p className="mt-4 text-xs text-[#F7F0E3]/45">We only use these details to plan the day and reach you about it.</p>
+      <p className="mt-4 text-xs text-[#F7F0E3]/55">We only use these details to plan the day and reach you about it.</p>
       {error && <p role="alert" className="mt-3 text-sm text-[#FFB4A8]">{error}</p>}
     </form>
   );

@@ -21,14 +21,14 @@ export default function PicnicLanding() {
         <div className="gingham h-3 w-full opacity-90" aria-hidden="true" />
         <div className="mx-auto grid max-w-6xl gap-14 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-2 lg:gap-24">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#F2B33D]">Save your spot</p>
+            <p className="text-sm font-medium text-[#F7F0E3]/75">Save your spot</p>
             <h2 className="mt-4 font-serif text-5xl leading-[1] tracking-tight sm:text-6xl">
-              Will we see <span className="italic">you</span> there?
+              Will we see you there?
             </h2>
             <p className="mt-6 max-w-md text-[16px] leading-relaxed text-[#F7F0E3]/65">
               Everyone is welcome — friends, family, neighbours. Leave your details so we plan enough of everything for everyone.
             </p>
-            <p className="mt-10 font-[family-name:var(--nf-dancing)] text-3xl text-[#F2B33D]">{d.long}</p>
+            <p className="mt-10 font-serif text-2xl text-[#F7F0E3]">{d.long}</p>
           </div>
           <div className="lg:pt-4">
             <PicnicRsvp fallbackDate={date.toISOString()} />
