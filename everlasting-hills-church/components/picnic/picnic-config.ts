@@ -56,6 +56,16 @@ export const PHOTOS = {
   },
 } as const;
 
+/** Credits for the stock photos on the default games (admins can replace them in the CMS). */
+export const GAME_PHOTO_CREDITS = [
+  { src: "sack", by: "Fachry Hasan", page: "https://unsplash.com/photos/IqN99TMi7lI" },
+  { src: "tug", by: "Rob Wingate", page: "https://unsplash.com/photos/llnxD4dd2DA" },
+  { src: "chairs", by: "Forest S", page: "https://unsplash.com/photos/ZzOtl6FSpLs" },
+  { src: "board", by: "Amos K", page: "https://unsplash.com/photos/QicOXN91tPU" },
+  { src: "football", by: "Quilia", page: "https://unsplash.com/photos/AvcBDbR-LWc" },
+  { src: "facepaint", by: "Rajesh Rajput", page: "https://unsplash.com/photos/6GvfgV8giOQ" },
+] as const;
+
 export function formatPicnicDate(d: Date) {
   const opts = { timeZone: "Africa/Lagos" } as const;
   return {

@@ -28,17 +28,17 @@ export function GiftModalAside() {
   const d = dateParts(data?.date);
 
   return (
-    <aside className="relative isolate flex min-h-[200px] flex-col justify-end overflow-hidden text-[#FBF4E6] md:min-h-full">
+    <aside className="relative isolate flex min-h-[150px] shrink-0 flex-col justify-end overflow-hidden text-[#FBF4E6] md:min-h-0">
       <Image src={PHOTOS.unity.src.replace(/w=\d+/, "w=1200")} alt="" fill sizes="(max-width: 768px) 100vw, 400px" className="-z-10 object-cover object-[center_60%]" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#140C06]/95 via-[#140C06]/55 to-[#140C06]/10" />
 
-      <div className="p-6 md:p-7">
+      <div className="p-5 md:p-7">
         <p className="text-sm font-medium text-[#FBF4E6]/80">Everlasting Hills Church</p>
-        <p className="mt-1 font-serif text-3xl leading-[1.05] md:text-[2.6rem]">
+        <p className="mt-1 font-serif text-[1.75rem] leading-[1.05] md:text-[2.4rem]">
           The EHC Picnic<span className="text-[#F2B8C2]">.</span>
         </p>
 
-          <div className="mt-5 flex max-w-[17rem] overflow-hidden rounded-xl bg-[#FBF6EE] text-[#1B1714] shadow-lg">
+          <div className="mt-4 hidden max-w-[17rem] md:mt-5 md:flex overflow-hidden rounded-xl bg-[#FBF6EE] text-[#1B1714] shadow-lg">
             <div className="flex w-[4.5rem] shrink-0 flex-col items-center justify-center bg-[#87102C] py-3 text-[#FBF4E6]">
               <span className="text-[11px] font-medium opacity-85">{d.top}</span>
               <span className="font-serif text-3xl leading-none">{d.long ? Number(d.big) : d.big}</span>
@@ -51,7 +51,7 @@ export function GiftModalAside() {
             </div>
           </div>
 
-        <ul className="mt-6 hidden space-y-2.5 md:block">
+        <ul className="mt-6 hidden space-y-2.5 md:block md:[@media(max-height:640px)]:hidden">
           {ON_THE_DAY.map(({ Icon, text }) => (
             <li key={text} className="flex items-center gap-3 text-sm text-[#FBF4E6]/85">
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FBF4E6]/15 ring-1 ring-[#FBF4E6]/20">

@@ -37,7 +37,7 @@ export function GiftOptionTile({ label, hint, Icon, photo, badge, checked, locke
     >
       <input type="checkbox" checked={checked} disabled={locked} onChange={(e) => onToggle(e.target.checked)} className="sr-only" />
 
-      <div className="relative h-28 overflow-hidden">
+      <div className="relative h-24 overflow-hidden">
         {photo ? (
           <Image src={photo} alt="" fill sizes="280px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
@@ -72,12 +72,12 @@ export function GiftOptionTile({ label, hint, Icon, photo, badge, checked, locke
         </span>
       </div>
 
-      <span className="flex flex-1 flex-col p-4">
+      <span className="flex flex-1 flex-col px-4 py-3.5">
         <span className="flex items-center gap-2 text-base font-semibold text-[#1B1714] dark:text-white">
           <Icon size={16} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
           {label}
         </span>
-        <span className="mt-1 text-[13px] leading-relaxed text-[#1B1714]/60 dark:text-white/55">
+        <span className="mt-1 text-[13px] leading-snug text-[#1B1714]/60 dark:text-white/55">
           {locked ? "Included with the picnic." : hint}
         </span>
       </span>
