@@ -64,17 +64,18 @@ export default function PicnicAfternoon() {
         </div>
       </section>
 
-      {/* ── Scripture over the park ──────────────────────────────────────── */}
-      <section className="relative isolate flex h-[520px] items-end overflow-hidden sm:h-[620px]">
-        <Image src={PHOTOS.park.src} alt={PHOTOS.park.alt} fill sizes="100vw" quality={92} className="-z-10 object-cover" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#0B1A12]/85 via-[#0B1A12]/25 via-45% to-transparent" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0B1A12]/65 via-[#0B1A12]/15 via-55% to-transparent" />
+      {/* ── Scripture over friends standing together ─────────────────────── */}
+      <section className="relative isolate flex h-[600px] items-end overflow-hidden sm:h-[760px] lg:h-[860px]">
+        <Image src={PHOTOS.unity.src} alt={PHOTOS.unity.alt} fill sizes="100vw" quality={92} className="-z-10 object-cover object-[center_30%]" />
+        {/* Warm dark shade from the ground up: the sunset stays golden, the verse stays readable. */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#140C06]/90 via-[#140C06]/35 via-40% to-transparent" />
         <ScrollReveal className="w-full">
-          <blockquote className="mx-auto max-w-6xl px-5 pb-16 sm:px-8 sm:pb-24">
-            <p className="max-w-3xl font-serif text-3xl leading-[1.2] text-[#F7F0E3] [text-shadow:0_2px_18px_rgba(0,0,0,0.45)] sm:text-5xl">
-              &ldquo;Behold, how good and how pleasant it is for brethren to dwell together in unity!&rdquo;
+          <blockquote className="mx-auto max-w-4xl px-5 pb-16 text-center sm:px-8 sm:pb-20">
+            <p className="text-balance font-serif text-3xl leading-[1.2] text-[#FBF4E6] [text-shadow:0_2px_24px_rgba(20,12,6,0.6)] sm:text-5xl">
+              &ldquo;Behold, how good and how pleasant it is for brethren to dwell together in{" "}
+              <span className="italic text-[#F2C46A]">unity!</span>&rdquo;
             </p>
-            <footer className="mt-5 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#F7F0E3]/70">Psalm 133:1</footer>
+            <footer className="mt-6 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#FBF4E6]/75">Psalm 133:1</footer>
           </blockquote>
         </ScrollReveal>
       </section>

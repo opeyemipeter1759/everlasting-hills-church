@@ -53,11 +53,11 @@ export const PHOTOS = {
     by: "Sou Jest",
     page: "https://unsplash.com/photos/picnic-blanket-with-grapes-apples-hat-and-flowers-on-grass-R6QLiEQwROc",
   },
-  park: {
-    src: "https://images.unsplash.com/photo-1792868769292-f82c526bc029?auto=format&fit=crop&w=3840&q=92",
-    alt: "A sunny park with acacia trees by the water",
-    by: "Samina Musharraf",
-    page: "https://unsplash.com/photos/dirt-path-through-grassy-lakeside-park-AFHPHSU7V4I",
+  unity: {
+    src: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=3840&q=92",
+    alt: "Four friends with their arms around each other on a hilltop at sunset",
+    by: "Helena Lopes",
+    page: "https://unsplash.com/s/photos/friends-golden-hour",
   },
 } as const;
 
