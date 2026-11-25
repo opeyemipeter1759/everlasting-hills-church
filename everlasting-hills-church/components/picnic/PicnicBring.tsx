@@ -25,7 +25,7 @@ export default function PicnicBring() {
           <ScrollReveal>
             <div className="lined-paper relative rounded-sm px-8 pb-10 pt-9 shadow-[0_24px_50px_-30px_rgba(27,23,20,0.5)] ring-1 ring-[#1B1714]/[0.06]">
               <span className="tape -top-3 right-10 rotate-3" aria-hidden="true" />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#87102C]">Bring along</p>
+              <p className="text-sm font-medium text-[#87102C]">Bring along</p>
               <ul className="mt-6 space-y-[14px]">
                 {BRING.map((thing) => (
                   <li key={thing} className="flex items-center gap-4 text-[17px] leading-[26px] text-[#1B1714]">
@@ -36,7 +36,7 @@ export default function PicnicBring() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-8 font-[family-name:var(--nf-dancing)] text-2xl text-[#87102C]">…and your appetite.</p>
+              <p className="mt-8 text-[15px] font-medium text-[#87102C]">…and your appetite.</p>
             </div>
           </ScrollReveal>
         </div>
@@ -63,7 +63,7 @@ function Print({
       <div className={`relative overflow-hidden bg-[#e9e1d2] ${square ? "aspect-square" : "aspect-[3/4]"}`}>
         <Image src={photo.src} alt={photo.alt} fill sizes="(max-width: 1024px) 45vw, 300px" className="object-cover" />
       </div>
-      <figcaption className="absolute bottom-2.5 left-3 font-[family-name:var(--nf-dancing)] text-lg text-[#1B1714]/70">
+      <figcaption className="absolute bottom-2.5 left-3 text-[13px] font-medium text-[#1B1714]/60">
         {caption}
       </figcaption>
     </figure>

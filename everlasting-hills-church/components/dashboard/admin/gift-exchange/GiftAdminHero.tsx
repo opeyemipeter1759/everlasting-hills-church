@@ -1,4 +1,7 @@
+import Image from "next/image";
+import { CalendarDays } from "lucide-react";
 import { giftDayLabel } from "@/components/dashboard/member/member-home/GiftCountdown";
+import { PHOTOS, PICNIC } from "@/components/picnic/picnic-config";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -8,30 +11,45 @@ function daysToGo(targetIso: string): string {
   return days === 1 ? "Tomorrow" : `In ${days} days`;
 }
 
-/** What this page is for, and when the gift exchange & picnic happen. */
+const GINGHAM = {
+  backgroundColor: "#FBF6EE",
+  backgroundImage:
+    "linear-gradient(90deg, rgba(135,16,44,0.5) 50%, transparent 50%), linear-gradient(rgba(135,16,44,0.5) 50%, transparent 50%)",
+  backgroundSize: "14px 14px",
+} as const;
+
+/** What this page is for, and when the picnic & gift exchange happen — on a picnic photograph. */
 export default function GiftAdminHero({ targetDate }: { targetDate: string | null }) {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.03] sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="max-w-2xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1]">
-            End-of-year fellowship
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#111] dark:text-white">Gift exchange &amp; picnic</h1>
-          <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-white/65">
-            Members sign up from their dashboard for the gift exchange, the picnic, or both. Everyone signed up for the gift
-            exchange will be paired. Reject anyone who shouldn&apos;t take part: they&apos;ll see your reason, and you can
-            reinstate them at any time.
+    <section className="relative isolate overflow-hidden rounded-2xl text-white">
+      <Image src={PHOTOS.unity.src.replace(/w=\d+/, "w=1800")} alt="" fill sizes="(max-width: 1024px) 100vw, 1000px" className="-z-10 object-cover object-[center_62%]" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#1A0E07]/90 via-[#1A0E07]/65 to-[#1A0E07]/20" />
+
+      <div className="flex flex-wrap items-end justify-between gap-6 px-6 pb-7 pt-12 sm:px-8 sm:pt-16">
+        <div className="max-w-xl">
+          <p className="text-sm font-medium text-[#F7F0E3]/80">End-of-year fellowship</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight">Picnic &amp; gift exchange</h1>
+          <p className="mt-3 text-sm leading-relaxed text-[#F7F0E3]/80">
+            Members sign up from their dashboard. Choosing the picnic includes the gift exchange, and everyone in the gift
+            exchange will be paired. Anyone else can register on the{" "}
+            <a href={PICNIC.path} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">
+              public picnic page
+            </a>
+            ; those sign-ups are listed at the bottom. Reject a member who shouldn&apos;t take part: they see your reason, and
+            you can reinstate them at any time.
           </p>
         </div>
         {targetDate && (
-          <div className="rounded-xl border border-gray-200 px-4 py-3 text-right dark:border-white/10">
-            <p className="text-xs text-gray-500 dark:text-white/50">Exchange day</p>
-            <p className="text-sm font-semibold text-[#111] dark:text-white">{giftDayLabel(targetDate)}</p>
-            <p className="text-xs font-semibold text-[#87102C] dark:text-[#FFB3C1]">{daysToGo(targetDate)}</p>
+          <div className="rounded-xl bg-[#F7F0E3] px-4 py-3 text-[#1B1714] shadow-sm">
+            <p className="flex items-center gap-1.5 text-xs text-[#1B1714]/60">
+              <CalendarDays size={13} aria-hidden="true" /> Picnic day
+            </p>
+            <p className="mt-0.5 text-sm font-semibold">{giftDayLabel(targetDate)}</p>
+            <p className="text-xs font-semibold text-[#87102C]">{daysToGo(targetDate)}</p>
           </div>
         )}
       </div>
+      <div aria-hidden="true" className="h-2.5 w-full" style={GINGHAM} />
     </section>
   );
 }

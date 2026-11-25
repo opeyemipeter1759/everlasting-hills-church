@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Play, Search } from 'lucide-react';
+import { Icon, MagnifyingGlass, Play } from '@/components/icons';
 import { usePublishedSermons } from '@/lib/api';
 import type { LatestSermon } from '@/types';
 import { Panel, PanelButton } from './archive/ArchiveUi';
@@ -54,7 +54,7 @@ export default function SermonArchiveSections({ onPlay }: { onPlay: (slug: strin
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Tap play to listen right here — no page reload.</p>
         </div>
         <div className="relative w-full sm:max-w-xs">
-          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Icon icon={MagnifyingGlass} size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             value={search}
             onChange={(e) => {
@@ -86,7 +86,7 @@ export default function SermonArchiveSections({ onPlay }: { onPlay: (slug: strin
               title="Latest message"
               action={
                 <PanelButton onClick={() => onPlay(latest.slug)}>
-                  <Play size={12} fill="currentColor" /> Play now
+                  <Icon icon={Play} size={12} weight="fill" /> Play now
                 </PanelButton>
               }
             >

@@ -27,7 +27,7 @@ const swap = {
 } as const;
 
 /**
- * Gift exchange & picnic: members register from a modal (either or both), then can change or withdraw.
+ * Picnic & gift exchange: members register from a modal (the picnic includes the gift exchange), then can change or withdraw.
  * Members never see who else is in, or how many. Once in, a countdown appears.
  */
 export function GiftExchangeCard() {
@@ -66,7 +66,7 @@ export function GiftExchangeCard() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: "easeOut" }}
     >
-      <GiftPartyHeader titleId="gift-exchange-title" kicker="End-of-year fellowship" title="Gift exchange & picnic" dayLabel={dayLabel} />
+      <GiftPartyHeader titleId="gift-exchange-title" kicker="End-of-year fellowship" title="Picnic & gift exchange" dayLabel={dayLabel} />
 
       <div className="px-5 py-5">
           {view === "rejected" && (
@@ -79,7 +79,7 @@ export function GiftExchangeCard() {
 
           {view === "open" && (
             <motion.div key="open" {...swap} className="flex flex-col gap-4">
-              <p className={bodyText}>Close the year with the church family. Join the gift exchange, the picnic, or both.</p>
+              <p className={bodyText}>Close the year with the church family on the grass. The picnic includes the gift exchange, or join the exchange on its own.</p>
               <motion.button
                 type="button"
                 onClick={() => setChoosing(true)}

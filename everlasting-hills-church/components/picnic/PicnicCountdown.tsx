@@ -27,7 +27,7 @@ export default function Countdown({ target, offsetMs = 0 }: { target: string; of
           <p className="font-serif text-4xl tabular-nums text-[#F7F0E3] sm:text-5xl">
             {now === null ? "–" : String(p.value).padStart(2, "0")}
           </p>
-          <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#F7F0E3]/45">{p.label}</p>
+          <p className="mt-1.5 text-xs font-medium text-[#F7F0E3]/55">{p.label}</p>
         </div>
       ))}
     </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Clock, Headphones, Heart, MessageCircle, Play } from 'lucide-react';
+import { ChatCircle, Clock, Headphones, Heart, Icon, Play } from '@/components/icons';
 import { formatSermonDuration } from '@/lib/api/sermon-types';
 import type { LatestSermon } from '@/types';
 import { Chevron, DetailRow, PrimaryButton } from './ArchiveUi';
@@ -32,7 +32,7 @@ export default function SermonRow({
         </button>
         {!open && (
           <PrimaryButton onClick={() => onPlay(s.slug)}>
-            <Play size={11} fill="currentColor" /> Play
+            <Icon icon={Play} size={11} weight="fill" /> Play
           </PrimaryButton>
         )}
         <Chevron open={open} onClick={() => setOpen((o) => !o)} label={open ? 'Hide details' : 'Show details'} />
@@ -51,25 +51,25 @@ export default function SermonRow({
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-200 px-5 py-3 text-xs text-gray-500 dark:border-white/10 dark:text-gray-400">
               {duration && (
                 <span className="flex items-center gap-1">
-                  <Clock size={12} /> {duration}
+                  <Icon icon={Clock} size={12} /> {duration}
                 </span>
               )}
               {s.audioUrl && (
                 <span className="flex items-center gap-1">
-                  <Headphones size={12} /> {s.playCount} plays
+                  <Icon icon={Headphones} size={12} /> {s.playCount} plays
                 </span>
               )}
               <span className="flex items-center gap-1">
-                <Heart size={12} /> {s._count?.SermonReaction ?? 0}
+                <Icon icon={Heart} size={12} /> {s._count?.SermonReaction ?? 0}
               </span>
               <span className="flex items-center gap-1">
-                <MessageCircle size={12} /> {s._count?.SermonComment ?? 0}
+                <Icon icon={ChatCircle} size={12} /> {s._count?.SermonComment ?? 0}
               </span>
             </div>
           </div>
           <div className="mt-3 flex items-center gap-3">
             <PrimaryButton onClick={() => onPlay(s.slug)}>
-              <Play size={11} fill="currentColor" /> {primaryLabel}
+              <Icon icon={Play} size={11} weight="fill" /> {primaryLabel}
             </PrimaryButton>
             <Link
               href={`/sermons/${s.slug}`}

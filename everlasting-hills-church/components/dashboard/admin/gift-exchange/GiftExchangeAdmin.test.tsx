@@ -23,6 +23,8 @@ vi.mock("@/lib/api/gift-exchange", () => ({
   useReinstateGiftEntry: () => ({ mutate: reinstate, isPending: false }),
 }));
 vi.mock("@/components/ui/toast/toast", () => ({ showToast: { success: vi.fn(), error: vi.fn() } }));
+// Public /picnic sign-ups load from the events API; not what these tests are about.
+vi.mock("./PublicPicnicSignups", () => ({ default: () => null }));
 
 afterEach(() => {
   cleanup();

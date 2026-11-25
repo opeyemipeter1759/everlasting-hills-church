@@ -70,10 +70,21 @@ describe("the gift exchange & picnic card", () => {
     fireEvent.click(screen.getByRole("button", { name: "Change" }));
     expect(screen.getByRole("checkbox", { name: /Gift exchange/ })).toBeChecked();
     expect(screen.getByRole("checkbox", { name: /Picnic/ })).not.toBeChecked();
-    fireEvent.click(screen.getByRole("checkbox", { name: /Gift exchange/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /Picnic/ }));
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
-    expect(register.mock.calls[0][0]).toEqual({ giftExchange: false, picnic: true });
+    expect(register.mock.calls[0][0]).toEqual({ giftExchange: true, picnic: true });
+  });
+
+  it("includes the gift exchange with the picnic and locks it on", () => {
+    state = signedUp({ picnic: false });
+    render(<GiftExchangeCard />);
+    fireEvent.click(screen.getByRole("button", { name: "Change" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Gift exchange/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Picnic/ }));
+    const gifts = screen.getByRole("checkbox", { name: /Gift exchange/ });
+    expect(gifts).toBeChecked();
+    expect(gifts).toBeDisabled();
+    expect(screen.getByText("Included with the picnic.")).toBeInTheDocument();
   });
 
   it("uses the server's clock, ticks every second, and says it's today at zero", () => {
