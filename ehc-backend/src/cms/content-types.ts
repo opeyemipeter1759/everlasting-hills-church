@@ -1,6 +1,7 @@
 import type { ZodTypeAny } from 'zod';
 import { BeliefsSchema, DEFAULT_BELIEFS } from './schemas/structured/beliefs.schema';
 import { CulturesSchema, DEFAULT_CULTURES } from './schemas/structured/cultures.schema';
+import { PicnicSchema, DEFAULT_PICNIC } from './schemas/structured/picnic.schema';
 import {
   AboutSchema, DEFAULT_ABOUT,
   MinistriesSchema, DEFAULT_MINISTRIES,
@@ -44,6 +45,7 @@ export const CONTENT_TYPES: Record<string, ContentType> = {
   contact: { schema: ContactSchema, default: DEFAULT_CONTACT },
   sermonsIntro: { schema: IntroSchema, default: DEFAULT_SERMONS_INTRO },
   eventsIntro: { schema: IntroSchema, default: DEFAULT_EVENTS_INTRO },
+  picnic: { schema: PicnicSchema, default: DEFAULT_PICNIC },
   privacyLegal: { schema: LegalSchema, default: DEFAULT_PRIVACY },
   termsLegal: { schema: LegalSchema, default: DEFAULT_TERMS },
 };

@@ -42,7 +42,7 @@ export default function GiftAdminHero({ targetDate }: { targetDate: string | nul
         {targetDate && (
           <div className="rounded-xl bg-[#F7F0E3] px-4 py-3 text-[#1B1714] shadow-sm">
             <p className="flex items-center gap-1.5 text-xs text-[#1B1714]/60">
-              <CalendarDays size={13} aria-hidden="true" /> Picnic day
+              <CalendarDays size={13} aria-hidden="true" /> Gift partners revealed
             </p>
             <p className="mt-0.5 text-sm font-semibold">{giftDayLabel(targetDate)}</p>
             <p className="text-xs font-semibold text-[#87102C]">{daysToGo(targetDate)}</p>

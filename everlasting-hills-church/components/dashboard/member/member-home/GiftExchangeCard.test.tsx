@@ -12,6 +12,7 @@ vi.mock("@/lib/api/gift-exchange", () => ({
   useRegisterGiftExchange: () => ({ mutate: register, isPending: false }),
   useWithdrawGiftExchange: () => ({ mutate: withdraw, isPending: false }),
 }));
+vi.mock("@/lib/api/picnic", () => ({ usePicnicDayLabel: () => "Picnic: date to be announced", usePicnicContent: () => ({ data: null }) }));
 vi.mock("@/components/ui/toast/toast", () => ({ showToast: { success: vi.fn(), error: vi.fn() } }));
 
 const TARGET = "2026-12-06T00:00:00.000+01:00";
@@ -93,7 +94,7 @@ describe("the gift exchange & picnic card", () => {
     render(<GiftExchangeCard />);
     expect(screen.getByRole("timer")).toHaveAccessibleName("0 days, 0 hours, 1 minutes left");
     act(() => vi.advanceTimersByTime(60_000));
-    expect(screen.getByText("It's today. See you there!")).toBeInTheDocument();
+    expect(screen.getByText("Gift partners are revealed today.")).toBeInTheDocument();
     expect(vi.getTimerCount()).toBe(0);
   });
 

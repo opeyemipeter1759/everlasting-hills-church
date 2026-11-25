@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { PHOTOS, PICNIC, formatPicnicDate, picnicDate } from "./picnic-config";
+import { PHOTOS, PICNIC } from "./picnic-config";
+import { dateParts, venueLabel } from "./picnic-content";
 
 const SITE_HOST = (() => {
   try {
@@ -14,8 +15,8 @@ const SITE_HOST = (() => {
  * the same proportions — positions are percentages of the 1080×1920 canvas and
  * type is in container-width units — so what people see is what they post.
  */
-export default function StatusPreview({ firstName }: { firstName: string | null; dateLong: string }) {
-  const d = formatPicnicDate(picnicDate());
+export default function StatusPreview({ firstName, date, venue }: { firstName: string | null; date: string | null; venue: string | null }) {
+  const d = dateParts(date);
   return (
     <div className="order-1 mx-auto w-full max-w-[300px] lg:order-2">
       <div className="relative rotate-[2deg] rounded-[2.4rem] bg-[#1B1714] p-2.5 shadow-[0_40px_80px_-30px_rgba(27,23,20,0.55)]">
@@ -52,18 +53,18 @@ export default function StatusPreview({ firstName }: { firstName: string | null;
           {/* Ticket stub */}
           <div className="absolute left-[5.9%] right-[5.9%] top-[79.7%] flex h-[11.7%] overflow-hidden rounded-[2.2cqw] bg-white">
             <div className="flex w-[20.6%] flex-col items-center justify-center bg-[#87102C] text-[#F7F0E3]">
-              <span className="text-[2.2cqw] font-semibold uppercase tracking-[0.2em]">{d.weekdayShort}</span>
-              <span className="font-serif text-[7.8cqw] font-semibold leading-none">{d.day}</span>
-              <span className="text-[2.2cqw] font-semibold uppercase tracking-[0.2em]">{d.monthShort}</span>
+              <span className="text-[2.2cqw] font-semibold uppercase tracking-[0.2em]">{d.top}</span>
+              <span className="font-serif text-[7.8cqw] font-semibold leading-none">{d.big}</span>
+              <span className="text-[2.2cqw] font-semibold uppercase tracking-[0.2em]">{d.bottom}</span>
             </div>
             <div className="flex flex-1 flex-col justify-center gap-[1.4cqw] border-l border-dashed border-[#1B1714]/20 pl-[3.7cqw]">
               <p className="text-[3.3cqw] font-semibold leading-tight text-[#1B1714]">
                 <span className="block text-[2cqw] tracking-[0.25em] text-[#1B1714]/55">WHEN</span>
-                {d.weekday}, {Number(d.day)} {d.month}
+                {d.when}
               </p>
               <p className="text-[3.3cqw] font-semibold leading-tight text-[#1B1714]">
                 <span className="block text-[2cqw] tracking-[0.25em] text-[#1B1714]/55">WHERE</span>
-                {PICNIC.venue ?? "Venue to be announced"}
+                {venueLabel(venue)}
               </p>
             </div>
           </div>

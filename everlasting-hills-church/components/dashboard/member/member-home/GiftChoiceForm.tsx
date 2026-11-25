@@ -2,13 +2,20 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Gift, Loader2, UtensilsCrossed, type LucideIcon } from "lucide-react";
+import { ArrowRight, Gift, Loader2, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import type { GiftChoice } from "@/lib/api/gift-exchange";
-import { btnPrimary, btnSecondary, iconBg, iconCl, itemTitle, metaText } from "./tokens";
+import { PHOTOS } from "@/components/picnic/picnic-config";
+import { GiftOptionTile } from "./GiftOptionTile";
 
 export const GIFT_OPTIONS: { key: keyof GiftChoice; label: string; hint: string; Icon: LucideIcon }[] = [
-  { key: "picnic", label: "Picnic", hint: "Food, games and fellowship on the grass. Includes the gift exchange.", Icon: UtensilsCrossed },
-  { key: "giftExchange", label: "Gift exchange", hint: "Bring a wrapped gift and swap with another member.", Icon: Gift },
+  { key: "picnic", label: "Picnic", hint: "Food, games and fellowship on the grass, with the gift exchange.", Icon: UtensilsCrossed },
+  { key: "giftExchange", label: "Gift exchange", hint: "Just the gift swap: bring a wrapped gift for another member.", Icon: Gift },
+];
+
+const STEPS = [
+  "Sign up here before the day.",
+  "Your gift partner is revealed ahead of the day.",
+  "Bring a wrapped gift and swap at the picnic.",
 ];
 
 interface Props {
@@ -28,6 +35,7 @@ export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: 
   const [choice, setChoice] = useState<GiftChoice>(initial);
   const nothingPicked = !choice.giftExchange && !choice.picnic;
   const still = useReducedMotion() ?? false;
+  const summary = choice.picnic ? "The picnic and the gift exchange" : choice.giftExchange ? "The gift exchange only" : "Nothing yet";
 
   return (
     <form
@@ -37,101 +45,83 @@ export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: 
       }}
     >
       <fieldset>
-        <legend className={`mb-3 ${metaText}`}>Coming to the picnic? The gift exchange is included.</legend>
-        <div className="space-y-2.5">
+        <legend className="mb-3 text-sm font-semibold text-[#1B1714] dark:text-white">What would you like to join?</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
           {GIFT_OPTIONS.map(({ key, label, hint, Icon }, i) => {
             const locked = key === "giftExchange" && choice.picnic;
-            const checked = choice[key] || locked;
             return (
-              <motion.label
+              <GiftOptionTile
                 key={key}
-                initial={still ? false : { opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, ease: "easeOut", delay: 0.15 + i * 0.08 }}
-                whileTap={still ? undefined : { scale: 0.98 }}
-                className={`flex ${locked ? "cursor-default" : "cursor-pointer"} items-center gap-3 rounded-xl border p-3.5 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#87102C]/30 ${
-                  checked
-                    ? "border-[#87102C] bg-[#FFF5F7] dark:border-[#FFB3C1]/50 dark:bg-[#87102C]/15"
-                    : "border-[#E7CDD3] hover:border-[#87102C]/40 dark:border-white/10 dark:hover:border-white/25"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  disabled={locked}
-                  onChange={(e) =>
-                    setChoice((c) =>
-                      key === "picnic" && e.target.checked
-                        ? { picnic: true, giftExchange: true }
-                        : { ...c, [key]: e.target.checked },
-                    )
-                  }
-                  className="sr-only"
-                />
-                <motion.span
-                  className={iconBg}
-                  animate={checked && !still ? { rotate: [0, -12, 10, 0], scale: [1, 1.12, 1] } : { rotate: 0, scale: 1 }}
-                  transition={{ duration: 0.45 }}
-                >
-                  <Icon size={15} className={iconCl} aria-hidden="true" />
-                </motion.span>
-                <span className="min-w-0 flex-1">
-                  <span className={`block ${itemTitle}`}>{label}</span>
-                  <span className={`block ${metaText}`}>{locked ? "Included with the picnic." : hint}</span>
-                </span>
-                <span
-                  aria-hidden="true"
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
-                    checked ? "border-[#87102C] bg-[#87102C] text-white" : "border-[#D9BFC5] text-transparent dark:border-white/25"
-                  }`}
-                >
-                  <AnimatePresence initial={false}>
-                    {checked && (
-                      <motion.span
-                        key="tick"
-                        initial={still ? false : { scale: 0 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 18 }}
-                      >
-                        <Check size={13} strokeWidth={3} />
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </span>
-              </motion.label>
+                label={label}
+                hint={hint}
+                Icon={Icon}
+                photo={key === "picnic" ? PHOTOS.gingham.src.replace(/w=\d+/, "w=600") : undefined}
+                badge={key === "picnic" ? "Includes the gift exchange" : undefined}
+                checked={choice[key] || locked}
+                locked={locked}
+                delay={0.12 + i * 0.08}
+                onToggle={(on) =>
+                  setChoice((c) => (key === "picnic" && on ? { picnic: true, giftExchange: true } : { ...c, [key]: on }))
+                }
+              />
             );
           })}
         </div>
       </fieldset>
 
-      <AnimatePresence initial={false}>
-        {nothingPicked && (
-          <motion.p
-            className={`mt-2 ${metaText}`}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-          >
-            Tick at least one to sign up.
-          </motion.p>
-        )}
-      </AnimatePresence>
+      <div className="mt-5 rounded-2xl bg-[#F6EFE2] p-4 dark:bg-white/[0.04]">
+        <p className="text-sm font-semibold text-[#1B1714] dark:text-white">How the gift exchange works</p>
+        <ol className="mt-3 grid gap-3 sm:grid-cols-3">
+          {STEPS.map((step, i) => (
+            <li key={step} className="flex gap-2.5 text-[13px] leading-snug text-[#1B1714]/70 dark:text-white/60">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1E3A2A] font-serif text-xs text-[#FBF4E6]">
+                {i + 1}
+              </span>
+              {step}
+            </li>
+          ))}
+        </ol>
+      </div>
 
-      <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <button type="button" disabled={saving} onClick={onCancel} className={btnSecondary}>
-          Cancel
-        </button>
-        <motion.button
-          type="submit"
-          disabled={saving || nothingPicked}
-          className={`${btnPrimary} shadow-md shadow-[#87102C]/20 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none`}
-          whileHover={still || nothingPicked ? undefined : { scale: 1.03 }}
-          whileTap={still || nothingPicked ? undefined : { scale: 0.96 }}
-        >
-          {saving ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Gift size={15} aria-hidden="true" />}
-          {changing ? "Save changes" : "Count me in"}
-        </motion.button>
+      <div className="mt-6 flex flex-col gap-4 border-t border-[#1B1714]/10 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
+        <div aria-live="polite" className="text-sm">
+          <span className="text-[#1B1714]/55 dark:text-white/50">You&apos;re signing up for</span>
+          <span className="block font-semibold text-[#1B1714] dark:text-white">{summary}</span>
+          <AnimatePresence initial={false}>
+            {nothingPicked && (
+              <motion.span
+                className="block text-xs text-[#87102C] dark:text-[#FFB3C1]"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                Tick at least one to sign up.
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={onCancel}
+            className="inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold text-[#1B1714]/70 transition-colors hover:bg-[#1B1714]/[0.05] hover:text-[#1B1714] dark:text-white/70 dark:hover:bg-white/10"
+          >
+            Cancel
+          </button>
+          <motion.button
+            type="submit"
+            disabled={saving || nothingPicked}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#1E3A2A] px-6 text-sm font-semibold text-[#FBF4E6] shadow-[0_12px_28px_-14px_rgba(30,58,42,0.9)] transition-colors hover:bg-[#16301F] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
+            whileHover={still || nothingPicked ? undefined : { scale: 1.03 }}
+            whileTap={still || nothingPicked ? undefined : { scale: 0.96 }}
+          >
+            {saving && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
+            {changing ? "Save changes" : "Count me in"}
+            {!saving && <ArrowRight size={15} aria-hidden="true" />}
+          </motion.button>
+        </div>
       </div>
     </form>
   );

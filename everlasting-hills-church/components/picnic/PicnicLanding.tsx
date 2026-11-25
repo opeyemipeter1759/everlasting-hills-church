@@ -1,20 +1,22 @@
 import "./picnic.css";
 import PicnicAfternoon from "./PicnicAfternoon";
 import PicnicBring from "./PicnicBring";
+import PicnicGames from "./PicnicGames";
 import PicnicHero from "./PicnicHero";
 import PicnicRsvp from "./PicnicRsvp";
 import PicnicShare from "./PicnicShare";
-import { PHOTOS, formatPicnicDate, picnicDate } from "./picnic-config";
+import { PHOTOS } from "./picnic-config";
+import { TBA_DATE, dateParts, type PicnicContent } from "./picnic-content";
 
-export default function PicnicLanding() {
-  const date = picnicDate();
-  const d = formatPicnicDate(date);
+export default function PicnicLanding({ c }: { c: PicnicContent }) {
+  const d = dateParts(c.date);
 
   return (
     <main className="paper-grain overflow-x-hidden">
-      <PicnicHero d={d} />
-      <PicnicAfternoon />
-      <PicnicBring />
+      <PicnicHero d={d} c={c} />
+      <PicnicAfternoon c={c} />
+      <PicnicGames c={c} />
+      <PicnicBring c={c} />
 
       {/* ── RSVP ─────────────────────────────────────────────────────────── */}
       <section id="rsvp" className="relative scroll-mt-20 bg-[#1E3A2A] text-[#F7F0E3]">
@@ -22,16 +24,14 @@ export default function PicnicLanding() {
         <div className="mx-auto grid max-w-6xl gap-14 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-2 lg:gap-24">
           <div>
             <p className="text-sm font-medium text-[#F7F0E3]/75">Save your spot</p>
-            <h2 className="mt-4 font-serif text-5xl leading-[1] tracking-tight sm:text-6xl">
-              Will we see you there?
-            </h2>
+            <h2 className="mt-4 font-serif text-5xl leading-[1] tracking-tight sm:text-6xl">{c.rsvpTitle}</h2>
             <p className="mt-6 max-w-md text-[16px] leading-relaxed text-[#F7F0E3]/65">
-              Everyone is welcome — friends, family, neighbours. Leave your details so we plan enough of everything for everyone.
+              {c.rsvpBody}
             </p>
-            <p className="mt-10 font-serif text-2xl text-[#F7F0E3]">{d.long}</p>
+            <p className="mt-10 font-serif text-2xl text-[#F7F0E3]">{d.long ?? TBA_DATE}</p>
           </div>
           <div className="lg:pt-4">
-            <PicnicRsvp fallbackDate={date.toISOString()} />
+            <PicnicRsvp target={d.iso} />
           </div>
         </div>
       </section>
@@ -39,7 +39,7 @@ export default function PicnicLanding() {
       {/* ── Share ────────────────────────────────────────────────────────── */}
       <section id="share" className="scroll-mt-20 py-20 sm:py-28">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <PicnicShare dateLong={d.long} />
+          <PicnicShare date={c.date ?? null} time={c.time ?? null} venue={c.venue ?? null} />
         </div>
       </section>
 

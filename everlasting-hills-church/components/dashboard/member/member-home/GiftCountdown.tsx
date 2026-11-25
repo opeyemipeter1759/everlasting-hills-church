@@ -30,7 +30,7 @@ export function remaining(ms: number) {
 }
 
 /**
- * A live countdown to the gift exchange & picnic. Ticks every second on the server's
+ * A live countdown to the gift partner reveal (the swap itself is at the picnic). Ticks every second on the server's
  * clock: `clockOffsetMs` (server time minus this device's time, measured when
  * the API answered) corrects a phone set to the wrong time. Stops at zero.
  */
@@ -59,7 +59,7 @@ export function GiftCountdown({ targetDate, clockOffsetMs }: { targetDate: strin
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 16 }}
       >
-        It&apos;s today. See you there!
+        Gift partners are revealed today.
       </motion.p>
     );
   }
@@ -68,7 +68,7 @@ export function GiftCountdown({ targetDate, clockOffsetMs }: { targetDate: strin
   const units = [["days", left.days], ["hrs", left.hours], ["mins", left.minutes], ["secs", left.seconds]] as const;
   return (
     <div>
-      <p className={`mb-2 ${kicker}`}>Starts in</p>
+      <p className={`mb-2 ${kicker}`}>Gift partners revealed in</p>
       <div
         className="grid grid-cols-4 gap-2"
         role="timer"

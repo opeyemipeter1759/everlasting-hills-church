@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CircleNotch, DownloadSimple, Icon, LinkSimple, ShareNetwork } from "@/components/icons";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { PICNIC } from "./picnic-config";
+import { dateParts } from "./picnic-content";
 import StatusPreview, { WhatsAppGlyph } from "./PicnicStatusPreview";
 import { drawPicnicStatus } from "./picnic-status-image";
 import { RSVP_STORAGE_KEY } from "./PicnicRsvp";
@@ -15,7 +16,8 @@ type Phase = "idle" | "working" | "shared" | "downloaded" | "error";
  * phone's share sheet (WhatsApp → My status, Instagram story, …). Where a browser
  * can't share files, the image downloads and WhatsApp opens with the link instead.
  */
-export default function PicnicShare({ dateLong }: { dateLong: string }) {
+export default function PicnicShare({ date, time, venue }: { date: string | null; time: string | null; venue: string | null }) {
+  const { long } = dateParts(date);
   const user = useCurrentUser();
   // Signed-in name, else the name they just registered with on this device.
   const [rsvpName, setRsvpName] = useState<string | null>(null);
@@ -35,13 +37,13 @@ export default function PicnicShare({ dateLong }: { dateLong: string }) {
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
   const pageUrl = `${origin}${PICNIC.path}`;
-  const message = `${firstName ? "I'm" : "We're"} going to the Everlasting Hills Church picnic on ${dateLong}. Come with me! ${pageUrl}`;
+  const message = `${firstName ? "I'm" : "We're"} going to the Everlasting Hills Church picnic${long ? ` on ${long}` : ""}. Come with me! ${pageUrl}`;
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(message)}`;
 
   async function shareStatus() {
     setPhase("working");
     try {
-      const blob = await drawPicnicStatus({ name: fullName ?? null, dateLong, siteHost: window.location.host });
+      const blob = await drawPicnicStatus({ name: fullName ?? null, date, time, venue, siteHost: window.location.host });
       const file = new File([blob], "ehc-picnic-status.png", { type: "image/png" });
       if (navigator.canShare?.({ files: [file] })) {
         try {
@@ -124,7 +126,7 @@ export default function PicnicShare({ dateLong }: { dateLong: string }) {
         </p>
       </div>
 
-      <StatusPreview firstName={firstName} dateLong={dateLong} />
+      <StatusPreview firstName={firstName} date={date} venue={venue} />
     </div>
   );
 }

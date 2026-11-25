@@ -11,7 +11,7 @@ import { Select } from "@/components/ui/select";
  * structured page is a field definition, not a bespoke component.
  */
 export type FieldDef =
-  | { kind: "text"; key: string; label: string; help?: string; nullable?: boolean }
+  | { kind: "text"; key: string; label: string; help?: string; nullable?: boolean; inputType?: "date" | "text" }
   | { kind: "textarea"; key: string; label: string; help?: string; nullable?: boolean }
   | { kind: "number"; key: string; label: string; help?: string }
   | { kind: "boolean"; key: string; label: string; help?: string }
@@ -61,7 +61,7 @@ function FieldView({ field, value, onChange }: { field: FieldDef; value: unknown
     return (
       <Labeled label={field.label} help={field.help}>
         <input
-          className={inp}
+          className={inp} type={field.inputType ?? "text"}
           value={(value as string) ?? ""}
           onChange={(e) => onChange(field.nullable && e.target.value === "" ? null : e.target.value)}
         />

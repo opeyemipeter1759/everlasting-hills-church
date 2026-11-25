@@ -1,18 +1,13 @@
 /**
- * Everything the picnic page says about the day. Edit here — the page, the
- * share image and the metadata all read from this file.
+ * Fixed facts about the picnic: path, event, date rule and photographs. The
+ * words, time and venue are edited in the CMS (see picnic-content.ts).
  *
- * Registration is the existing gift exchange & picnic sign-up
- * (POST /gift-exchange/register with picnic: true), so entries show up in the
- * admin Gift exchange list under "Picnic".
+ * Public registrations are RSVPs on the picnic event; members sign up from the
+ * dashboard's Picnic & gift exchange card.
  */
 
 export const PICNIC = {
   title: "The EHC Picnic",
-  /** Leave null until confirmed; the page shows "Venue to be announced". */
-  venue: null as string | null,
-  /** e.g. "From 2:00 PM". Leave null until confirmed. */
-  time: null as string | null,
   path: "/picnic",
   /** Registrations are RSVPs on this event (Dashboard → Events → RSVPs). */
   eventSlug: "ehc-picnic",
@@ -60,24 +55,6 @@ export const PHOTOS = {
     page: "https://unsplash.com/photos/NjQ_gzJfeiw",
   },
 } as const;
-
-const LAGOS_OFFSET_MS = 60 * 60 * 1000;
-
-/**
- * The picnic day: the first Sunday of December (Lagos), rolling to next year once
- * this year's has passed — same rule as the backend's giftExchangeTarget. Signed-in
- * members get the server's date (which an admin can override) instead.
- */
-export function picnicDate(now: Date = new Date()): Date {
-  const firstSunday = (year: number) => {
-    const dec1 = new Date(Date.UTC(year, 11, 1));
-    const day = (7 - dec1.getUTCDay()) % 7;
-    return new Date(Date.UTC(year, 11, 1 + day) - LAGOS_OFFSET_MS); // 00:00 Lagos
-  };
-  const year = new Date(now.getTime() + LAGOS_OFFSET_MS).getUTCFullYear();
-  const thisYear = firstSunday(year);
-  return now.getTime() < thisYear.getTime() + 24 * 60 * 60 * 1000 ? thisYear : firstSunday(year + 1);
-}
 
 export function formatPicnicDate(d: Date) {
   const opts = { timeZone: "Africa/Lagos" } as const;
