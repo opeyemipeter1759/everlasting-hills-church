@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 import { showToast } from "@/components/ui/toast/toast";
-import type { NavGrantType, NavPermissionEntry, NavPermissionGrantEntry } from "@/lib/nav-permissions-core";
+import type { NavGrantAccess, NavGrantType, NavPermissionEntry, NavPermissionGrantEntry } from "@/lib/nav-permissions-core";
 
 export * from "@/lib/nav-permissions-core";
 
@@ -75,7 +75,7 @@ export function useNavGrants() {
 export function useAddNavGrant() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { itemHref: string; type: NavGrantType; targetId: string }) =>
+    mutationFn: (input: { itemHref: string; type: NavGrantType; targetId: string; access: NavGrantAccess }) =>
       api.post<NavPermissionGrantEntry>("/nav-permissions/grants", input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GRANTS_KEY });
@@ -83,6 +83,21 @@ export function useAddNavGrant() {
       showToast.success("Exception added");
     },
     onError: (err) => showToast.error((err as { message?: string })?.message ?? "Couldn't add that exception"),
+  });
+}
+
+/** Switch a grant between view only and full access. */
+export function useSetNavGrantAccess() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, access }: { id: string; access: NavGrantAccess }) =>
+      api.patch<{ id: string; access: NavGrantAccess }>(`/nav-permissions/grants/${id}`, { access }),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: GRANTS_KEY });
+      qc.invalidateQueries({ queryKey: MY_GRANTS_KEY });
+      showToast.success(res.access === "VIEW" ? "Now view only" : "Now full access");
+    },
+    onError: (err) => showToast.error((err as { message?: string })?.message ?? "Couldn't change that access"),
   });
 }
 

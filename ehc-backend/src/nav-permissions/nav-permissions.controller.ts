@@ -1,11 +1,11 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { SetNavPermissionsDto } from './dto/set-nav-permissions.dto';
-import { CreateNavGrantDto } from './dto/nav-permission-grant.dto';
+import { CreateNavGrantDto, UpdateNavGrantDto } from './dto/nav-permission-grant.dto';
 import { NavPermissionsService } from './services/nav-permissions.service';
 
 /**
@@ -51,7 +51,7 @@ export class NavPermissionsController {
   @Get('my-grants')
   @ApiOperation({ summary: 'Nav items the caller can reach via a named person/unit exception (MEMBER+, self-scoped only)' })
   async myGrants(@CurrentUser() actor: AuthUser) {
-    return { hrefs: await this.permissions.getGrantedHrefsForActor(actor) };
+    return this.permissions.getGrantedHrefsForActor(actor);
   }
 
   @Get('grants')
@@ -67,6 +67,14 @@ export class NavPermissionsController {
   @ApiBody({ type: CreateNavGrantDto })
   async addGrant(@Body() body: CreateNavGrantDto) {
     return this.permissions.addGrant(body);
+  }
+
+  @Patch('grants/:id')
+  @Roles(Role.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Make a grant view only or full access (SUPER_ADMIN only)' })
+  @ApiBody({ type: UpdateNavGrantDto })
+  async updateGrant(@Param('id') id: string, @Body() body: UpdateNavGrantDto) {
+    return this.permissions.setGrantAccess(id, body.access);
   }
 
   @Delete('grants/:id')

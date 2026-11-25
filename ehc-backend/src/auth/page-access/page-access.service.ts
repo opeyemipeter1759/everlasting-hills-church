@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NavGrantType, Prisma, Role } from '@prisma/client';
+import { NavGrantAccess, NavGrantType, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { isAudioProductionUnitName } from '../../common/audio-production.util';
 import type { Env } from '../../config/env.validation';
@@ -25,7 +25,7 @@ const MAX_CACHED_ACTORS = 5_000;
 export class PageAccessService {
   private readonly tenantId: string;
   private roleTable: { byHref: Map<string, Role[]>; expires: number } | null = null;
-  private readonly grantCache = new Map<string, { hrefs: Set<string>; expires: number }>();
+  private readonly grantCache = new Map<string, { access: Map<string, NavGrantAccess>; expires: number }>();
   private readonly audioProductionCache = new Map<string, { member: boolean; expires: number }>();
 
   constructor(
@@ -63,12 +63,17 @@ export class PageAccessService {
     return member;
   }
 
-  async canReach(actor: AuthUser, href: string): Promise<boolean> {
+  /**
+   * How far this person has been given the page: FULL through a role on the
+   * page's saved role list or a full grant, VIEW through view-only grants
+   * only, null when not at all.
+   */
+  async canReach(actor: AuthUser, href: string): Promise<NavGrantAccess | null> {
     const actorRoles = new Set<Role>(actor.effectiveRoles ?? []);
     if (actor.role) actorRoles.add(actor.role);
     const pageRoles = (await this.getRoleTable()).get(href);
-    if (pageRoles?.some((role) => actorRoles.has(role))) return true;
-    return (await this.getCachedGrants(actor)).has(href);
+    if (pageRoles?.some((role) => actorRoles.has(role))) return NavGrantAccess.FULL;
+    return (await this.getCachedGrants(actor)).get(href) ?? null;
   }
 
   /**
@@ -77,6 +82,11 @@ export class PageAccessService {
    * UNIT_MEMBER/UNIT_LEAD grant on any unit they belong to/lead.
    */
   async getGrantedHrefsForActor(actor: AuthUser): Promise<string[]> {
+    return Array.from((await this.getGrantsForActor(actor)).keys());
+  }
+
+  /** Each granted page with the widest access any of the person's grants gives (FULL beats VIEW). */
+  async getGrantsForActor(actor: AuthUser): Promise<Map<string, NavGrantAccess>> {
     const memberUnitIds = actor.memberId
       ? (
           await this.prisma.unitMember.findMany({
@@ -90,13 +100,17 @@ export class PageAccessService {
     if (actor.profileId) or.push({ type: NavGrantType.MEMBER, targetId: { in: [actor.profileId] } });
     if (memberUnitIds.length) or.push({ type: NavGrantType.UNIT_MEMBER, targetId: { in: memberUnitIds } });
     if (actor.unitLeadOf.length) or.push({ type: NavGrantType.UNIT_LEAD, targetId: { in: actor.unitLeadOf } });
-    if (or.length === 0) return [];
+    const access = new Map<string, NavGrantAccess>();
+    if (or.length === 0) return access;
 
     const rows = await this.prisma.navPermissionGrant.findMany({
       where: { tenantId: this.tenantId, OR: or },
-      select: { itemHref: true },
+      select: { itemHref: true, access: true },
     });
-    return Array.from(new Set(rows.map((r) => r.itemHref)));
+    for (const row of rows) {
+      if (access.get(row.itemHref) !== NavGrantAccess.FULL) access.set(row.itemHref, row.access);
+    }
+    return access;
   }
 
   private async getRoleTable(): Promise<Map<string, Role[]>> {
@@ -110,12 +124,12 @@ export class PageAccessService {
     return byHref;
   }
 
-  private async getCachedGrants(actor: AuthUser): Promise<Set<string>> {
+  private async getCachedGrants(actor: AuthUser): Promise<Map<string, NavGrantAccess>> {
     const cached = this.grantCache.get(actor.userId);
-    if (cached && cached.expires > Date.now()) return cached.hrefs;
-    const hrefs = new Set(await this.getGrantedHrefsForActor(actor));
+    if (cached && cached.expires > Date.now()) return cached.access;
+    const access = await this.getGrantsForActor(actor);
     if (this.grantCache.size >= MAX_CACHED_ACTORS) this.grantCache.clear();
-    this.grantCache.set(actor.userId, { hrefs, expires: Date.now() + CACHE_TTL_MS });
-    return hrefs;
+    this.grantCache.set(actor.userId, { access, expires: Date.now() + CACHE_TTL_MS });
+    return access;
   }
 }

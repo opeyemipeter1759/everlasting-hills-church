@@ -28,7 +28,7 @@ function makeRequest(user: AuthUser | undefined, path: string) {
 
 /** A PageAccessService stub granting exactly the listed page hrefs. */
 function grants(...hrefs: string[]) {
-  const canReach = jest.fn(async (_actor: AuthUser, href: string) => hrefs.includes(href));
+  const canReach = jest.fn(async (_actor: AuthUser, href: string) => (hrefs.includes(href) ? 'FULL' : null));
   const isInAudioProduction = jest.fn(async () => false);
   return { service: { canReach, isInAudioProduction } as unknown as PageAccessService, canReach };
 }
@@ -36,7 +36,7 @@ function grants(...hrefs: string[]) {
 /** A PageAccessService stub for someone in the Audio (Post) Production unit. */
 function audioProductionMember() {
   const isInAudioProduction = jest.fn(async () => true);
-  const canReach = jest.fn(async () => false);
+  const canReach = jest.fn(async () => null);
   return { service: { canReach, isInAudioProduction } as unknown as PageAccessService, isInAudioProduction };
 }
 
@@ -163,5 +163,30 @@ describe('PageAccessGuard', () => {
 
     expect(canReach).not.toHaveBeenCalled();
     expect(req.user).toBeUndefined();
+  });
+});
+
+describe('PageAccessGuard — view-only grants', () => {
+  function viewOnly(href: string) {
+    const canReach = jest.fn(async (_actor: AuthUser, h: string) => (h === href ? 'VIEW' : null));
+    const isInAudioProduction = jest.fn(async () => false);
+    return { canReach, isInAudioProduction } as unknown as PageAccessService;
+  }
+  function request(method: string) {
+    const req: { user?: AuthUser; path: string; method: string } = { user: makeUser(Role.MEMBER), path: '/events/abc', method };
+    const ctx = { switchToHttp: () => ({ getRequest: () => req }) } as unknown as ExecutionContext;
+    return { req, ctx };
+  }
+
+  it('lets them read the page', async () => {
+    const { req, ctx } = request('GET');
+    await new PageAccessGuard(viewOnly('/dashboard/admin/events')).canActivate(ctx);
+    expect(req.user?.role).toBe(Role.ADMIN);
+  });
+
+  it.each(['POST', 'PUT', 'PATCH', 'DELETE'])('gives no elevation for %s', async (method) => {
+    const { req, ctx } = request(method);
+    await new PageAccessGuard(viewOnly('/dashboard/admin/events')).canActivate(ctx);
+    expect(req.user?.role).toBe(Role.MEMBER);
   });
 });

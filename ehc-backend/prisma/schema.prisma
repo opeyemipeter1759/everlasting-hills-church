@@ -3188,6 +3188,13 @@ enum NavGrantType {
   UNIT_LEAD
 }
 
+/// What a named grant allows on its page: VIEW = read only (no create, edit or
+/// delete through the grant); FULL = everything the page's role can do.
+enum NavGrantAccess {
+  VIEW
+  FULL
+}
+
 /// Additive, per-item exceptions layered on top of NavPermission's role table
 /// — grant-only by design (see NavPermission's own comment: role revocation
 /// still goes through that table, never through this one). `targetId` is
@@ -3202,6 +3209,7 @@ model NavPermissionGrant {
   itemHref  String
   type      NavGrantType
   targetId  String
+  access    NavGrantAccess @default(FULL)
   createdAt DateTime     @default(now())
   Tenant    Tenant       @relation(fields: [tenantId], references: [id])
 

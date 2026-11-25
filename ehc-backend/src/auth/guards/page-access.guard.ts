@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { NavGrantAccess, Role } from '@prisma/client';
 import { AUDIO_PRODUCTION_PATHS, PAGE_ACCESS, pathUnder } from '../page-access/page-access.map';
 import { PageAccessService } from '../page-access/page-access.service';
 import type { AuthUser } from '../types/auth-user';
@@ -21,13 +21,17 @@ import { meetsRole, ROLE_LEVEL } from './roles.guard';
  *
  * Registered as a global guard after JwtAuthGuard (needs req.user) and before
  * RolesGuard (which must see the elevated role). Never blocks anything itself.
+ *
+ * A VIEW-only grant elevates reads (GET/HEAD) only: a create, edit or delete
+ * through it gets no elevation, so RolesGuard refuses it as it would anyone
+ * without the page.
  */
 @Injectable()
 export class PageAccessGuard implements CanActivate {
   constructor(private readonly pageAccess: PageAccessService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest<{ user?: AuthUser; path?: string }>();
+    const req = context.switchToHttp().getRequest<{ user?: AuthUser; path?: string; method?: string }>();
     const user = req.user;
     if (!user) return true; // @Public route, or not signed in
 
@@ -53,8 +57,10 @@ export class PageAccessGuard implements CanActivate {
     // Highest page role first, so a person given several pages that share an
     // endpoint gets the most capable of them.
     candidates.sort((a, b) => ROLE_LEVEL[b.role] - ROLE_LEVEL[a.role]);
+    const reading = READ_METHODS.has((req.method ?? 'GET').toUpperCase());
     for (const page of candidates) {
-      if (await this.pageAccess.canReach(user, page.href)) {
+      const access = await this.pageAccess.canReach(user, page.href);
+      if (access === NavGrantAccess.FULL || (access === NavGrantAccess.VIEW && reading)) {
         req.user = elevate(user, page.role);
         break;
       }
@@ -62,6 +68,9 @@ export class PageAccessGuard implements CanActivate {
     return true;
   }
 }
+
+/** Requests that only read. Everything else (POST, PUT, PATCH, DELETE) changes something. */
+const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 function effectiveRolesOf(user: AuthUser): Role[] {
   if (user.effectiveRoles?.length) return user.effectiveRoles;

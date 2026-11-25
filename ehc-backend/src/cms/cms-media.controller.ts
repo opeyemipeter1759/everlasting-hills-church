@@ -20,9 +20,11 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { CmsMediaService } from './services/cms-media.service';
 import { CmsAuditService } from './services/cms-audit.service';
 import { hasValidFileSignature } from '../uploads/file-signature.util';
+import { UploadsService } from '../uploads/uploads.service';
 
 const MAX_CMS_MEDIA_BYTES = 8 * 1024 * 1024;
-const CMS_MEDIA_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+/** HEIC/HEIF and TIFF are converted to JPEG before storage; the dashboard redraws other types as PNG. */
+const CMS_MEDIA_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'image/heic', 'image/heif', 'image/tiff'];
 
 @ApiTags('cms')
 @Controller('cms')
@@ -30,6 +32,7 @@ export class CmsMediaController {
   constructor(
     private readonly media: CmsMediaService,
     private readonly audit: CmsAuditService,
+    private readonly uploads: UploadsService,
   ) {}
 
   @Roles(Role.PASTOR)
@@ -62,7 +65,7 @@ export class CmsMediaController {
       },
     },
   })
-  uploadMedia(
+  async uploadMedia(
     @CurrentUser() actor: AuthUser,
     @UploadedFile()
     file: { buffer: Buffer; mimetype: string; originalname: string; size: number } | undefined,
@@ -70,10 +73,10 @@ export class CmsMediaController {
   ) {
     if (!file) throw new BadRequestException('No file provided');
     if (!CMS_MEDIA_MIME.includes(file.mimetype) || !hasValidFileSignature(file)) {
-      throw new BadRequestException('Media must be a valid JPG, PNG, WebP, GIF, or AVIF image');
+      throw new BadRequestException('Media must be a valid image (JPG, PNG, WebP, GIF, AVIF, HEIC or TIFF)');
     }
     return this.media.uploadMedia(
-      file,
+      await this.uploads.toWebImage(file),
       {
         alt: body.alt ?? '',
         width: body.width ? Number(body.width) : undefined,
