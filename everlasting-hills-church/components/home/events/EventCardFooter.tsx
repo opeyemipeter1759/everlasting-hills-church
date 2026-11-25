@@ -31,7 +31,7 @@ export default function EventCardFooter({ event, href, takingRsvps, registering,
     <div className={`flex flex-nowrap items-center border-t border-[#ECE7E9] ${compact ? "gap-2 pt-4" : "gap-4 pt-5"}`}>
       <dl className={`flex min-w-0 flex-1 flex-nowrap items-center font-medium uppercase text-[#6B6B6B] ${compact ? "text-[10px] tracking-[0.08em]" : "text-[13px] tracking-[0.14em]"}`}>
         <dt className="sr-only">Time</dt>
-        <dd className="flex-shrink-0 whitespace-nowrap">{formatEventTime(event.startAt)} WAT</dd>
+        <dd className="flex-shrink-0 whitespace-nowrap">{formatEventTime(event.nextStartAt ?? event.startAt)} WAT</dd>
         {location && (
           <>
             <span aria-hidden="true" className={`flex-shrink-0 text-[#C9C2C5] ${compact ? "mx-1.5" : "mx-2"}`}>·</span>

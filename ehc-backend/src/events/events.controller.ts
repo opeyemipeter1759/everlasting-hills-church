@@ -19,7 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Public } from '../auth/decorators/public.decorator';
+import { OptionalAuth, Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { CalendarQueryDto, CreateEventDto, UpdateEventDto } from './dto/event.dto';
@@ -119,19 +119,19 @@ export class EventsController {
 
   // ── Public ──────────────────────────────────────────────────────────────────
 
-  @Public()
+  @OptionalAuth()
   @Get()
-  @ApiOperation({ summary: 'List published events (public)' })
+  @ApiOperation({ summary: 'List published events (public; private events included when signed in)' })
   @ApiOkResponse({ description: 'Array of published event summaries' })
-  listPublished() {
-    return this.eventsService.listPublished();
+  listPublished(@CurrentUser() user?: AuthUser) {
+    return this.eventsService.listPublished(Boolean(user));
   }
 
-  @Public()
+  @OptionalAuth()
   @Get(':slug')
-  @ApiOperation({ summary: 'Get a published event by slug (public)' })
-  getBySlug(@Param('slug') slug: string) {
-    return this.eventsService.getBySlug(slug);
+  @ApiOperation({ summary: 'Get a published event by slug (public; private events need sign-in)' })
+  getBySlug(@Param('slug') slug: string, @CurrentUser() user?: AuthUser) {
+    return this.eventsService.getBySlug(slug, Boolean(user));
   }
 
   @Public()

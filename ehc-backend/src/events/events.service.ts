@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EventStatus, Prisma } from '@prisma/client';
+import { EventStatus, EventVisibility, Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import slugify from 'slugify';
 import { PrismaService } from '../prisma/prisma.service';
@@ -59,22 +59,28 @@ export class EventsService {
     customPath: true,
     rsvpEnabled: true,
     registrationRequired: true,
+    visibility: true,
     Schedules: { orderBy: { sortOrder: 'asc' as const } },
   } satisfies Prisma.EventSelect;
 
-  /** Public: published events, featured first then soonest. */
-  async listPublished() {
+  /** PRIVATE events are only visible to signed-in users. */
+  private visibleTo(signedIn: boolean): Prisma.EventWhereInput {
+    return signedIn ? {} : { visibility: EventVisibility.PUBLIC };
+  }
+
+  /** Public: published events, featured first then soonest. Private ones only when signed in. */
+  async listPublished(signedIn = false) {
     return this.prisma.event.findMany({
-      where: { tenantId: this.tenantId, status: EventStatus.PUBLISHED },
+      where: { tenantId: this.tenantId, status: EventStatus.PUBLISHED, ...this.visibleTo(signedIn) },
       orderBy: [{ featured: 'desc' }, { startAt: 'asc' }],
       select: EventsService.SUMMARY_SELECT,
     });
   }
 
-  /** Public: a single published event by slug. */
-  async getBySlug(slug: string) {
+  /** Public: a single published event by slug. A private event 404s unless signed in. */
+  async getBySlug(slug: string, signedIn = false) {
     const event = await this.prisma.event.findFirst({
-      where: { tenantId: this.tenantId, slug, status: EventStatus.PUBLISHED },
+      where: { tenantId: this.tenantId, slug, status: EventStatus.PUBLISHED, ...this.visibleTo(signedIn) },
       include: {
         Schedules: { orderBy: { sortOrder: 'asc' } },
         Sections: { where: { isVisible: true }, orderBy: { sortOrder: 'asc' } },
@@ -238,6 +244,7 @@ export class EventsService {
           featured: data.featured ?? false,
           rsvpEnabled: data.rsvpEnabled ?? true,
           registrationRequired: data.registrationRequired ?? data.rsvpEnabled ?? true,
+          visibility: data.visibility ?? EventVisibility.PUBLIC,
           capacity: data.capacity ?? null,
           customPath: data.customPath ?? null,
           order: data.order ?? 0,
@@ -287,6 +294,7 @@ export class EventsService {
           ...(data.startAt !== undefined && { startAt: new Date(data.startAt) }),
           ...(data.endAt !== undefined && { endAt: data.endAt ? new Date(data.endAt) : null }),
           ...(data.timezone !== undefined && { timezone: data.timezone }),
+          ...(data.visibility !== undefined && { visibility: data.visibility }),
           ...(data.locationType !== undefined && { locationType: data.locationType }),
           ...(data.venueName !== undefined && { venueName: data.venueName || null }),
           ...(data.venueAddress !== undefined && { venueAddress: data.venueAddress || null }),
@@ -401,7 +409,7 @@ export class EventsService {
    * returns the existing RSVP instead of creating a duplicate row.
    */
   async createRsvpAsMember(slug: string, profileId: string) {
-    const event = await this.getBySlug(slug); // 404 if not published
+    const event = await this.getBySlug(slug, true); // 404 if not published (members may see private)
     const member = await this.prisma.member.findFirst({
       where: { tenantId: this.tenantId, profileId },
     });
@@ -431,7 +439,7 @@ export class EventsService {
    * consistent across devices/sessions instead of resetting when local state is lost.
    */
   async getRsvpStatusForMember(slug: string, profileId: string) {
-    const event = await this.getBySlug(slug); // 404 if not published
+    const event = await this.getBySlug(slug, true); // signed-in route: private events allowed
     const member = await this.prisma.member.findFirst({
       where: { tenantId: this.tenantId, profileId },
     });

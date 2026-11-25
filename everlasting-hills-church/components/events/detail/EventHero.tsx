@@ -23,7 +23,7 @@ export default function EventHero({ event }: { event: EventDetail }) {
   const bannerIsPoster = !event.heroImageUrl && Boolean(poster);
   const primaryUrl = event.primaryCtaUrl || event.liveUrl || (event.registrationRequired ? event.registrationUrl : null);
   const primaryLabel = event.primaryCtaLabel || (event.liveUrl ? "Join Live" : event.registrationRequired ? "Register" : null);
-  const status = getEventStatus(event.startAt, event.endAt, event.timezone);
+  const status = getEventStatus(event);
   const venue = [event.venueName, event.venueAddress].filter(Boolean).join(" · ");
   const dateLabel = formatEventDateRange(event.startAt, event.endAt, event.timezone);
   // An older API payload carries no schedules at all.
@@ -53,7 +53,7 @@ export default function EventHero({ event }: { event: EventDetail }) {
               every section label further down the page. */}
           <div className="mb-8 flex flex-wrap items-center gap-x-3 gap-y-2">
             <span className="inline-flex items-center rounded-sm border border-white/25 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FFE8ED] xs:tracking-[0.22em]">
-              {status}
+              {status}{event.visibility === "PRIVATE" ? " · Members only" : ""}
             </span>
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45 xs:tracking-[0.22em]">
               Everlasting Hills Church
@@ -131,13 +131,13 @@ export default function EventHero({ event }: { event: EventDetail }) {
                 {event.secondaryCtaLabel}
               </a>
             )}
-            <a
+            {event.visibility !== "PRIVATE" && <a
               href={calendarHref}
               download
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/20 px-6 text-sm font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
             >
               <CalendarPlus size={15} aria-hidden="true" /> Add to calendar
-            </a>
+            </a>}
           </div>
         </div>
 

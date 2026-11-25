@@ -7,8 +7,9 @@ import type {
   EventSchedule,
   EventSection,
   EventStatus,
+  EventVisibility,
 } from "@/types";
-import { toLocalInput } from "./helpers";
+import { sectionsPayload, schedulesPayload, toLocalInput } from "./helpers";
 
 export interface EventFormData {
   title: string;
@@ -46,6 +47,7 @@ export interface EventFormData {
   featured: boolean;
   rsvpEnabled: boolean;
   registrationRequired: boolean;
+  visibility: EventVisibility;
   capacity: string;
   customPath: string;
   order: number;
@@ -98,6 +100,7 @@ export function useEventForm(
     featured: initial?.featured ?? false,
     rsvpEnabled: initial?.rsvpEnabled ?? true,
     registrationRequired: initial?.registrationRequired ?? initial?.rsvpEnabled ?? true,
+    visibility: initial?.visibility ?? "PUBLIC",
     capacity: initial?.capacity != null ? String(initial.capacity) : "",
     customPath: initial?.customPath ?? "",
     order: initial?.order ?? 0,
@@ -130,6 +133,7 @@ export function useEventForm(
         featured: data.featured,
         rsvpEnabled: data.rsvpEnabled,
         registrationRequired: data.registrationRequired,
+        visibility: data.visibility,
         order: Number(data.order) || 0,
         slug: text(data.slug),
         tagline: text(data.tagline),
@@ -160,23 +164,8 @@ export function useEventForm(
         contactEmail: text(data.contactEmail),
         contactWhatsapp: text(data.contactWhatsapp),
         customPath: text(data.customPath),
-        schedules: data.schedules.map((schedule, index) => ({
-          title: schedule.title.trim(),
-          description: text(schedule.description ?? ""),
-          startTime: schedule.startTime,
-          endTime: text(schedule.endTime ?? ""),
-          recurrenceRule: text(schedule.recurrenceRule ?? ""),
-          meetingUrl: text(schedule.meetingUrl ?? ""),
-          sortOrder: index,
-        })),
-        sections: data.sections.map((section, index) => ({
-          type: section.type,
-          title: text(section.title ?? ""),
-          subtitle: text(section.subtitle ?? ""),
-          content: section.content,
-          sortOrder: index,
-          isVisible: section.isVisible,
-        })),
+        schedules: schedulesPayload(data.schedules),
+        sections: sectionsPayload(data.sections),
         capacity: data.capacity.trim() ? Number(data.capacity) : null,
       };
       if (isEdit) {
