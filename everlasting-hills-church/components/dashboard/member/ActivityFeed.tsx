@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { Activity } from "lucide-react";
 import { SectionCard } from "@/components/ui/cards/SectionCard";
 import { relativeTime } from "@/utils/ServiceUtils";
 import type { MemberHomeProps } from "@/types";
@@ -24,10 +24,10 @@ export function ActivityFeed({ services, prayerCount }: {
   }
 
   return (
-    <SectionCard title="Recent Platform Actions" iconEl={<Sparkles size={14} />}>
+    <SectionCard title="Recent Platform Actions" iconEl={<Activity size={14} />}>
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <Sparkles size={24} className="text-gray-200 dark:text-gray-700 mb-2" />
+          <Activity size={24} className="text-gray-200 dark:text-gray-700 mb-2" />
           <p className="text-sm text-gray-400 dark:text-gray-500">No activity yet</p>
         </div>
       ) : (

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CalendarClock, CalendarDays, Archive, type LucideIcon } from "lucide-react";
+import { Icon, Archive, CalendarDots, type IconComponent } from "@/components/icons";
 
 export type EventsTab = "ongoing" | "upcoming" | "past";
 
@@ -13,9 +13,9 @@ interface EventsTabBarProps {
   pastCount: number;
 }
 
-const TAB_CONFIG: { key: EventsTab; label: string; icon: LucideIcon }[] = [
-  { key: "ongoing", label: "Ongoing", icon: CalendarClock },
-  { key: "upcoming", label: "Upcoming", icon: CalendarDays },
+const TAB_CONFIG: { key: EventsTab; label: string; icon: IconComponent }[] = [
+  { key: "ongoing", label: "Ongoing", icon: CalendarDots },
+  { key: "upcoming", label: "Upcoming", icon: CalendarDots },
   { key: "past", label: "Past", icon: Archive },
 ];
 
@@ -35,7 +35,7 @@ export default function EventsTabBar({
   return (
     <div className="no-scrollbar max-w-full overflow-x-auto">
       <div className="inline-flex items-center gap-1 rounded-full border border-[#E7CDD3] bg-white p-1.5 shadow-[0_8px_30px_-12px_rgba(135,16,44,0.25)]">
-        {TAB_CONFIG.map(({ key, label, icon: Icon }) => {
+        {TAB_CONFIG.map(({ key, label, icon: Glyph }) => {
           const isActive = active === key;
           const count = counts[key];
           return (
@@ -69,7 +69,7 @@ export default function EventsTabBar({
                     />
                   </span>
                 )}
-                <Icon size={14} className={isActive ? "text-white" : "text-[#87102C]/70"} />
+                <Icon icon={Glyph} size={14} className={isActive ? "text-white" : "text-[#87102C]/70"} />
                 {label}
                 <span
                   className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold sm:px-2 sm:text-[11px] ${

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Clock, Music, BookOpen, HandHeart, Users, ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, HandHeart, Icon, MapPin, MusicNotes, Users } from "@/components/icons";
 import PageHero from "@/components/marketing/PageHero";
 import { CHURCH } from "@/config/config";
 import { getStructuredContent } from "@/lib/cms-page";
@@ -12,7 +12,7 @@ export const metadata = {
 
 const MAP_EMBED_URL = `https://www.google.com/maps?q=${encodeURIComponent(CHURCH.address)}&z=16&output=embed`;
 const MAP_LINK = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CHURCH.address)}`;
-const EXPECT_ICONS = [Music, BookOpen, HandHeart, Users];
+const EXPECT_ICONS = [MusicNotes, BookOpen, HandHeart, Users];
 
 interface VisitContent {
   eyebrow: string;
@@ -70,7 +70,7 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
           <div className="flex flex-col gap-4">
             <div className="rounded-3xl border border-brand-rose/60 bg-brand-blush/40 p-5 sm:p-8">
               <div className="mb-5 flex items-center gap-3">
-                <Clock size={20} className="text-[#87102C]" />
+                <Icon icon={Clock} size={20} className="text-[#87102C]" />
                 <h2 className="text-xl font-bold text-[#111]">{c.serviceTimesHeading}</h2>
               </div>
               <div className="space-y-4">
@@ -88,11 +88,11 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
 
             <div className="rounded-3xl border border-brand-rose/60 bg-brand-blush/40 p-5 sm:p-8">
               <div className="mb-3 flex items-center gap-3">
-                <MapPin size={20} className="text-[#87102C]" />
+                <Icon icon={MapPin} size={20} className="text-[#87102C]" />
                 <h2 className="text-xl font-bold text-[#111]">{c.locationHeading}</h2>
               </div>
               <p className="mb-4 text-[#4a4a4a]">{c.address}</p>
-              <a href={MAP_LINK} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-[#87102C] hover:underline">Get directions<ArrowRight size={15} /></a>
+              <a href={MAP_LINK} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-[#87102C] hover:underline">Get directions<Icon icon={ArrowRight} size={15} /></a>
             </div>
           </div>
 
@@ -111,10 +111,10 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {c.expectItems.map((item, i) => {
-              const Icon = EXPECT_ICONS[i % EXPECT_ICONS.length];
+              const Glyph = EXPECT_ICONS[i % EXPECT_ICONS.length];
               return (
                 <div key={i} className="relative rounded-3xl border border-brand-rose/60 bg-white p-4 xs:p-7">
-                  <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#87102C]/10 text-[#87102C]"><Icon size={20} /></span>
+                  <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#87102C]/10 text-[#87102C]"><Icon icon={Glyph} size={20} /></span>
                   <h3 className="mb-2 text-lg font-bold text-[#111]">{item.title}</h3>
                   <p className="text-sm leading-relaxed text-[#4a4a4a]">{item.body}</p>
                 </div>
@@ -130,7 +130,7 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
           <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">{c.cta.heading}</h2>
           <p className="mx-auto mt-4 max-w-xl text-white/55">{c.cta.body}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/first-timer" className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-7 py-3.5 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:bg-[#6E0C24]">I am Planning to Visit<ArrowRight size={16} /></Link>
+            <Link href="/first-timer" className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-7 py-3.5 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:bg-[#6E0C24]">I am Planning to Visit<Icon icon={ArrowRight} size={16} /></Link>
             <Link href="/contact" className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-7 py-3.5 text-sm font-semibold transition-colors hover:bg-white/5">Contact Us</Link>
           </div>
         </div>

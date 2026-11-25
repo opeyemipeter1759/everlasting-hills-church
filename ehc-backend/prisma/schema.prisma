@@ -1994,6 +1994,7 @@ model Tenant {
   PushSubscription               PushSubscription[]
   NotificationPreference         NotificationPreference[]
   RecurringGathering             RecurringGathering[]
+  Program                        Program[]
   ServiceAssignment              ServiceAssignment[]
   FollowUpConnection             FollowUpConnection[]
   ServiceFollowUpReport          ServiceFollowUpReport[]
@@ -2017,7 +2018,7 @@ model Tenant {
   ServiceInspection              ServiceInspection[]
   ReadinessUpdate                ReadinessUpdate[]
   ReadinessTask                  ReadinessTask[]
-  GiftExchangeEntry        GiftExchangeEntry[]
+  GiftExchangeEntry              GiftExchangeEntry[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -2764,7 +2765,7 @@ model UnitExpense {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Visitor {
-  id                       String            @id
+  id                       String                    @id
   tenantId                 String
   firstName                String
   lastName                 String
@@ -2790,21 +2791,21 @@ model Visitor {
   /// Consent checkbox on the first-timer form: only when true may this person be
   /// surfaced as a suggested friend-match for someone else (their own reason for
   /// matching them to another guest, not a blanket "may we share your info" flag).
-  shareForConnections      Boolean           @default(false)
-  submittedAt              DateTime          @default(now())
+  shareForConnections      Boolean                   @default(false)
+  submittedAt              DateTime                  @default(now())
   attendanceType           String?
   convertedAt              DateTime? // set once this visitor becomes a Member; hides them from the first-timers list
   convertedToMemberId      String? // no FK; mirrors AuditLog.actorId, just an audit pointer
   serviceId                String? // the Service day this first-timer was registered at, when resolvable
   /// Church-local (Africa/Lagos) date of their first visit. Months on the Overview bucket on this.
-  firstVisitDate           DateTime?         @db.Date
+  firstVisitDate           DateTime?                 @db.Date
   /// Answer to "Are you a student?" on the form; routes them to the student team.
   isStudent                Boolean?
   /// The free text behind "How did you hear about us: Other".
   heardFromOther           String?
   /// Storage key of their photo (private bucket); read through short-lived signed URLs.
   photoKey                 String?
-  photoConsent             Boolean           @default(false)
+  photoConsent             Boolean                   @default(false)
   photoConsentAt           DateTime?
   /// Soft delete: archived first-timers drop out of every list and count.
   archivedAt               DateTime?
@@ -2817,8 +2818,8 @@ model Visitor {
   statusOverride           FirstTimerStatusOverride?
   statusOverrideAt         DateTime?                 @db.Timestamptz(3)
   statusOverrideById       String?
-  Tenant                   Tenant            @relation(fields: [tenantId], references: [id])
-  Service                  Service?          @relation(fields: [serviceId], references: [id])
+  Tenant                   Tenant                    @relation(fields: [tenantId], references: [id])
+  Service                  Service?                  @relation(fields: [serviceId], references: [id])
   FollowUpEntry            FollowUpEntry[]
   PastoralBooking          PastoralBooking[]
   Visits                   FirstTimerVisit[]
@@ -3290,21 +3291,22 @@ model NotificationPreference {
 /// different UTC offsets, which is the classic recurring-event bug.
 /// Members read; PASTOR and ADMIN write. RLS deny-all backstop.
 model RecurringGathering {
-  id              String   @id
+  id              String    @id
   tenantId        String
   title           String
   description     String?
   /// RFC 5545 RRULE, e.g. "FREQ=DAILY". Emitted verbatim into the VEVENT.
   recurrenceRule  String
-  startDate       DateTime @db.Date
+  startDate       DateTime  @db.Date
   startTime       String // "HH:MM" local wall clock, DB CHECK-guarded
-  durationMinutes Int      @default(60)
-  timezone        String   @default("Africa/Lagos")
+  durationMinutes Int       @default(60)
+  timezone        String    @default("Africa/Lagos")
   joinUrl         String?
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now()) @updatedAt
-  Tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+  Tenant          Tenant    @relation(fields: [tenantId], references: [id])
+  Program         Program[]
 
   @@index([tenantId, isActive])
 }
@@ -5047,4 +5049,154 @@ model GiftExchangeEntry {
   Member          Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, status])
+}
+
+/// A program: the identity and rhythm of a ministry meeting (Prayer Watch, Furnace).
+/// Public at /programs once PUBLISHED. Dates are computed in its timezone by ProgramsOccurrences.
+model Program {
+  id               String              @id
+  tenantId         String
+  slug             String
+  name             String
+  nameStatus       ProgramNameStatus   @default(FINAL)
+  /// Optional override; otherwise generated from the cadence ("WEEKLY WATCH · MON TUE").
+  eyebrow          String?
+  shortDescription String
+  /// Sanitised HTML (allowlist) written by the pastors.
+  longDescription  String?
+  programType      ProgramType         @default(OTHER)
+  cadence          ProgramCadence      @default(CUSTOM)
+  /// RFC 5545 RRULE without DTSTART, read in local wall-clock time.
+  recurrenceRule   String?
+  /// "HH:MM" local start time.
+  startTime        String?
+  durationMinutes  Int?
+  /// Days added to each rule date before the start (the Homecoming weekend starts the Friday before its Saturday).
+  startOffsetDays  Int                 @default(0)
+  timezone         String              @default("Africa/Lagos")
+  dateStatus       ProgramDateStatus   @default(TBA)
+  format           ProgramFormat       @default(IN_PERSON)
+  venue            String?
+  streamUrl        String?
+  logoUrl          String?
+  coverUrl         String?
+  accent           ProgramAccent       @default(BURGUNDY)
+  ctaLabel         String?
+  ctaUrl           String?
+  status           ProgramStatus       @default(DRAFT)
+  featured         Boolean             @default(false)
+  sortOrder        Int                 @default(0)
+  /// Optional link to a RecurringGathering for concrete occurrences (not used yet).
+  gatheringId      String?
+  createdById      String?
+  updatedById      String?
+  createdAt        DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime            @default(now()) @updatedAt @db.Timestamptz(3)
+  Tenant           Tenant              @relation(fields: [tenantId], references: [id])
+  Gathering        RecurringGathering? @relation(fields: [gatheringId], references: [id], onDelete: SetNull)
+  Scriptures       ProgramScripture[]
+  Sessions         ProgramSession[]
+  Editions         ProgramEdition[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, status, sortOrder])
+}
+
+/// A scripture on a program. Only the reference is stored; the text is read from BibleVerse.
+model ProgramScripture {
+  id              String                 @id
+  programId       String
+  bookId          Int                    @db.SmallInt
+  chapter         Int                    @db.SmallInt
+  verseStart      Int?                   @db.SmallInt
+  /// Set only when the passage runs into a later chapter.
+  chapterEnd      Int?                   @db.SmallInt
+  verseEnd        Int?                   @db.SmallInt
+  scriptureStatus ProgramScriptureStatus @default(CONFIRMED)
+  sortOrder       Int                    @default(0)
+  Program         Program                @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId, sortOrder])
+}
+
+/// A named part of each occurrence, like the four watches of the Prayer Watch. May cross midnight.
+model ProgramSession {
+  id          String  @id
+  programId   String
+  name        String
+  /// "HH:MM" local.
+  startTime   String
+  endTime     String
+  description String?
+  sortOrder   Int     @default(0)
+  Program     Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId, sortOrder])
+}
+
+/// A dated edition of an annual program (Furnace '26). Overrides the rule for its dates.
+model ProgramEdition {
+  id           String            @id
+  programId    String
+  label        String
+  theme        String?
+  startsOn     DateTime?         @db.Date
+  endsOn       DateTime?         @db.Date
+  dateStatus   ProgramDateStatus @default(TBA)
+  summary      String?
+  recordingUrl String?
+  Program      Program           @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId, startsOn])
+}
+
+enum ProgramStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ProgramCadence {
+  WEEKLY
+  MONTHLY
+  ANNUAL
+  CUSTOM
+}
+
+enum ProgramType {
+  PRAYER
+  PROPHETIC
+  CONSECRATION
+  CONFERENCE
+  HOLY_GHOST
+  OTHER
+}
+
+enum ProgramFormat {
+  IN_PERSON
+  ONLINE
+  HYBRID
+}
+
+enum ProgramDateStatus {
+  CONFIRMED
+  TBA
+}
+
+enum ProgramNameStatus {
+  FINAL
+  PROVISIONAL
+}
+
+enum ProgramScriptureStatus {
+  CONFIRMED
+  SUGGESTED
+}
+
+/// Brand tokens only, never free hex.
+enum ProgramAccent {
+  BURGUNDY
+  CRIMSON
+  DEEP_BURGUNDY
+  GOLD
 }

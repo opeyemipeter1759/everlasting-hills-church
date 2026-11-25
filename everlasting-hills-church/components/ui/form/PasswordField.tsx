@@ -1,7 +1,7 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeSlash, Icon } from "@/components/icons";
 import type { InputHTMLAttributes } from 'react';
 
 interface PasswordFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
@@ -45,7 +45,7 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#87102C] focus:outline-none p-1"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            {showPassword ? <Icon icon={EyeSlash} size={18} /> : <Icon icon={Eye} size={18} />}
           </button>
         </div>
         {error && <p className="text-red-600 text-xs mt-1.5">{error}</p>}

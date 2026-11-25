@@ -1,6 +1,6 @@
 "use client";
 
-import { Navigation, Youtube } from "lucide-react";
+import { Icon, NavigationArrow, YoutubeLogo } from "@/components/icons";
 import ScrollReveal from "./ScrollReveal";
 import { CHURCH } from "../../config/config";
 
@@ -80,7 +80,7 @@ export default function ServiceHero({
             onClick={onGetDirections}
             className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
           >
-            <Navigation size={15} />
+            <Icon icon={NavigationArrow} size={15} />
             Get Directions
           </button>
 
@@ -91,7 +91,7 @@ export default function ServiceHero({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
             >
-              <Youtube size={15} />
+              <Icon icon={YoutubeLogo} size={15} />
               Watch Live
             </a>
           )}

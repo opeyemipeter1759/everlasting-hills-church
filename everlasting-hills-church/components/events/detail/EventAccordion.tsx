@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { CaretDown, Icon } from "@/components/icons";
 import { useId, useState } from "react";
 
 export interface EventAccordionItem {
@@ -30,7 +30,10 @@ export default function EventAccordion({ items }: { items: EventAccordionItem[] 
                   {item.eyebrow && <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#87102C]">{item.eyebrow}</span>}
                   <span className="block text-base font-bold text-[#111] sm:text-lg">{item.title}</span>
                 </span>
-                <ChevronDown size={19} className={`flex-none text-[#87102C] transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+                <Icon icon={CaretDown}
+                  size={19}
+                  className={`flex-none text-[#87102C] transition-transform ${open ? "rotate-180" : ""}`}
+                />
               </button>
             </h3>
             <div id={panelId} role="region" aria-labelledby={buttonId} hidden={!open} className="pb-6 pr-8 text-sm leading-7 text-[#555] sm:text-base">

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
-import { ArrowLeft, Archive, Trash2, BookOpen, Bookmark, BookmarkCheck, ExternalLink, Heart, MessageCircle, Pencil, Sparkles } from "lucide-react";
+import { ArrowLeft, Archive, Trash2, BookOpen, Bookmark, BookmarkCheck, ExternalLink, Heart, MessageCircle, Pencil, BadgeCheck } from "lucide-react";
 import ReadingView from "@/components/medium/ReadingView";
 import ShareMenu from "@/components/medium/ShareMenu";
 import { MAvatar, StoryRow } from "@/components/medium/parts";
@@ -141,7 +141,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
                   aria-pressed={!!article.featuredAt}
                   className={article.featuredAt ? "m-pill !min-h-9 !px-4" : "m-pill-outline !min-h-9 !px-4"}
                 >
-                  <Sparkles size={14} aria-hidden="true" /> {article.featuredAt ? "Featured" : "Feature"}
+                  <BadgeCheck size={14} aria-hidden="true" /> {article.featuredAt ? "Featured" : "Feature"}
                 </button>
               )}
               {canModerate && !article.isAuthor && published && (

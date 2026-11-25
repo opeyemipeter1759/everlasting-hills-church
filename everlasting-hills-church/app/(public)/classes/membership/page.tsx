@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { Check, MapPin, Clock, Users, BookOpen } from "lucide-react";
+import { BookOpen, Check, Clock, Icon, MapPin, Users } from "@/components/icons";
 import { serverApi } from "@/lib/api/server";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/session-constants";
 import { ClassTheme, EmphasisHeading } from "@/components/classes/theme";
@@ -154,7 +154,7 @@ export default async function MembershipClassPage() {
                 <>You want to understand what we believe and how we do life together</>,
               ].map((item, i) => (
                 <li key={i} className="flex gap-3">
-                  <Check className="mt-1 h-5 w-5 flex-none text-[var(--color-burgundy)]" aria-hidden />
+                  <Icon icon={Check} size={24} className="mt-1 h-5 w-5 flex-none text-[var(--color-burgundy)]" />
                   <span>{item}</span>
                 </li>
               ))}

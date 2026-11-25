@@ -10,8 +10,8 @@ import {
   Megaphone,
   MessageCircle,
   PenLine,
-  Sparkles,
   type LucideIcon,
+  Sunrise,
 } from "lucide-react";
 import type { BadgeLevel, BadgeTrack } from "@/lib/api/family";
 
@@ -20,7 +20,7 @@ export const TRACK_ICON: Record<BadgeTrack, LucideIcon> = {
   bibleDays: BookOpen,
   plansFinished: Flag,
   reached: Megaphone,
-  saved: Sparkles,
+  saved: Sunrise,
   salvation: Cross,
   books: Library,
   birthdays: Cake,

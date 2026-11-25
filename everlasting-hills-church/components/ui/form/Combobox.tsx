@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown, Search } from "lucide-react";
+import { CaretDown, Check, Icon, MagnifyingGlass } from "@/components/icons";
 import { useAnchoredPosition } from "../useAnchoredPosition";
 
 export interface ComboOption {
@@ -137,7 +137,7 @@ export function Combobox({
         <span className={selected ? "text-gray-900 dark:text-white" : "text-gray-400"}>
           {loading ? "Loading…" : selected ? selected.label : placeholder}
         </span>
-        <ChevronDown
+        <Icon icon={CaretDown}
           size={14}
           className={`text-gray-400 shrink-0 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
         />
@@ -159,7 +159,7 @@ export function Combobox({
         >
           {/* Search */}
           <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-white/8">
-            <Search size={13} className="text-gray-400 shrink-0" />
+            <Icon icon={MagnifyingGlass} size={13} className="text-gray-400 shrink-0" />
             <input
               ref={inputRef}
               type="text"
@@ -203,7 +203,7 @@ export function Combobox({
                 >
                   <span>{opt.label}</span>
                   {opt.id === value && (
-                    <Check size={13} aria-hidden="true" className="text-[#87102C] shrink-0" />
+                    <Icon icon={Check} size={13} className="text-[#87102C] shrink-0" />
                   )}
                 </li>
               ))

@@ -8,16 +8,16 @@ import {
   Phone,
   Play,
   Quote,
-  Sparkles,
   Users,
   type LucideIcon,
+  Church,
 } from "lucide-react";
 import type { SiteSectionName } from "@/lib/site-settings";
 
 /** Tab label and icon for each homepage section in the editor. */
 export const SECTION_META: Record<SiteSectionName, { label: string; icon: LucideIcon }> = {
   HERO: { label: "Hero", icon: Play },
-  ABOUT: { label: "About", icon: Sparkles },
+  ABOUT: { label: "About", icon: Church },
   CULTURE: { label: "Culture", icon: Mountain },
   SCRIPTURE: { label: "Scripture", icon: Quote },
   SERVICE: { label: "Services", icon: Globe },

@@ -10,8 +10,8 @@ import {
   MapPin,
   MessageSquareQuote,
   Phone,
-  Sparkles,
   Undo2,
+  Sunrise,
 } from "lucide-react";
 import {
   decisionLabel,
@@ -96,7 +96,7 @@ function DecisionCard({ record }: { record: SalvationDecision }) {
                 : "bg-[#FFE8ED] text-[#87102C] dark:bg-[#87102C]/25 dark:text-[#FFB3C1]"
             }`}
           >
-            <Sparkles size={11} aria-hidden="true" />
+            <Sunrise size={11} aria-hidden="true" />
             {decisionLabel(record.decision)}
           </p>
         </div>

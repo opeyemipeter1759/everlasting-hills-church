@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { HandHeart, ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowRight, CaretDown, HandHeart, Icon } from "@/components/icons";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -78,7 +78,7 @@ export default function GiveHero({
           transition={{ duration: 0.6, ease: EASE }}
           className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/70 backdrop-blur-sm"
         >
-          <HandHeart size={12} className="text-[#FFB3C1]" />
+          <Icon icon={HandHeart} size={12} className="text-[#FFB3C1]" />
           {eyebrow}
         </motion.span>
 
@@ -123,7 +123,7 @@ export default function GiveHero({
             className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold uppercase tracking-wider text-[#87102C] transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 sm:w-auto"
           >
             Give Now
-            <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+            <Icon icon={ArrowRight} size={16} className="transition-transform group-hover:translate-x-0.5" />
           </button>
           {/* <button
             type="button"
@@ -145,7 +145,7 @@ export default function GiveHero({
         transition={{ delay: 0.9 }}
         className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 text-white/40 transition-colors hover:text-white"
       >
-        <ChevronDown size={22} className="animate-bounce" />
+        <Icon icon={CaretDown} size={22} className="animate-bounce" />
       </motion.button>
     </section>
   );

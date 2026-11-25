@@ -1,10 +1,7 @@
 import {
-  Sparkles,
-  LayoutDashboard,
-  User,
-  CheckCircle,
-  Heart,
-  MessageSquare,
+  Repeat, LayoutDashboard,
+  User, CheckCircle,
+  Heart, MessageSquare,
   Users,
   UserPlus,
   Calendar,
@@ -34,6 +31,7 @@ import {
   HandCoins,
   ClipboardCheck,
   Award,
+  Sunrise,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -125,6 +123,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Articles",      href: "/dashboard/admin/articles",     icon: Newspaper,     minRole: "ADMIN" },
       { label: "Books",         href: "/dashboard/admin/books",   icon: Library,       minRole: "ADMIN" },
       { label: "Gatherings",    href: "/dashboard/admin/gatherings", icon: CalendarClock, minRole: "ADMIN" },
+      { label: "Programs",      href: "/dashboard/admin/programs",   icon: Repeat,        minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory", icon: Package,     minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",   icon: Network,       minRole: "ADMIN" },
       // The Roles page existed with no way in but the URL — the third screen in
@@ -151,7 +150,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Sermon Analytics",  href: "/dashboard/pastor/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },
       { label: "Follow-ups",        href: "/dashboard/pastor/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
       { label: "Testimonials",      href: "/dashboard/pastor/testimonials",       icon: MessageSquare,  minRole: "PASTOR" },
-      { label: "Decisions for Christ", href: "/dashboard/pastor/salvation",       icon: Sparkles,       minRole: "PASTOR" },
+      { label: "Decisions for Christ", href: "/dashboard/pastor/salvation",       icon: Sunrise,       minRole: "PASTOR" },
       // Who is reading and who has gone quiet is a pastoral question. Admins
       // keep it: the minimum role is unchanged from when it sat under Administration.
       { label: "Bible Reading",     href: "/dashboard/admin/reading",      icon: BookOpen,       minRole: "ADMIN" },

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Icon } from "@/components/icons";
 import SermonWatchPanel from './watch/SermonWatchPanel';
 import type { MemberSermonContext, WatchSermon } from '@/lib/api/sermon-types';
 
@@ -22,7 +22,7 @@ export default function SermonDetail({
             href="/sermons"
             className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
           >
-            <ArrowLeft size={14} /> All Sermons
+            <Icon icon={ArrowLeft} size={14} /> All Sermons
           </Link>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle, Icon } from "@/components/icons";
 
 export default function CheckedInHero({ justCheckedIn }: { justCheckedIn: boolean }) {
   return (
@@ -18,7 +18,7 @@ export default function CheckedInHero({ justCheckedIn }: { justCheckedIn: boolea
           animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0, 0.4] }}
           transition={{ duration: 2.8, repeat: Infinity, ease: "easeOut" }}
         />
-        <CheckCircle2 size={52} className="text-emerald-300 relative" strokeWidth={2.2} />
+        <Icon icon={CheckCircle} size={52} className="text-emerald-300 relative" />
       </motion.div>
       <div>
         <p className="text-white text-xl sm:text-2xl font-bold tracking-tight">

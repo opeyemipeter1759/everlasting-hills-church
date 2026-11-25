@@ -4,11 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ArrowLeft, Search, MapPin, Clock, Calendar, Phone,
-  X, AlertCircle, Plus, Minus,
-  CheckCircle, Loader2,
-} from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle, CircleNotch, Clock, Icon, MagnifyingGlass, MapPin, Minus, Phone, Plus, WarningCircle, X } from "@/components/icons";
 import { apiClient } from "@/lib/api/axios";
 import { Select } from "@/components/ui/select";
 
@@ -81,7 +77,7 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
         aria-expanded={open}>
         <span className="font-display font-black text-base sm:text-lg text-white/80 group-hover:text-white transition-colors leading-snug">{q}</span>
         <span className="flex-shrink-0 w-7 h-7 rounded-full border border-white/15 flex items-center justify-center mt-0.5 group-hover:border-church-accent/50 group-hover:text-church-accent text-white/40 transition-all">
-          {open ? <Minus size={13} /> : <Plus size={13} />}
+          {open ? <Icon icon={Minus} size={13} /> : <Icon icon={Plus} size={13} />}
         </span>
       </button>
       <AnimatePresence initial={false}>
@@ -167,7 +163,7 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
             <p className="text-white/35 text-xs mt-0.5">A super admin will review and approve your submission.</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-all">
-            <X size={15} />
+            <Icon icon={X} size={15} />
           </button>
         </div>
 
@@ -176,7 +172,7 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
             <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center text-center py-10 gap-4">
               <div className="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
-                <Clock size={24} className="text-amber-400" />
+                <Icon icon={Clock} size={24} className="text-amber-400" />
               </div>
               <div>
                 <h4 className="text-white font-black text-xl mb-1">Submitted for Review</h4>
@@ -236,7 +232,7 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
               </div>
               {err && (
                 <div className="flex items-center gap-2 text-rose-400 text-sm">
-                  <AlertCircle size={13} />{err}
+                  <Icon icon={WarningCircle} size={13} />{err}
                 </div>
               )}
               <button type="submit" disabled={!valid || loading}
@@ -317,7 +313,7 @@ function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
             <p className="text-white/35 text-xs mt-0.5">Led by {cell.leaderName}</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-all">
-            <X size={15} />
+            <Icon icon={X} size={15} />
           </button>
         </div>
 
@@ -327,7 +323,7 @@ function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
             <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center text-center py-10 gap-4">
               <div className="w-16 h-16 rounded-full bg-church-maroon/20 border border-church-maroon/30 flex items-center justify-center">
-                <CheckCircle size={26} className="text-church-accent" />
+                <Icon icon={CheckCircle} size={26} className="text-church-accent" />
               </div>
               <div>
                 <h4 className="text-white font-black text-xl mb-1">You&rsquo;re in!</h4>
@@ -362,13 +358,13 @@ function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
 
               {err && (
                 <div className="flex items-center gap-2 text-rose-400 text-sm">
-                  <AlertCircle size={13} />{err}
+                  <Icon icon={WarningCircle} size={13} />{err}
                 </div>
               )}
 
               <button type="submit" disabled={!valid || loading}
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-church-maroon text-white font-black text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#6E0C24] transition-colors mt-1">
-                {loading ? <><Loader2 size={14} className="animate-spin" />Joining…</> : "Join this Cell"}
+                {loading ? <><Icon icon={CircleNotch} size={14} className="animate-spin" />Joining…</> : "Join this Cell"}
               </button>
             </form>
           )}
@@ -440,11 +436,11 @@ function CellCard({ cell, index, onJoin }: { cell: Cell; index: number; onJoin: 
 
       {/* Info rows */}
       <div className="px-4 pt-4 pb-3 space-y-2.5">
-        <InfoRow icon={<Clock size={11} />}    label="TIME"    value={cell.meetingTime} />
-        <InfoRow icon={<Calendar size={11} />} label="DAY"     value={cell.meetingDay} />
-        <InfoRow icon={<MapPin size={11} />}   label="VENUE"   value={cell.address} />
+        <InfoRow icon={<Icon icon={Clock} size={11} />}    label="TIME"    value={cell.meetingTime} />
+        <InfoRow icon={<Icon icon={Calendar} size={11} />} label="DAY"     value={cell.meetingDay} />
+        <InfoRow icon={<Icon icon={MapPin} size={11} />}   label="VENUE"   value={cell.address} />
         {cell.leaderPhone && (
-          <InfoRow icon={<Phone size={11} />}  label="CONTACT" value={cell.leaderPhone} />
+          <InfoRow icon={<Icon icon={Phone} size={11} />}  label="CONTACT" value={cell.leaderPhone} />
         )}
       </div>
 
@@ -546,7 +542,7 @@ export default function FindCellPage() {
           <div className="mb-10">
             <Link href="/home-cell"
               className="inline-flex items-center gap-2 text-white/30 hover:text-white/60 transition-all group">
-              <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
+              <Icon icon={ArrowLeft} size={13} className="group-hover:-translate-x-0.5 transition-transform" />
               <span className="text-[10px] font-black uppercase tracking-[0.2em] xs:tracking-[0.4em]">Home Cell</span>
             </Link>
           </div>
@@ -574,7 +570,7 @@ export default function FindCellPage() {
           {/* Search bar */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}
             className="relative max-w-xl mx-auto mb-10">
-            <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
+            <Icon icon={MagnifyingGlass} size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
             <input
               value={query}
               onChange={(e) => { setQuery(e.target.value); setVisible(PAGE_SIZE); }}
@@ -584,7 +580,7 @@ export default function FindCellPage() {
             {query && (
               <button onClick={() => setQuery("")}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white transition-colors">
-                <X size={14} />
+                <Icon icon={X} size={14} />
               </button>
             )}
           </motion.div>
@@ -638,7 +634,7 @@ export default function FindCellPage() {
         {/* error */}
         {!loading && apiErr && (
           <div className="flex flex-col items-center text-center py-24 gap-5">
-            <AlertCircle size={28} className="text-rose-400/40" />
+            <Icon icon={WarningCircle} size={28} className="text-rose-400/40" />
             <p className="text-white/35 text-sm">{apiErr}</p>
             <button onClick={() => window.location.reload()}
               className="px-7 py-2.5 rounded-full border border-white/10 text-white/35 text-sm font-bold hover:text-white hover:border-white/25 transition-all">
@@ -652,7 +648,7 @@ export default function FindCellPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="flex flex-col items-center text-center py-24 gap-5">
             <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.07] flex items-center justify-center">
-              <MapPin size={20} className="text-white/15" />
+              <Icon icon={MapPin} size={20} className="text-white/15" />
             </div>
             <div>
               <p className="font-display font-black text-lg text-white/40 mb-1">No cells found</p>
@@ -715,7 +711,7 @@ export default function FindCellPage() {
               <button
                 onClick={() => setShowAdd(true)}
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-church-maroon text-white text-sm font-black tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/30 transition-all">
-                <Plus size={15} /> Add Your Cell
+                <Icon icon={Plus} size={15} /> Add Your Cell
               </button>
             </div>
           </motion.div>

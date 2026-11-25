@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Loader2, MessageCircleQuestion, Send, X } from "lucide-react";
+import { ArrowRight, ChatCircleText, CircleNotch, Icon, PaperPlaneTilt, X } from "@/components/icons";
 import { apiClient } from "@/lib/api/axios";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { normalizeRole } from "@/lib/auth/frontend-session";
@@ -127,7 +127,7 @@ export default function HelpChatWidget() {
           <div className="flex items-start justify-between gap-2 bg-[#87102C] px-4 pb-3.5 pt-[max(0.875rem,env(safe-area-inset-top))]">
             <div className="flex min-w-0 items-start gap-2.5">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15">
-                <MessageCircleQuestion size={18} className="text-white" aria-hidden="true" />
+                <Icon icon={ChatCircleText} size={18} className="text-white" />
               </span>
               <div className="min-w-0 pt-0.5">
                 <p className="flex items-center gap-1.5 text-[15px] font-bold text-white">
@@ -146,7 +146,7 @@ export default function HelpChatWidget() {
               aria-label="Close HillsBot"
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
             >
-              <X size={15} />
+              <Icon icon={X} size={15} />
             </button>
           </div>
 
@@ -206,7 +206,7 @@ export default function HelpChatWidget() {
                       className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#87102C] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#9c1636]"
                     >
                       {m.answer.cta.label}
-                      <ArrowRight size={12} aria-hidden="true" />
+                      <Icon icon={ArrowRight} size={12} />
                     </a>
                   )}
                   <div className="mt-3 flex items-center gap-2 border-t border-white/10 pt-2.5">
@@ -260,7 +260,7 @@ export default function HelpChatWidget() {
                       disabled={sending}
                       className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-[#87102C] px-3.5 text-xs font-semibold text-white hover:bg-[#9c1636] disabled:opacity-60"
                     >
-                      {sending && <Loader2 size={13} className="animate-spin" aria-hidden="true" />}
+                      {sending && <Icon icon={CircleNotch} size={13} className="animate-spin" />}
                       Send to the church team
                     </button>
                   </>
@@ -287,7 +287,7 @@ export default function HelpChatWidget() {
                 aria-label="Send"
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#87102C] text-white hover:bg-[#9c1636]"
               >
-                <Send size={16} />
+                <Icon icon={PaperPlaneTilt} size={16} />
               </button>
             </div>
             <div className="mt-2 flex items-center justify-between gap-2">
@@ -311,7 +311,7 @@ export default function HelpChatWidget() {
           aria-label="Open HillsBot"
           className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-50 inline-flex h-11 w-11 items-center justify-center gap-2 rounded-full bg-[#87102C] text-sm font-semibold text-white shadow-lg hover:bg-[#9c1636] sm:bottom-5 sm:right-6 sm:h-auto sm:min-h-12 sm:w-auto sm:px-4"
         >
-          <MessageCircleQuestion size={18} aria-hidden="true" />
+          <Icon icon={ChatCircleText} size={18} />
           <span className="hidden sm:inline">Ask HillsBot</span>
         </button>
       )}

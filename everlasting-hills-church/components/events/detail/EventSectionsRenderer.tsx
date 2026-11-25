@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Icon } from "@/components/icons";
 import type { EventDetail, EventSection } from "@/types";
 import EventAccordion, { type EventAccordionItem } from "./EventAccordion";
 import { formatEventDateRange } from "./event-format";
@@ -39,7 +39,7 @@ function EventSectionView({ section, event, index }: { section: EventSection; ev
         <div className="mx-auto max-w-4xl text-center">
           <SectionHeading section={section} dark />
           {section.content.body && <p className="mx-auto mt-6 max-w-2xl whitespace-pre-line text-[17px] leading-[1.7] text-white/65">{section.content.body}</p>}
-          {url && <a href={url} target={url.startsWith("http") ? "_blank" : undefined} rel={url.startsWith("http") ? "noopener noreferrer" : undefined} className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-7 text-sm font-black uppercase tracking-[0.08em] text-[#6E0C24] hover:bg-[#FFE8ED]">{section.content.buttonLabel}<ArrowUpRight size={15} /></a>}
+          {url && <a href={url} target={url.startsWith("http") ? "_blank" : undefined} rel={url.startsWith("http") ? "noopener noreferrer" : undefined} className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-7 text-sm font-black uppercase tracking-[0.08em] text-[#6E0C24] hover:bg-[#FFE8ED]">{section.content.buttonLabel}<Icon icon={ArrowUpRight} size={15} /></a>}
         </div>
       </section>
     );
@@ -103,7 +103,7 @@ function ResponseSection({ section, event }: { section: Extract<EventSection, { 
                   className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#87102C] px-6 text-sm font-black uppercase tracking-[0.06em] text-white transition hover:bg-[#6E0C24] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#87102C]/30"
                 >
                   {action.buttonLabel}
-                  <ArrowUpRight size={15} aria-hidden="true" />
+                  <Icon icon={ArrowUpRight} size={15} />
                 </a>
               ) : (
                 // No destination yet — say so rather than render a dead button.

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { BellRing } from "lucide-react";
+import { BellRinging, Icon } from "@/components/icons";
 import { useCountdown } from "./useCountdown";
 
 interface ServiceCountdownHeroProps {
@@ -53,7 +53,7 @@ export default function ServiceCountdownHero({ opensAt, onComplete, compact = fa
           animate={{ scale: [1, 1.06, 1] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <BellRing size={compact ? 18 : 30} className="text-amber-300" strokeWidth={2} />
+          <Icon icon={BellRinging} size={compact ? 18 : 30} className="text-amber-300" />
         </motion.span>
       </div>
 

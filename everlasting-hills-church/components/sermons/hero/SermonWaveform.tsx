@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Headphones, Play } from "lucide-react";
+import { Headphones, Icon, Play } from "@/components/icons";
 import type { SermonHeroSlide } from "./types";
 
 const BAR_COUNT = 28;
@@ -36,11 +36,11 @@ export default function SermonWaveform({
             aria-label="Play"
             className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-[#87102C] shadow-2xl transition-transform hover:scale-110"
           >
-            <Play className="h-6 w-6 fill-current" />
+            <Icon icon={Play} size={24} className="h-6 w-6" weight="fill" />
           </button>
         ) : (
           <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-white/70">
-            <Headphones className="h-6 w-6" />
+            <Icon icon={Headphones} size={24} className="h-6 w-6" />
           </span>
         )}
 
@@ -69,7 +69,7 @@ export default function SermonWaveform({
           <span>{slide.speaker}</span>
           <span className="text-white/30">·</span>
           <span className="inline-flex items-center gap-1">
-            <Headphones className="h-3 w-3" />
+            <Icon icon={Headphones} size={24} className="h-3 w-3" />
             {slide.duration}
           </span>
         </div>

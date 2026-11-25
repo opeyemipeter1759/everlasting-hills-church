@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Circle, Sparkles } from "lucide-react";
+import { CheckCircle2, Circle, UserPlus } from "lucide-react";
 import Loader from "@/components/ui/feedback/Loader";
 import type { EventRsvp } from "@/types";
 import type { CheckInMutation } from "./useEventRsvps";
@@ -71,7 +71,7 @@ export default function RsvpTable({ rsvps, checkIn }: { rsvps: EventRsvp[]; chec
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 whitespace-nowrap">
-                      <Sparkles size={10} /> New
+                      <UserPlus size={10} /> New
                     </span>
                   )}
                 </td>

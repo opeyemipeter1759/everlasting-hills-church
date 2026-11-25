@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { MapPin, Clock, Navigation, X, Car, PersonStanding, Train } from "lucide-react";
+import { Car, Clock, Icon, MapPin, NavigationArrow, Person, Train, X } from "@/components/icons";
 import { CHURCH, type RouteInfo, type TravelMode } from "../../config/config";
 import { buildMapSrc, openGoogleMapsNav } from "../../utils/UseDirection";
 
@@ -18,7 +18,7 @@ interface DirectionsModalProps {
 
 const MODE_BUTTONS: { mode: TravelMode; icon: typeof Car; label: string }[] = [
   { mode: "driving",  icon: Car,           label: "Drive"   },
-  { mode: "walking",  icon: PersonStanding, label: "Walk"    },
+  { mode: "walking",  icon: Person, label: "Walk"    },
   { mode: "transit",  icon: Train,          label: "Transit" },
 ];
 
@@ -48,7 +48,7 @@ export default function DirectionsModal({
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#FFE8ED] flex items-center justify-center">
-              <MapPin size={16} className="text-[#87102C]" />
+              <Icon icon={MapPin} size={16} className="text-[#87102C]" />
             </div>
             <div>
               <p className="font-semibold text-[#111] text-sm leading-tight">
@@ -63,13 +63,13 @@ export default function DirectionsModal({
             aria-label="Close directions modal"
             title="Close"
           >
-            <X size={15} className="text-gray-600" />
+            <Icon icon={X} size={15} className="text-gray-600" />
           </button>
         </div>
 
         {/* Travel mode tabs */}
         <div className="flex gap-2 px-5 py-3 border-b border-gray-100">
-          {MODE_BUTTONS.map(({ mode, icon: Icon, label }) => (
+          {MODE_BUTTONS.map(({ mode, icon: Glyph, label }) => (
             <button
               key={mode}
               onClick={() => onModeChange(mode)}
@@ -79,7 +79,7 @@ export default function DirectionsModal({
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              <Icon size={14} />
+              <Icon icon={Glyph} size={14} />
               {label}
             </button>
           ))}
@@ -97,7 +97,7 @@ export default function DirectionsModal({
           ) : routeInfo ? (
             <div className="flex items-center gap-4 w-full">
               <div className="flex items-center gap-1.5">
-                <MapPin size={14} className="text-[#87102C]" />
+                <Icon icon={MapPin} size={14} className="text-[#87102C]" />
                 <span className="text-sm font-semibold text-[#111]">
                   {routeInfo.distance}
                 </span>
@@ -105,7 +105,7 @@ export default function DirectionsModal({
               </div>
               <div className="w-px h-4 bg-[#E7CDD3]" />
               <div className="flex items-center gap-1.5">
-                <Clock size={14} className="text-[#87102C]" />
+                <Icon icon={Clock} size={14} className="text-[#87102C]" />
                 <span className="text-sm font-semibold text-[#111]">
                   {routeInfo.duration}
                 </span>
@@ -116,7 +116,7 @@ export default function DirectionsModal({
                   onClick={() => openGoogleMapsNav(travelMode, userLocation)}
                   className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#87102C] text-white text-xs font-semibold hover:bg-[#6E0C24] transition-colors"
                 >
-                  <Navigation size={12} />
+                  <Icon icon={NavigationArrow} size={12} />
                   Open in Maps
                 </button>
               </div>

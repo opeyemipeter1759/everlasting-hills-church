@@ -47,6 +47,19 @@ export class CmsPageCoreService {
     return EMPTY_CONTENT;
   }
 
+  /**
+   * Structured pages: fill in any field the saved draft is missing from the
+   * page's defaults, so the editor always shows every field pre-filled. A draft
+   * saved before a section existed (e.g. `home` before Set Man) would otherwise
+   * open with that whole section blank. Only absent keys are filled; anything
+   * the editor has saved — including empty strings, nulls and empty lists — is kept.
+   */
+  private withStructuredDefaults(def: PageDef, content: unknown): unknown {
+    if (def.editor !== 'structured') return content;
+    const ct = contentType(def.contentType);
+    return ct ? fillMissing(content, ct.default) : content;
+  }
+
   /** Lazily create a Page + its first empty draft version on first access. */
   async ensurePage(key: string, actorId?: string | null) {
     this.assertKnownKey(key);
@@ -129,9 +142,22 @@ export class CmsPageCoreService {
             versionId: working.id,
             version: working.version,
             status: working.status,
-            content: working.content,
+            content: this.withStructuredDefaults(def, working.content),
           }
         : { versionId: null, version: 0, status: 'DRAFT', content: EMPTY_CONTENT },
     };
   }
+}
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+/** Recursively copy keys from `defaults` that are absent (undefined) in `value`. */
+export function fillMissing(value: unknown, defaults: unknown): unknown {
+  if (value === undefined) return defaults;
+  if (!isPlainObject(value) || !isPlainObject(defaults)) return value;
+  const out: Record<string, unknown> = { ...value };
+  for (const [k, d] of Object.entries(defaults)) out[k] = fillMissing(value[k], d);
+  return out;
 }

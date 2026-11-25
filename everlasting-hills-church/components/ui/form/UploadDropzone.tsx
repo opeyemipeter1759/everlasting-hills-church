@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Upload } from "lucide-react";
+import { Icon, UploadSimple } from "@/components/icons";
 
 interface UploadDropzoneProps {
   accept: string;
@@ -85,7 +85,7 @@ export function UploadDropzone({
       >
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-white dark:bg-white/10 shadow-sm flex items-center justify-center border border-[#E7CDD3]/80 dark:border-white/[0.14]">
-            <Upload size={18} className="text-[#87102C] dark:text-[#FFB3C1]" />
+            <Icon icon={UploadSimple} size={18} className="text-[#87102C] dark:text-[#FFB3C1]" />
           </div>
           <p className="text-sm">
             <span className="font-semibold text-[#87102C] dark:text-[#FFB3C1]">Click to upload</span>{" "}

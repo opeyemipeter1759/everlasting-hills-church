@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Search, Play, BookOpen, Headphones, Video, Layers, Mic2, ArrowLeft, Clock, Heart, MessageCircle } from 'lucide-react';
+import { ArrowLeft, BookOpen, ChatCircle, Clock, Headphones, Heart, Icon, MagnifyingGlass, Microphone, Play, Stack, VideoCamera } from "@/components/icons";
 import SermonCover from './SermonCover';
 import { usePublishedSermons } from '@/lib/api';
 import { formatSermonDuration } from '@/lib/api/sermon-types';
@@ -23,7 +23,7 @@ function TypeBadge({ s }: { s: LatestSermon }) {
         isSeries ? 'bg-[#87102C]/85 text-white' : 'bg-black/60 text-white'
       }`}
     >
-      {isSeries ? <Layers size={10} /> : <Mic2 size={10} />}
+      {isSeries ? <Icon icon={Stack} size={10} /> : <Icon icon={Microphone} size={10} />}
       {isSeries ? 'Series' : 'Single'}
     </span>
   );
@@ -36,19 +36,19 @@ function CardStats({ s }: { s: LatestSermon }) {
     <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
       {duration && (
         <span className="flex items-center gap-1">
-          <Clock size={11} /> {duration}
+          <Icon icon={Clock} size={11} /> {duration}
         </span>
       )}
       {s.audioUrl && (
         <span className="flex items-center gap-1">
-          <Headphones size={11} /> {s.playCount}
+          <Icon icon={Headphones} size={11} /> {s.playCount}
         </span>
       )}
       <span className="flex items-center gap-1">
-        <Heart size={11} /> {s._count?.SermonReaction ?? 0}
+        <Icon icon={Heart} size={11} /> {s._count?.SermonReaction ?? 0}
       </span>
       <span className="flex items-center gap-1">
-        <MessageCircle size={11} /> {s._count?.SermonComment ?? 0}
+        <Icon icon={ChatCircle} size={11} /> {s._count?.SermonComment ?? 0}
       </span>
     </div>
   );
@@ -79,17 +79,17 @@ function SermonCard({
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#87102C]/10 to-[#87102C]/5 dark:from-[#87102C]/20 dark:to-transparent flex items-center justify-center">
-            <BookOpen size={32} className="text-[#87102C]/30 dark:text-[#87102C]/40" />
+            <Icon icon={BookOpen} size={32} className="text-[#87102C]/30 dark:text-[#87102C]/40" />
           </div>
         )}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
           <div className="h-12 w-12 rounded-full bg-white/95 text-[#87102C] flex items-center justify-center opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all shadow-lg">
-            <Play size={18} fill="currentColor" />
+            <Icon icon={Play} size={18} weight="fill" />
           </div>
         </div>
         {s.videoUrl && (
           <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
-            <Video size={10} /> Video
+            <Icon icon={VideoCamera} size={10} /> Video
           </span>
         )}
         <TypeBadge s={s} />
@@ -142,12 +142,12 @@ function SermonRow({ s, onPlay }: { s: LatestSermon; onPlay: (slug: string) => v
             imageClassName="group-hover:scale-105 transition-transform duration-300"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
-            <Play size={16} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" />
+            <Icon icon={Play} size={16} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" weight="fill" />
           </div>
         </div>
       ) : (
         <div className="w-24 sm:w-32 aspect-video rounded-lg bg-gradient-to-br from-[#87102C]/10 to-[#87102C]/5 dark:from-[#87102C]/20 dark:to-transparent flex items-center justify-center flex-shrink-0">
-          <Play size={18} className="text-[#87102C]/40" />
+          <Icon icon={Play} size={18} className="text-[#87102C]/40" />
         </div>
       )}
       <div className="flex-1 min-w-0 flex flex-col gap-1">
@@ -189,11 +189,11 @@ function SeriesCard({ g, onOpen }: { g: SeriesGroup; onOpen: (g: SeriesGroup) =>
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#87102C]/10 to-[#87102C]/5 dark:from-[#87102C]/20 dark:to-transparent flex items-center justify-center">
-            <Layers size={32} className="text-[#87102C]/30 dark:text-[#87102C]/40" />
+            <Icon icon={Stack} size={32} className="text-[#87102C]/30 dark:text-[#87102C]/40" />
           </div>
         )}
         <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
-          <Layers size={10} /> Series
+          <Icon icon={Stack} size={10} /> Series
         </span>
       </div>
       <div className="p-5 flex flex-col gap-1.5">
@@ -217,10 +217,10 @@ function SeriesDetailView({ group, onBack, onPlay }: { group: SeriesGroup; onBac
         onClick={onBack}
         className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
       >
-        <ArrowLeft size={14} /> Back to Series
+        <Icon icon={ArrowLeft} size={14} /> Back to Series
       </button>
       <div className="flex items-center gap-2">
-        <Layers size={16} className="text-[#87102C] dark:text-[#e8768a]" />
+        <Icon icon={Stack} size={16} className="text-[#87102C] dark:text-[#e8768a]" />
         <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">{group.name}</h2>
       </div>
       <p className="text-sm text-gray-400 dark:text-gray-500 -mt-3">
@@ -237,8 +237,8 @@ function SeriesDetailView({ group, onBack, onPlay }: { group: SeriesGroup; onBac
 
 const TABS = [
   { id: 'all', label: 'All', icon: BookOpen },
-  { id: 'singles', label: 'Singles', icon: Mic2 },
-  { id: 'series', label: 'Series', icon: Layers },
+  { id: 'singles', label: 'Singles', icon: Microphone },
+  { id: 'series', label: 'Series', icon: Stack },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
@@ -297,7 +297,7 @@ export default function SermonBrowseGrid({
 
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Icon icon={MagnifyingGlass} size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -308,7 +308,7 @@ export default function SermonBrowseGrid({
 
         <div className="inline-flex items-center gap-1 rounded-xl bg-gray-100 dark:bg-white/5 p-1 w-fit">
           {TABS.map((t) => {
-            const Icon = t.icon;
+            const Glyph = t.icon;
             const active = tab === t.id;
             return (
               <button
@@ -321,7 +321,7 @@ export default function SermonBrowseGrid({
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                 }`}
               >
-                <Icon size={12} /> {t.label}
+                <Icon icon={Glyph} size={12} /> {t.label}
               </button>
             );
           })}
@@ -349,7 +349,7 @@ export default function SermonBrowseGrid({
         </div>
       ) : count === 0 ? (
         <div className="text-center py-16">
-          <BookOpen size={32} className="mx-auto text-gray-200 dark:text-gray-700 mb-3" />
+          <Icon icon={BookOpen} size={32} className="mx-auto text-gray-200 dark:text-gray-700 mb-3" />
           <p className="text-gray-400">No sermons match your search.</p>
         </div>
       ) : tab === 'series' ? (

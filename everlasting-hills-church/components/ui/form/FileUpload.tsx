@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
-import { X, Loader2, Music, ImageIcon, FileText, RefreshCw } from 'lucide-react';
+import { ArrowClockwise, CircleNotch, FileText, Icon, Image as ImageIcon, MusicNotes, X } from "@/components/icons";
 import { apiClient } from '@/lib/api/axios';
 import { uploadAudioDirect } from '@/lib/api/direct-audio-upload';
 
@@ -120,7 +120,7 @@ export default function FileUpload({
         >
           {uploading ? (
             <>
-              <Loader2 size={20} className="animate-spin text-[#87102C]" />
+              <Icon icon={CircleNotch} size={20} className="animate-spin text-[#87102C]" />
               <p className="font-sans text-xs text-gray-500 dark:text-gray-400">Uploading… {progress}%</p>
               <div className="w-40 h-1.5 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
                 <div className="h-full bg-[#87102C] rounded-full transition-all duration-150" style={{ width: `${progress}%` }} />
@@ -129,11 +129,11 @@ export default function FileUpload({
           ) : (
             <>
               {isAudio ? (
-                <Music size={22} className="text-gray-300 dark:text-gray-600" />
+                <Icon icon={MusicNotes} size={22} className="text-gray-300 dark:text-gray-600" />
               ) : isDocument ? (
-                <FileText size={22} className="text-gray-300 dark:text-gray-600" />
+                <Icon icon={FileText} size={22} className="text-gray-300 dark:text-gray-600" />
               ) : (
-                <ImageIcon size={22} className="text-gray-300 dark:text-gray-600" />
+                <Icon icon={ImageIcon} size={22} className="text-gray-300 dark:text-gray-600" />
               )}
               <div className="text-center">
                 <p className="font-sans text-xs font-medium text-gray-500 dark:text-gray-400">Click or drag & drop to upload</p>
@@ -146,15 +146,15 @@ export default function FileUpload({
         <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] px-3 py-3 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <Music size={13} className="text-[#87102C] dark:text-[#e8768a]" />
+              <Icon icon={MusicNotes} size={13} className="text-[#87102C] dark:text-[#e8768a]" />
               <span className="font-sans text-[11px] font-semibold text-gray-600 dark:text-gray-400">Audio uploaded</span>
             </div>
             <div className="flex items-center gap-1">
               <button type="button" onClick={() => !disabled && !uploading && inputRef.current?.click()} disabled={disabled || uploading} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50">
-                <RefreshCw size={10} /> Replace
+                <Icon icon={ArrowClockwise} size={10} /> Replace
               </button>
               <button type="button" onClick={() => onChange('')} disabled={disabled} className="flex h-6 w-6 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50">
-                <X size={12} />
+                <Icon icon={X} size={12} />
               </button>
             </div>
           </div>
@@ -164,15 +164,15 @@ export default function FileUpload({
         <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] px-3 py-3">
           <div className="flex items-center justify-between">
             <a href={value} target="_blank" rel="noopener noreferrer" className="flex min-w-0 items-center gap-1.5 hover:underline">
-              <FileText size={13} className="flex-shrink-0 text-[#87102C] dark:text-[#e8768a]" />
+              <Icon icon={FileText} size={13} className="flex-shrink-0 text-[#87102C] dark:text-[#e8768a]" />
               <span className="truncate font-sans text-[11px] font-semibold text-gray-600 dark:text-gray-400">PDF uploaded — open</span>
             </a>
             <div className="flex flex-shrink-0 items-center gap-1">
               <button type="button" onClick={() => !disabled && !uploading && inputRef.current?.click()} disabled={disabled || uploading} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50">
-                <RefreshCw size={10} /> Replace
+                <Icon icon={ArrowClockwise} size={10} /> Replace
               </button>
               <button type="button" onClick={() => onChange('')} disabled={disabled} className="flex h-6 w-6 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50">
-                <X size={12} />
+                <Icon icon={X} size={12} />
               </button>
             </div>
           </div>
@@ -182,10 +182,10 @@ export default function FileUpload({
           <Image src={value} alt="Thumbnail" fill sizes="200px" className="object-cover" />
           <div className="absolute top-2 right-2 flex gap-1.5">
             <button type="button" onClick={() => !disabled && !uploading && inputRef.current?.click()} disabled={disabled || uploading} className="inline-flex items-center gap-1 rounded-lg bg-black/55 px-2 py-1 text-[10px] font-semibold text-white hover:bg-black/75 backdrop-blur-sm transition-colors disabled:opacity-50">
-              <RefreshCw size={10} /> Replace
+              <Icon icon={ArrowClockwise} size={10} /> Replace
             </button>
             <button type="button" onClick={() => onChange('')} disabled={disabled} className="flex h-6 w-6 items-center justify-center rounded-lg bg-black/55 text-white hover:bg-red-600/70 backdrop-blur-sm transition-colors disabled:opacity-50">
-              <X size={12} />
+              <Icon icon={X} size={12} />
             </button>
           </div>
         </div>

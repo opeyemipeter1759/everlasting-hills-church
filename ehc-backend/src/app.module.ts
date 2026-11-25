@@ -71,6 +71,7 @@ import { ReadingPlanModule } from './reading-plan/reading-plan.module';
 import { ArticlesModule } from './articles/articles.module';
 import { ServiceTeamsModule } from './service-teams/service-teams.module';
 import { GatheringsModule } from './gatherings/gatherings.module';
+import { ProgramsModule } from './programs/programs.module';
 
 @Module({
   imports: [
@@ -187,6 +188,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     ArticlesModule,
     ServiceTeamsModule,
     GatheringsModule,
+    ProgramsModule,
     ClassesModule,
     StatusReportsModule,
     AuditTrailModule,

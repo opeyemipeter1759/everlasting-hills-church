@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { CheckCircle2, Sparkles, UserCheck, Users } from "lucide-react";
+import { CheckCircle2, UserCheck, Users, UserPlus } from "lucide-react";
 import type { EventRsvp } from "@/types";
 
 function StatCard({
@@ -42,7 +42,7 @@ export default function EventRsvpsStats({ rsvps }: { rsvps: EventRsvp[] }) {
       <StatCard icon={<Users size={16} />} label="Attendees" value={totalAttendees} />
       <StatCard icon={<UserCheck size={16} />} label="Present" value={checkedInCount} tone="sky" />
       <StatCard icon={<CheckCircle2 size={16} />} label="Members" value={memberCount} tone="emerald" />
-      <StatCard icon={<Sparkles size={16} />} label="New people" value={newCount} tone="amber" />
+      <StatCard icon={<UserPlus size={16} />} label="New people" value={newCount} tone="amber" />
     </div>
   );
 }

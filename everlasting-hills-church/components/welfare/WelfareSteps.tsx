@@ -1,7 +1,7 @@
 "use client";
 
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
-import { Briefcase, Mail, MapPin, Phone, User } from "lucide-react";
+import { Briefcase, EnvelopeSimple, MapPin, Phone, User } from "@/components/icons";
 import { FormInput } from "@/components/ui/form/FormInput";
 import { FormTextarea } from "@/components/ui/form/FormTextarea";
 import { URGENCY_OPTIONS, urgencyShortLabel, type WelfareFormValues } from "./welfare-schema";
@@ -59,7 +59,7 @@ export function WelfareStepDetails({ register, errors }: StepProps) {
             label="Email"
             required
             type="email"
-            icon={Mail}
+            icon={EnvelopeSimple}
             placeholder="you@example.com"
             error={errors.email?.message}
             {...register("email")}

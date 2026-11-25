@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CalendarDays, CalendarPlus, MapPin, Radio } from "lucide-react";
+import { Broadcast, CalendarDots, CalendarPlus, Icon, MapPin } from "@/components/icons";
 import type { EventDetail } from "@/types";
 import { formatEventDateRange, getEventStatus } from "./event-format";
 import EventShareButton from "./EventShareButton";
@@ -80,13 +80,13 @@ export default function EventHero({ event }: { event: EventDetail }) {
               separating work that shadows would elsewhere. */}
           <dl className="mt-10 flex flex-col gap-4 border-t border-white/12 pt-8 text-sm text-white/75 sm:flex-row sm:flex-wrap sm:gap-x-10">
             <div className="flex items-center gap-2.5">
-              <CalendarDays size={15} className="shrink-0 text-[#E7CDD3]" aria-hidden="true" />
+              <Icon icon={CalendarDots} size={15} className="shrink-0 text-[#E7CDD3]" />
               <dt className="sr-only">Dates</dt>
               <dd>{dateLabel}</dd>
             </div>
             {schedules.length > 0 && (
               <div className="flex items-center gap-2.5">
-                <Radio size={15} className="shrink-0 text-[#E7CDD3]" aria-hidden="true" />
+                <Icon icon={Broadcast} size={15} className="shrink-0 text-[#E7CDD3]" />
                 <dt className="sr-only">Meeting times</dt>
                 <dd>
                   {schedules.map((item) => formatClock(item.startTime)).join(" & ")} ·{" "}
@@ -96,7 +96,7 @@ export default function EventHero({ event }: { event: EventDetail }) {
             )}
             {venue && (
               <div className="flex items-center gap-2.5">
-                <MapPin size={15} className="shrink-0 text-[#E7CDD3]" aria-hidden="true" />
+                <Icon icon={MapPin} size={15} className="shrink-0 text-[#E7CDD3]" />
                 <dt className="sr-only">Location</dt>
                 <dd>{venue}</dd>
               </div>
@@ -136,7 +136,7 @@ export default function EventHero({ event }: { event: EventDetail }) {
               download
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/20 px-6 text-sm font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
             >
-              <CalendarPlus size={15} aria-hidden="true" /> Add to calendar
+              <Icon icon={CalendarPlus} size={15} /> Add to calendar
             </a>}
           </div>
         </div>

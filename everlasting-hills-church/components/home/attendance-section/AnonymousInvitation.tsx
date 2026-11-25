@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Hand } from "lucide-react";
+import { ArrowRight, HandPalm, Icon } from "@/components/icons";
 
 export default function AnonymousInvitation() {
   return (
@@ -18,7 +18,7 @@ export default function AnonymousInvitation() {
             className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white text-[#87102C] font-bold text-sm hover:bg-amber-50 hover:-translate-y-0.5 hover:shadow-2xl transition-all"
           >
             Sign in to check in
-            <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
+            <Icon icon={ArrowRight} size={15} className="group-hover:translate-x-0.5 transition-transform" />
           </Link>
           <Link
             href="/first-timer"
@@ -42,7 +42,7 @@ export default function AnonymousInvitation() {
             animate={{ scale: [1, 1.04, 1] }}
             transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
           >
-            <Hand size={48} className="text-white/85" />
+            <Icon icon={HandPalm} size={48} className="text-white/85" />
           </motion.div>
         </div>
         <p className="absolute -bottom-1 text-[10px] tracking-[0.13em] xs:tracking-[0.25em] uppercase font-bold text-white/40">

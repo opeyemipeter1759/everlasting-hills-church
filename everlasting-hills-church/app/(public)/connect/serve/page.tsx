@@ -3,28 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import {
-  Heart,
-  Monitor,
-  PenTool,
-  Globe,
-  Megaphone,
-  Music,
-  Users,
-  Star,
-  PhoneCall,
-  BookOpen,
-  ClipboardList,
-  Banknote,
-  Package,
-  Database,
-  X,
-  ArrowRight,
-  Send,
-  ArrowLeft,
-  CheckCircle,
-  MapPin,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle, ChildrenIcon, ClipboardText, Database, Globe, Heart, Icon, MapPin, Megaphone, Money, Monitor, MusicNotes, Package, PaperPlaneTilt, PenNib, PhoneCall, Users, X } from "@/components/icons";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import { apiClient } from "@/lib/api/axios";
 
@@ -58,7 +37,7 @@ const UNITS: Unit[] = [
   {
     id: "design",
     name: "Design Team",
-    icon: PenTool,
+    icon: PenNib,
     category: "Creative",
     description:
       "We shape the visual identity of Everlasting Hills — graphics, materials, and the imagery that tells our story.",
@@ -82,7 +61,7 @@ const UNITS: Unit[] = [
   {
     id: "worship",
     name: "Worship Team",
-    icon: Music,
+    icon: MusicNotes,
     category: "Ministry",
     description:
       "We lead the congregation into the presence of God through music, voice, and the Spirit.",
@@ -98,7 +77,7 @@ const UNITS: Unit[] = [
   {
     id: "children",
     name: "Children's Team",
-    icon: Star,
+    icon: ChildrenIcon,
     category: "Ministry",
     description:
       "We serve the next generation — creating safe, joyful, faith-filled environments for our youngest members.",
@@ -122,7 +101,7 @@ const UNITS: Unit[] = [
   {
     id: "coordination",
     name: "Service Coordination",
-    icon: ClipboardList,
+    icon: ClipboardText,
     category: "Admin",
     description:
       "We ensure services run with excellence — coordinating every moving part behind what the congregation experiences.",
@@ -130,7 +109,7 @@ const UNITS: Unit[] = [
   {
     id: "finance",
     name: "Finance Team",
-    icon: Banknote,
+    icon: Money,
     category: "Admin",
     description:
       "We steward the resources of the house with integrity, transparency, and excellence.",
@@ -236,7 +215,7 @@ function JoinModal({
             className="w-9 h-9 rounded-full flex items-center justify-center text-[#999] hover:text-[#111] hover:bg-[#FFF4F6] transition-colors"
             aria-label="Close"
           >
-            <X size={18} />
+            <Icon icon={X} size={18} />
           </button>
         </div>
 
@@ -249,7 +228,7 @@ function JoinModal({
               className="flex flex-col items-center text-center py-8"
             >
               <div className="w-16 h-16 rounded-full bg-[#FFE8ED] flex items-center justify-center mb-4">
-                <CheckCircle size={26} className="text-[#87102C]" />
+                <Icon icon={CheckCircle} size={26} className="text-[#87102C]" />
               </div>
               <h4 className="text-[#111] font-bold text-xl mb-2">You're in!</h4>
               <p className="text-[#666] text-sm leading-relaxed max-w-xs">
@@ -342,7 +321,7 @@ function JoinModal({
                 disabled={isLoading}
                 className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
               >
-                <Send size={14} className={isLoading ? "animate-pulse" : ""} />
+                <Icon icon={PaperPlaneTilt} size={14} className={isLoading ? "animate-pulse" : ""} />
                 {isLoading ? "Sending…" : "Join This Team"}
               </button>
             </form>
@@ -356,13 +335,13 @@ function JoinModal({
 // ── Unit card ─────────────────────────────────────────────────────────────────
 
 function UnitCard({ unit, index, onJoin }: { unit: Unit; index: number; onJoin: () => void }) {
-  const Icon = unit.icon;
+  const Glyph = unit.icon;
   return (
     <ScrollReveal delay={0.05 + (index % 3) * 0.08}>
       <div className="group bg-white border border-[#E7CDD3]/60 rounded-2xl p-4 xs:p-6 hover:shadow-[0_8px_40px_rgba(135,16,44,0.10)] hover:border-[#E7CDD3] hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
         {/* Icon */}
         <div className="w-12 h-12 rounded-xl bg-[#FFE8ED] flex items-center justify-center text-[#87102C] flex-shrink-0 mb-4">
-          <Icon size={20} />
+          <Glyph size={20} />
         </div>
 
         {/* Name */}
@@ -379,7 +358,7 @@ function UnitCard({ unit, index, onJoin }: { unit: Unit; index: number; onJoin: 
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[#E7CDD3] text-[#87102C] text-sm font-semibold hover:bg-[#87102C] hover:text-white hover:border-[#87102C] transition-all duration-200"
         >
           Join This Team
-          <ArrowRight size={14} />
+          <Icon icon={ArrowRight} size={14} />
         </button>
       </div>
     </ScrollReveal>
@@ -420,7 +399,7 @@ export default function ServeTeamPage() {
             className="flex flex-col items-center gap-4"
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/60 backdrop-blur-sm">
-              <MapPin size={12} className="text-[#FFB3C1]" />
+              <Icon icon={MapPin} size={12} className="text-[#FFB3C1]" />
               Serve the House
             </span>
 
@@ -447,7 +426,7 @@ export default function ServeTeamPage() {
                 href="/connect"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/25 text-white text-sm font-semibold hover:bg-white/10 transition-all"
               >
-                <ArrowLeft size={14} />
+                <Icon icon={ArrowLeft} size={14} />
                 Back to Connect
               </Link>
             </div>

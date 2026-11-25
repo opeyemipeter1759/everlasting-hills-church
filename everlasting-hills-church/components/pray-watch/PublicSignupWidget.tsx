@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Clock3, Send, MessageCircle } from "lucide-react";
+import { ChatCircle, Clock, Icon, PaperPlaneTilt } from "@/components/icons";
 import { useIsLoggedIn } from "@/components/home/NavUserBadge";
 import { usePublicPrayerWatch, useMyPrayerSignup, type PublicSlot } from "@/lib/api/prayer-watch";
 import { PWLoading, PWError } from "./shared";
@@ -38,7 +38,7 @@ export default function PublicSignupWidget() {
       return (
         <div className="pw-ink rounded-[22px] p-7 text-center">
           <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/70">
-            <Clock3 size={14} aria-hidden="true" /> Awaiting approval
+            <Icon icon={Clock} size={14} /> Awaiting approval
           </p>
           <p className="pw-display mt-3 text-2xl">{slot.label} — {slot.startTime}–{slot.endTime}</p>
           <p className="mx-auto mt-3 max-w-sm text-sm text-white/65">
@@ -54,12 +54,12 @@ export default function PublicSignupWidget() {
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
           {telegramLink && (
             <a href={telegramLink} target="_blank" rel="noopener noreferrer" className="pw-btn pw-btn-primary">
-              <Send size={16} aria-hidden="true" /> Join the Telegram channel
+              <Icon icon={PaperPlaneTilt} size={16} /> Join the Telegram channel
             </a>
           )}
           {slot.whatsappLink && (
             <a href={slot.whatsappLink} target="_blank" rel="noopener noreferrer" className="pw-btn pw-btn-glass">
-              <MessageCircle size={16} aria-hidden="true" /> Join your watch family
+              <Icon icon={ChatCircle} size={16} /> Join your watch family
             </a>
           )}
         </div>

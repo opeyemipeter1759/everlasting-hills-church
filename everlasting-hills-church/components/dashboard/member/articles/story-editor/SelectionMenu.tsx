@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
-import { Bold, Heading2, Italic, Link2, Quote, SpellCheck, Wand2 } from "lucide-react";
+import { Bold, Heading2, Italic, Link2, Quote, SpellCheck, PenLine } from "lucide-react";
 import type { WritingAction } from "@/lib/api/writing-assist";
 import { Separator, ToolButton } from "./ToolButton";
 import type { StoryEditorState } from "./useStoryEditor";
@@ -48,7 +48,7 @@ export function SelectionMenu({
         <SpellCheck size={15} aria-hidden="true" />
       </ToolButton>
       <ToolButton tone="dark" label="Improve writing" onClick={() => onAi("improve")}>
-        <Wand2 size={15} aria-hidden="true" />
+        <PenLine size={15} aria-hidden="true" />
       </ToolButton>
     </BubbleMenu>
   );

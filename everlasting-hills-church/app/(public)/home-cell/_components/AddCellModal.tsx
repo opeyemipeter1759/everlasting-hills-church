@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, X, AlertCircle } from "lucide-react";
+import { CheckCircle, Icon, WarningCircle, X } from "@/components/icons";
 
 const EMPTY_FORM = {
   name: "",
@@ -106,7 +106,7 @@ export default function AddCellModal({ onClose }: { onClose: () => void }) {
             aria-label="Close"
             className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-all"
           >
-            <X size={15} />
+            <Icon icon={X} size={15} />
           </button>
         </div>
 
@@ -118,7 +118,7 @@ export default function AddCellModal({ onClose }: { onClose: () => void }) {
               className="flex flex-col items-center text-center py-10 gap-4"
             >
               <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
-                <CheckCircle2 size={26} className="text-emerald-400" />
+                <Icon icon={CheckCircle} size={26} className="text-emerald-400" />
               </div>
               <div>
                 <h4 className="text-white font-black text-xl mb-2">Registration Received</h4>
@@ -232,7 +232,7 @@ export default function AddCellModal({ onClose }: { onClose: () => void }) {
 
               {err && (
                 <div className="flex items-center gap-2 text-rose-400 text-sm">
-                  <AlertCircle size={13} />
+                  <Icon icon={WarningCircle} size={13} />
                   {err}
                 </div>
               )}

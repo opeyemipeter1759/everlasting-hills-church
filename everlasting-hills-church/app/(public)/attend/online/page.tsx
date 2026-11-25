@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api/axios";
-import { Loader2, ArrowRight, CheckCircle2, ChevronLeft } from "lucide-react";
+import { ArrowRight, CaretLeft, CheckCircle, CircleNotch, Icon } from "@/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
@@ -162,7 +162,7 @@ export default function OnlineAttendancePage() {
                     </div>
                     <p className="text-white/40 text-[13px] leading-snug">{card.subtitle}</p>
                   </div>
-                  <ArrowRight
+                  <Icon icon={ArrowRight}
                     size={16}
                     className="text-white/20 flex-shrink-0 group-hover:text-church-accent group-hover:translate-x-1 transition-all duration-300"
                   />
@@ -190,7 +190,7 @@ export default function OnlineAttendancePage() {
                   onClick={() => { setPhase("select"); setServerError(""); setEmailError(""); setEmail(""); }}
                   className="flex items-center gap-1.5 text-xs text-white/35 hover:text-white/60 mb-8 transition-colors"
                 >
-                  <ChevronLeft size={14} />
+                  <Icon icon={CaretLeft} size={14} />
                   Back
                 </button>
 
@@ -247,9 +247,9 @@ export default function OnlineAttendancePage() {
                       transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none"
                   >
                     {loading ? (
-                      <><Loader2 size={15} className="animate-spin" /> Checking…</>
+                      <><Icon icon={CircleNotch} size={15} className="animate-spin" /> Checking…</>
                     ) : (
-                      <>Continue <ArrowRight size={15} /></>
+                      <>Continue <Icon icon={ArrowRight} size={15} /></>
                     )}
                   </button>
                 </form>
@@ -274,7 +274,7 @@ export default function OnlineAttendancePage() {
                   transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 15 }}
                   className="w-20 h-20 rounded-2xl bg-church-maroon/20 flex items-center justify-center mx-auto mb-6"
                 >
-                  <CheckCircle2 size={40} className="text-church-accent" />
+                  <Icon icon={CheckCircle} size={40} className="text-church-accent" />
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}

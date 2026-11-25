@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Heart, MessageCircle } from "lucide-react";
+import { ArrowLeft, ChatCircle, Heart, Icon } from "@/components/icons";
 import ArticleComments from "@/components/blog/ArticleComments";
 import ReadingView from "@/components/medium/ReadingView";
 import ShareMenu from "@/components/medium/ShareMenu";
@@ -100,7 +100,7 @@ export default async function PublicArticlePage({
                 href="/articles"
                 className="m-muted inline-flex min-h-11 items-center gap-1.5 text-sm hover:text-[var(--m-ink)]"
               >
-                <ArrowLeft size={15} aria-hidden="true" /> All stories
+                <Icon icon={ArrowLeft} size={15} /> All stories
               </Link>
             }
             actions={
@@ -111,7 +111,7 @@ export default async function PublicArticlePage({
                     className="m-icon-btn"
                     aria-label={`${a.likeCount} likes. Sign in to like`}
                   >
-                    <Heart size={19} aria-hidden="true" />{" "}
+                    <Icon icon={Heart} size={19} />{" "}
                     {compact(a.likeCount)}
                   </Link>
                   <a
@@ -119,7 +119,7 @@ export default async function PublicArticlePage({
                     className="m-icon-btn"
                     aria-label={`${a.commentCount} responses`}
                   >
-                    <MessageCircle size={19} aria-hidden="true" />{" "}
+                    <Icon icon={ChatCircle} size={19} />{" "}
                     {compact(a.commentCount)}
                   </a>
                 </div>

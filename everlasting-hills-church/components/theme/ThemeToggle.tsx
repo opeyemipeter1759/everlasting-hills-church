@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sun, Moon } from "lucide-react";
+import { Icon, Moon, Sun } from "@/components/icons";
 
 export default function ThemeToggle({ className }: { className?: string }) {
   const [isDark, setIsDark] = useState(false);
@@ -41,7 +41,7 @@ export default function ThemeToggle({ className }: { className?: string }) {
         "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 transition-colors"
       }
     >
-      {isDark ? <Sun size={17} /> : <Moon size={17} />}
+      {isDark ? <Icon icon={Sun} size={17} /> : <Icon icon={Moon} size={17} />}
     </button>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, UserPlus, Users } from "lucide-react";
+import { UserPlus, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import StatCard from "@/components/dashboard/analytics/StatCard";
 import MonthlyReviewSkeleton from "@/components/ui/skeleton/MonthlyReviewSkeleton";
@@ -14,7 +14,7 @@ import TeamLeaderboard from "./TeamLeaderboard";
 const ICON: Record<ReviewCard["key"], LucideIcon> = {
   members: UserPlus,
   teams: Users,
-  visitors: Sparkles,
+  visitors: UserPlus,
 };
 
 const ICON_COLOR: Record<ReviewCard["key"], string> = {

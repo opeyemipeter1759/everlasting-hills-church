@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { UseFormRegister, FieldValues, Path } from "react-hook-form";
-import { AlertCircle } from "lucide-react";
+import { Icon, WarningCircle } from "@/components/icons";
 import { Select } from "@/components/ui/select";
 
 type Option = {
@@ -77,7 +77,7 @@ const SelectForm = <T extends FieldValues>({
 
       {error && (
         <p id={errorId} role="alert" className="mt-2 flex items-center gap-1 text-sm text-red-600 dark:text-red-400">
-          <AlertCircle size={15} aria-hidden="true" />
+          <Icon icon={WarningCircle} size={15} />
           {error}
         </p>
       )}

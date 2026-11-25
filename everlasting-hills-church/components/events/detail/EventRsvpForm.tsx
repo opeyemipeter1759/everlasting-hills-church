@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Send } from "lucide-react";
+import { CheckCircle, Icon, PaperPlaneTilt } from "@/components/icons";
 import { submitEventRsvp, getRsvpErrorMessage } from "@/lib/api/events";
 
 /**
@@ -68,7 +68,7 @@ export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
               className="text-center py-8 sm:py-12"
             >
               <div className="mx-auto w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-6">
-                <CheckCircle2 size={32} />
+                <Icon icon={CheckCircle} size={32} />
               </div>
               <h3 className="text-2xl sm:text-3xl font-bold text-[#111] mb-3">
                 Your seat is reserved.
@@ -151,7 +151,7 @@ export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
                   </>
                 ) : (
                   <>
-                    <Send size={15} />
+                    <Icon icon={PaperPlaneTilt} size={15} />
                     Reserve My Seat
                   </>
                 )}

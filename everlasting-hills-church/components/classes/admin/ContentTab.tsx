@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Plus, Trash2 } from "lucide-react";
+import { Check, Icon, Plus, Trash } from "@/components/icons";
 import { useClassContent, useSetQuiz, useUpdateLesson, type AdminLesson, type QuizItem } from "@/lib/api/classes";
 import { showToast } from "@/components/ui/toast/toast";
 import { ClassError, ClassLoading, errorText } from "../shared";
@@ -50,7 +50,7 @@ export default function ContentTab({ courseId }: { courseId: string }) {
                         <span className="block text-[var(--color-ink)] dark:text-white">{l.title}</span>
                         <span className="block text-xs text-black/45 dark:text-white/45">{parts.length ? parts.join(", ") : "nothing to do yet"}</span>
                       </span>
-                      {l.videoUrl && l.QuizItems.length > 0 && <Check className="h-4 w-4 flex-none text-green-600" aria-label="Video and quiz in place" />}
+                      {l.videoUrl && l.QuizItems.length > 0 && <Icon icon={Check} size={24} className="h-4 w-4 flex-none text-green-600" label="Video and quiz in place" />}
                     </button>
                   </li>
                 );
@@ -193,7 +193,7 @@ function QuizEditor({ lessonId, courseId, initial }: { lessonId: string; courseI
             <span className="text-sm font-semibold text-black/50 dark:text-white/50">{i + 1}.</span>
             <input className={input} value={q.prompt} onChange={(e) => change(i, { prompt: e.target.value })} placeholder="The question" maxLength={400} aria-label={`Question ${i + 1}`} />
             <button type="button" onClick={() => setItems(items.filter((_, qi) => qi !== i))} aria-label={`Remove question ${i + 1}`} className="text-black/40 hover:text-red-600 dark:text-white/40">
-              <Trash2 className="h-4 w-4" />
+              <Icon icon={Trash} size={24} className="h-4 w-4" />
             </button>
           </div>
           {q.options.map((opt, oi) => (
@@ -221,7 +221,7 @@ function QuizEditor({ lessonId, courseId, initial }: { lessonId: string; courseI
                   aria-label={`Remove option ${oi + 1}`}
                   className="text-black/40 hover:text-red-600 dark:text-white/40"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Icon icon={Trash} size={24} className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -236,7 +236,7 @@ function QuizEditor({ lessonId, courseId, initial }: { lessonId: string; courseI
       <div className="flex flex-wrap gap-2">
         {items.length < 10 && (
           <button type="button" onClick={() => setItems([...items, { prompt: "", options: ["", "", ""], correctIndex: 0 }])} className="cls-btn cls-btn-outline !px-4 !py-2">
-            <Plus className="h-4 w-4" aria-hidden /> Question
+            <Icon icon={Plus} size={24} className="h-4 w-4" /> Question
           </button>
         )}
         <button type="button" onClick={save} disabled={setQuiz.isPending} className="cls-btn cls-btn-primary !px-4 !py-2">

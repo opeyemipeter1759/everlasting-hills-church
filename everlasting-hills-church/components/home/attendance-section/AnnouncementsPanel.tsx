@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { BellRing, CheckCircle2 } from "lucide-react";
+import { BellRinging, CheckCircle, Icon } from "@/components/icons";
 import { useUnseenAnnouncements, type Announcement } from "@/hooks";
 import PanelHeader from "./PanelHeader";
 import AnnouncementItem from "./AnnouncementItem";
@@ -34,7 +34,7 @@ export default function AnnouncementsPanel({ announcements, loading }: Announcem
       transition={{ delay: 0.12 }}
     >
       <PanelHeader
-        icon={BellRing}
+        icon={BellRinging}
         eyebrow="From the Church"
         title="Announcements"
         badge={
@@ -110,7 +110,7 @@ function EmptyState() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-14 text-center">
       <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-white/8">
-        <CheckCircle2 size={20} className="text-[#FFB3C1]/70" />
+        <Icon icon={CheckCircle} size={20} className="text-[#FFB3C1]/70" />
       </span>
       <div>
         <p className="text-sm font-bold text-white">You&apos;re all caught up</p>

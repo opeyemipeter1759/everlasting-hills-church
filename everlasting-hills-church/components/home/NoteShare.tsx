@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Check, Copy, Download, Loader2, Share2, X } from "lucide-react";
+import { Check, CircleNotch, Copy, DownloadSimple, Icon, ShareNetwork, X } from "@/components/icons";
 import { saveScriptureImage } from "@/lib/scripture-share";
 
 /** WhatsApp's own green, so the option is recognised at a glance. */
@@ -150,7 +150,7 @@ export default function NoteShare({
           compact ? "px-3 py-1.5 text-[11px]" : "px-3.5 py-2 text-xs"
         }`}
       >
-        <Share2 className="h-3 w-3" aria-hidden="true" />
+        <Icon icon={ShareNetwork} size={24} className="h-3 w-3" />
         Share
       </button>
 
@@ -180,7 +180,7 @@ export default function NoteShare({
                       aria-label="Close sharing"
                       className="-mr-2 -mt-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white"
                     >
-                      <X className="h-4 w-4" aria-hidden="true" />
+                      <Icon icon={X} size={24} className="h-4 w-4" />
                     </button>
                   </div>
 
@@ -207,14 +207,14 @@ export default function NoteShare({
                         className={secondary}
                       >
                         {ready || failed ? (
-                          <Download className="h-4 w-4" aria-hidden="true" />
+                          <Icon icon={DownloadSimple} size={24} className="h-4 w-4" />
                         ) : (
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                          <Icon icon={CircleNotch} size={24} className="h-4 w-4 animate-spin" />
                         )}
                         Download
                       </button>
                       <button type="button" onClick={copy} aria-label={`Copy ${what} text`} className={secondary}>
-                        {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
+                        {copied ? <Icon icon={Check} size={24} className="h-4 w-4" /> : <Icon icon={Copy} size={24} className="h-4 w-4" />}
                         {copied ? "Copied" : "Copy"}
                       </button>
                     </div>

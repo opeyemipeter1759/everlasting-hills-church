@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Moon, Users, Clock3 } from "lucide-react";
+import { Clock, Icon, Moon, Users } from "@/components/icons";
 import { PrayerWatchTheme } from "@/components/pray-watch/theme";
 import PublicSignupWidget from "@/components/pray-watch/PublicSignupWidget";
 
@@ -85,14 +85,14 @@ export default function PrayerWatchPage() {
             </p>
             <div className="mt-10 grid gap-5 sm:grid-cols-2">
               <div className="rounded-[20px] bg-white p-7">
-                <Clock3 className="h-6 w-6" style={{ color: "var(--color-flame)" }} aria-hidden="true" />
+                <Icon icon={Clock} size={24} className="h-6 w-6" style={{ color: "var(--color-flame)" }} />
                 <h3 className="pw-display mt-4 text-2xl">A Prayer Watch</h3>
                 <p className="mt-2 text-black/65">
                   Simply a time slot — say, 2am to 4am. It's the hour on the clock, nothing more.
                 </p>
               </div>
               <div className="rounded-[20px] bg-white p-7">
-                <Users className="h-6 w-6" style={{ color: "var(--color-flame)" }} aria-hidden="true" />
+                <Icon icon={Users} size={24} className="h-6 w-6" style={{ color: "var(--color-flame)" }} />
                 <h3 className="pw-display mt-4 text-2xl">A Watchmen Family</h3>
                 <p className="mt-2 text-black/65">
                   The WhatsApp community tied to that time slot — the people who pray it with you nightly, much like
@@ -111,7 +111,7 @@ export default function PrayerWatchPage() {
         <section id="signup" className="scroll-mt-24 px-5 py-20 sm:px-8 sm:py-28">
           <div className="mx-auto max-w-[1180px]">
             <div className="flex items-start gap-3">
-              <Moon className="mt-1 h-6 w-6 shrink-0" style={{ color: "var(--color-flame)" }} aria-hidden="true" />
+              <Icon icon={Moon} size={24} className="mt-1 h-6 w-6 shrink-0" style={{ color: "var(--color-flame)" }} />
               <div>
                 <h2 className="pw-display text-4xl sm:text-5xl">Pick your watch</h2>
                 <p className="mt-3 max-w-xl text-black/65">

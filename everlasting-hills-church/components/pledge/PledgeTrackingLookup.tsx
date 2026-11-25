@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, MailCheck } from "lucide-react";
+import { ArrowLeft, CircleNotch, EnvelopeSimpleOpen, Icon } from "@/components/icons";
 import { useRequestTrackingLink } from "@/lib/api/pledges";
 import { userMessageForError } from "@/lib/api/user-message";
 
@@ -39,7 +39,7 @@ export default function PledgeTrackingLookup() {
         {sent ? (
           <div role="status" className="text-center">
             <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-              <MailCheck size={32} aria-hidden="true" />
+              <Icon icon={EnvelopeSimpleOpen} size={32} />
             </span>
             <h1 className="mt-5 text-2xl font-black tracking-tight">Check your email</h1>
             <p className="mt-3 text-sm leading-relaxed text-[#6d565b]">
@@ -59,7 +59,7 @@ export default function PledgeTrackingLookup() {
         ) : (
           <>
             <Link href="/pledge" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#87102C] hover:underline">
-              <ArrowLeft size={16} aria-hidden="true" /> Back to project pledge
+              <Icon icon={ArrowLeft} size={16} /> Back to project pledge
             </Link>
             <h1 className="mt-4 text-2xl font-black tracking-tight">Find my pledge</h1>
             <p className="mt-3 text-sm leading-relaxed text-[#6d565b]">
@@ -94,7 +94,7 @@ export default function PledgeTrackingLookup() {
                 disabled={request.isPending}
                 className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#87102C] px-6 font-black text-white hover:bg-[#6f0d24] disabled:opacity-60"
               >
-                {request.isPending && <Loader2 size={18} className="animate-spin" aria-hidden="true" />}
+                {request.isPending && <Icon icon={CircleNotch} size={18} className="animate-spin" />}
                 {request.isPending ? "Sending…" : "Email me my link"}
               </button>
             </form>

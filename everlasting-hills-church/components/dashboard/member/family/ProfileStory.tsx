@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Droplets, Flame, GraduationCap, HandHeart, Languages, Mail, Phone, Quote, Sparkles, Sprout, Users } from "lucide-react";
+import { Briefcase, Droplets, Flame, GraduationCap, HandHeart, Languages, Mail, Phone, Quote, Sprout, Users, Gift } from "lucide-react";
 import type { FamilyProfile } from "@/lib/api/family";
 import { CardTitle, card } from "./ProfileSections";
 
@@ -105,7 +105,7 @@ export function GiftsSection({ p }: { p: FamilyProfile }) {
       {p.gifts.length > 0 && (
         <div>
           <h3 className="mb-2 inline-flex items-center gap-1.5 text-sm font-bold text-[#111] dark:text-white">
-            <Sparkles size={14} aria-hidden="true" /> Spiritual gifts and ministry
+            <Gift size={14} aria-hidden="true" /> Spiritual gifts and ministry
           </h3>
           <Chips items={p.gifts} />
         </div>

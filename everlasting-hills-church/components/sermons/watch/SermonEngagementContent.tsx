@@ -2,10 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import {
-  Share2, Bookmark, BookmarkCheck, BookOpen, Headphones,
-  MessageCircle, PenLine, Lightbulb, ChevronDown, Flame, Send,
-} from 'lucide-react';
+import { BookmarkSimple, BookOpen, CaretDown, ChatCircle, Fire, Headphones, Icon, Lightbulb, PaperPlaneTilt, PencilLine, ShareNetwork } from "@/components/icons";
 import CommentsPanel from './CommentsPanel';
 import ReflectionPanel from './ReflectionPanel';
 import NotesPanel from './NotesPanel';
@@ -21,10 +18,10 @@ const REACTIONS: { type: ReactionType; emoji: string; label: string }[] = [
 ];
 
 const TABS = [
-  { id: 'comments', label: 'Comments', icon: MessageCircle },
+  { id: 'comments', label: 'Comments', icon: ChatCircle },
   { id: 'reflection', label: 'Reflection', icon: Lightbulb },
-  { id: 'notes', label: 'My Notes', icon: PenLine },
-  { id: 'direct', label: 'Ask & Share', icon: Send },
+  { id: 'notes', label: 'My Notes', icon: PencilLine },
+  { id: 'direct', label: 'Ask & Share', icon: PaperPlaneTilt },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
@@ -126,7 +123,7 @@ export default function SermonEngagementContent({
           )}
           <span>·</span>
           <span className="flex items-center gap-1">
-            <Headphones size={12} /> {sermon.playCount} play{sermon.playCount !== 1 ? 's' : ''}
+            <Icon icon={Headphones} size={12} /> {sermon.playCount} play{sermon.playCount !== 1 ? 's' : ''}
           </span>
         </div>
         {sermon.description && (
@@ -165,7 +162,7 @@ export default function SermonEngagementContent({
           ))}
           {sermon._count.reactions > 0 && (
             <span className="text-xs text-gray-400 dark:text-gray-500 inline-flex items-center gap-1">
-              <Flame size={11} /> {sermon._count.reactions}
+              <Icon icon={Fire} size={11} /> {sermon._count.reactions}
             </span>
           )}
         </div>
@@ -181,7 +178,7 @@ export default function SermonEngagementContent({
                 : 'border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-amber-300 disabled:opacity-50 disabled:cursor-default'
             }`}
           >
-            {bookmarked ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
+            {bookmarked ? <Icon icon={BookmarkSimple} size={15} /> : <Icon icon={BookmarkSimple} size={15} />}
             <span className="hidden sm:inline">{bookmarked ? 'Saved' : 'Save'}</span>
           </button>
           <button
@@ -189,7 +186,7 @@ export default function SermonEngagementContent({
             onClick={share}
             className="flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-[#87102C]/40 transition-all"
           >
-            <Share2 size={15} />
+            <Icon icon={ShareNetwork} size={15} />
             <span className="hidden sm:inline">{copied ? 'Copied!' : 'Share'}</span>
           </button>
         </div>
@@ -206,9 +203,12 @@ export default function SermonEngagementContent({
             className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
           >
             <span className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
-              <BookOpen size={14} className="text-[#87102C]" /> Transcript
+              <Icon icon={BookOpen} size={14} className="text-[#87102C]" /> Transcript
             </span>
-            <ChevronDown size={16} className={`text-gray-400 transition-transform ${showTranscript ? 'rotate-180' : ''}`} />
+            <Icon icon={CaretDown}
+              size={16}
+              className={`text-gray-400 transition-transform ${showTranscript ? 'rotate-180' : ''}`}
+            />
           </button>
           {showTranscript && (
             <div className="px-4 pb-4">
@@ -222,7 +222,7 @@ export default function SermonEngagementContent({
       <div>
         <div className="flex items-center gap-1 border-b border-gray-100 dark:border-white/8 mb-4 overflow-x-auto no-scrollbar">
           {TABS.map((t) => {
-            const Icon = t.icon;
+            const Glyph = t.icon;
             const active = tab === t.id;
             return (
               <button
@@ -235,7 +235,7 @@ export default function SermonEngagementContent({
                     : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
               >
-                <Icon size={13} /> {t.label}
+                <Icon icon={Glyph} size={13} /> {t.label}
               </button>
             );
           })}

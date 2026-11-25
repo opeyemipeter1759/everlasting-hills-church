@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Icon } from "@/components/icons";
 import type { EventSummary } from "@/types";
 import { formatEventTime } from "@/components/events/detail/event-format";
 import { focusRing, LOCATION_LABEL } from "./event-card-utils";
@@ -49,7 +49,7 @@ export default function EventCardFooter({ event, href, takingRsvps, registering,
         {event.liveUrl ? (
           <a href={event.liveUrl} target="_blank" rel="noopener noreferrer" className={actionClasses}>
             {event.primaryCtaLabel || "Join live"}
-            <ArrowRight size={arrowSize} aria-hidden="true" />
+            <Icon icon={ArrowRight} size={arrowSize} />
           </a>
         ) : takingRsvps ? (
           <button
@@ -59,12 +59,12 @@ export default function EventCardFooter({ event, href, takingRsvps, registering,
             className={`${actionClasses} disabled:cursor-default ${registered ? "text-emerald-700 hover:text-emerald-700" : ""}`}
           >
             {registering ? "Registering…" : registered ? "Registered" : "Register"}
-            {registered ? <Check size={arrowSize} aria-hidden="true" /> : <ArrowRight size={arrowSize} aria-hidden="true" />}
+            {registered ? <Icon icon={Check} size={arrowSize} /> : <Icon icon={ArrowRight} size={arrowSize} />}
           </button>
         ) : (
           <Link href={href} className={actionClasses}>
             See details
-            <ArrowRight size={arrowSize} aria-hidden="true" />
+            <Icon icon={ArrowRight} size={arrowSize} />
           </Link>
         )}
       </div>

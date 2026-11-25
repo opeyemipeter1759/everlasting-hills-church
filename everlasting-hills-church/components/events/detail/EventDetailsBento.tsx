@@ -1,4 +1,4 @@
-import { CalendarDays, Clock, ExternalLink, MapPin, Mic, UserRound, type LucideIcon } from "lucide-react";
+import { ArrowSquareOut, CalendarDots, Clock, Icon, type IconComponent, MapPin, Microphone, User } from "@/components/icons";
 import type { EventDetail } from "@/types";
 import { formatEventDateRange, formatEventTimeRange } from "./event-format";
 
@@ -10,12 +10,12 @@ import { formatEventDateRange, formatEventTimeRange } from "./event-format";
  * the values instead of on five identical containers.
  */
 export default function EventDetailsBento({ event }: { event: EventDetail }) {
-  const chips: { icon: LucideIcon; label: string; value: string | null }[] = [
-    { icon: CalendarDays, label: "Date",           value: formatEventDateRange(event.startAt, event.endAt, event.timezone) || null },
+  const chips: { icon: IconComponent; label: string; value: string | null }[] = [
+    { icon: CalendarDots, label: "Date",           value: formatEventDateRange(event.startAt, event.endAt, event.timezone) || null },
     { icon: Clock,        label: "Time",           value: event.Schedules?.length ? event.Schedules.map((item) => `${formatClock(item.startTime)} ${item.title}`).join(" · ") : formatEventTimeRange(event.startAt, null, event.timezone) || null },
     { icon: MapPin,       label: "Venue",          value: [event.venueName, event.venueAddress].filter(Boolean).join(" · ") || null },
-    { icon: UserRound,    label: "Host",           value: event.hostName },
-    { icon: Mic,          label: "Guest Minister", value: event.guestMinister },
+    { icon: User,    label: "Host",           value: event.hostName },
+    { icon: Microphone,          label: "Guest Minister", value: event.guestMinister },
   ];
 
   const visible = chips.filter((c) => c.value);
@@ -39,10 +39,10 @@ export default function EventDetailsBento({ event }: { event: EventDetail }) {
           // draws every rule at hairline weight without stacking borders.
           <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-[#E7CDD3] bg-[#E7CDD3] sm:grid-cols-2">
             {visible.map((c) => {
-              const Icon = c.icon;
+              const Glyph = c.icon;
               return (
                 <div key={c.label} className="flex items-start gap-4 bg-white px-5 py-6 sm:px-6">
-                  <Icon size={16} className="mt-0.5 shrink-0 text-[#87102C]" aria-hidden="true" />
+                  <Icon icon={Glyph} size={16} className="mt-0.5 shrink-0 text-[#87102C]" />
                   <div className="min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a7e80] xs:tracking-[0.18em]">
                       {c.label}
@@ -69,9 +69,9 @@ export default function EventDetailsBento({ event }: { event: EventDetail }) {
               rel="noopener noreferrer"
               className="inline-flex min-h-12 items-center gap-2 rounded-full border border-[#181011] px-7 text-sm font-semibold text-[#181011] transition-colors hover:bg-[#FFF4F6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/40"
             >
-              <MapPin size={14} aria-hidden="true" />
+              <Icon icon={MapPin} size={14} />
               Get directions
-              <ExternalLink size={12} className="opacity-50" aria-hidden="true" />
+              <Icon icon={ArrowSquareOut} size={12} className="opacity-50" />
             </a>
           </div>
         )}
