@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Link2, Loader2, Share2 } from "lucide-react";
+import { CircleNotch, DownloadSimple, Icon, LinkSimple, ShareNetwork } from "@/components/icons";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { PICNIC } from "./picnic-config";
 import StatusPreview, { WhatsAppGlyph } from "./PicnicStatusPreview";
@@ -81,7 +81,7 @@ export default function PicnicShare({ dateLong }: { dateLong: string }) {
             disabled={phase === "working"}
             className="inline-flex items-center justify-center gap-2.5 rounded-full bg-[#87102C] px-7 py-3.5 text-[15px] font-semibold text-white transition-transform hover:-translate-y-0.5 disabled:opacity-70"
           >
-            {phase === "working" ? <Loader2 size={17} className="animate-spin" /> : <Share2 size={17} />}
+            {phase === "working" ? <Icon icon={CircleNotch} size={17} className="animate-spin" /> : <Icon icon={ShareNetwork} size={17} />}
             {phase === "working" ? "Making your card…" : "Share to my status"}
           </button>
           <a
@@ -97,7 +97,7 @@ export default function PicnicShare({ dateLong }: { dateLong: string }) {
             onClick={copyLink}
             className="inline-flex items-center justify-center gap-2 rounded-full px-4 py-3.5 text-[15px] font-medium text-[#1B1714]/60 hover:text-[#1B1714]"
           >
-            <Link2 size={16} /> {copied ? "Link copied" : "Copy link"}
+            <Icon icon={LinkSimple} size={16} /> {copied ? "Link copied" : "Copy link"}
           </button>
         </div>
 
@@ -105,7 +105,7 @@ export default function PicnicShare({ dateLong }: { dateLong: string }) {
           {phase === "shared" && "Shared. Thank you for inviting someone!"}
           {phase === "downloaded" && (
             <span className="inline-flex items-center gap-1.5">
-              <Download size={14} /> Saved to your device — open WhatsApp → My status → add the picture.
+              <Icon icon={DownloadSimple} size={14} /> Saved to your device — open WhatsApp → My status → add the picture.
             </span>
           )}
           {phase === "error" && "We couldn't make the card on this device. The WhatsApp button still works."}

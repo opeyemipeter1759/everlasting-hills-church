@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Play } from 'lucide-react';
+import { Icon, Play } from '@/components/icons';
 import { Chevron, PrimaryButton } from './ArchiveUi';
 import { fmtDate, metaLine, type SeriesGroup } from './archive-utils';
 
@@ -21,7 +21,7 @@ export default function SeriesRow({ g, onPlay }: { g: SeriesGroup; onPlay: (slug
           </p>
         </button>
         <PrimaryButton onClick={() => onPlay(newest.slug)}>
-          <Play size={11} fill="currentColor" /> Latest
+          <Icon icon={Play} size={11} weight="fill" /> Latest
         </PrimaryButton>
         <Chevron open={open} onClick={() => setOpen((o) => !o)} label={open ? 'Hide messages' : 'Show messages'} />
       </div>
@@ -42,7 +42,7 @@ export default function SeriesRow({ g, onPlay }: { g: SeriesGroup; onPlay: (slug
                   aria-label={`Play ${s.title}`}
                   className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white text-[#87102C] transition-colors hover:border-[#87102C] dark:border-white/15 dark:bg-white/5 dark:text-rose-300"
                 >
-                  <Play size={11} fill="currentColor" />
+                  <Icon icon={Play} size={11} weight="fill" />
                 </button>
               </li>
             ))}

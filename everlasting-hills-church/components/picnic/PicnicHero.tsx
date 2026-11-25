@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, Icon } from "@/components/icons";
 import { PHOTOS, PICNIC, type formatPicnicDate } from "./picnic-config";
 import { INK } from "./picnic-styles";
 
@@ -60,7 +60,7 @@ export default function PicnicHero({ d }: { d: PicnicDate }) {
                 href="#rsvp"
                 className="inline-flex items-center gap-2 rounded-full bg-[#1E3A2A] px-7 py-3.5 text-[15px] font-semibold text-[#F7F0E3] transition-transform hover:-translate-y-0.5"
               >
-                Count me in <ArrowDown size={16} />
+                Count me in <Icon icon={ArrowDown} size={16} />
               </a>
               <a
                 href="#share"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowRight, Check, CircleNotch, Icon } from "@/components/icons";
 import { useSessionReady } from "@/hooks/useSessionReady";
 import {
   useGiftExchange,
@@ -32,7 +32,7 @@ export default function PicnicRsvp({ fallbackDate }: { fallbackDate: string }) {
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Link href={LOGIN_HREF} className={primaryBtn}>
-            Sign in to save my spot <ArrowRight size={16} />
+            Sign in to save my spot <Icon icon={ArrowRight} size={16} />
           </Link>
           <Link href={REGISTER_HREF} className={ghostBtn}>
             New here? Create an account
@@ -111,7 +111,7 @@ function SignedIn({ fallbackDate }: { fallbackDate: string }) {
         <div className="mt-8">
           <p className="flex items-center gap-3 font-serif text-2xl text-[#F7F0E3]">
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F2B33D] text-[#1E3A2A]">
-              <Check size={18} strokeWidth={3} />
+              <Icon icon={Check} size={18} weight="bold" />
             </span>
             You&apos;re on the list.
           </p>
@@ -137,9 +137,9 @@ function SignedIn({ fallbackDate }: { fallbackDate: string }) {
             </span>
           </label>
           <button type="button" disabled={busy} onClick={join} className={`${primaryBtn} mt-6 w-full sm:w-auto`}>
-            {busy ? <Loader2 size={16} className="animate-spin" /> : null}
+            {busy ? <Icon icon={CircleNotch} size={16} className="animate-spin" /> : null}
             {busy ? "Saving your spot…" : "Count me in"}
-            {!busy && <ArrowRight size={16} />}
+            {!busy && <Icon icon={ArrowRight} size={16} />}
           </button>
         </div>
       )}
