@@ -1,33 +1,11 @@
 import Image from "next/image";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import { PHOTOS } from "./picnic-config";
+import type { PicnicContent } from "./picnic-content";
 import { INK } from "./picnic-styles";
 
-const AFTERNOON = [
-  {
-    n: "01",
-    title: "Food to share",
-    body: "Coolers, plates, something from your kitchen if you'd like to bring it. Nobody goes home hungry.",
-  },
-  {
-    n: "02",
-    title: "Games on the grass",
-    body: "Something for the children, and something for the ones who still think they can win a race.",
-  },
-  {
-    n: "03",
-    title: "The gift exchange",
-    body: "Signed up for the gift exchange? This is where the gifts change hands.",
-  },
-  {
-    n: "04",
-    title: "Time with each other",
-    body: "No programme to rush through. Sit, talk, laugh, pray — and meet the people you only ever wave at on Sunday.",
-  },
-];
-
 /** What the day is, then Psalm 133 over the park. */
-export default function PicnicAfternoon() {
+export default function PicnicAfternoon({ c }: { c: PicnicContent }) {
   return (
     <>
       {/* ── The afternoon ────────────────────────────────────────────────── */}
@@ -39,20 +17,20 @@ export default function PicnicAfternoon() {
                 <Image src={PHOTOS.family.src} alt={PHOTOS.family.alt} fill sizes="(max-width: 1024px) 100vw, 560px" className="object-cover" />
               </div>
               <p className="absolute -bottom-6 right-4 max-w-[15rem] rotate-[-2deg] bg-[#87102C] px-4 py-3 text-[15px] font-medium leading-snug text-[#F7F0E3] shadow-md sm:right-[-1.5rem]">
-                Aunties, uncles, little ones — everybody&apos;s invited.
+                {c.familyNote}
               </p>
             </div>
           </ScrollReveal>
 
           <div>
-            <p className="text-sm font-medium text-[#87102C]">The afternoon</p>
+            <p className="text-sm font-medium text-[#87102C]">{c.afternoonKicker}</p>
             <h2 className={`mt-4 font-serif text-4xl leading-[1.05] tracking-tight ${INK} sm:text-5xl`}>
-              Nothing fancy. Just us, outside.
+              {c.afternoonTitle}
             </h2>
             <ol className="mt-10 divide-y divide-[#1B1714]/10 border-y border-[#1B1714]/10">
-              {AFTERNOON.map((item) => (
-                <li key={item.n} className="grid grid-cols-[3.5rem_1fr] gap-4 py-6">
-                  <span className="font-serif text-2xl text-[#87102C]">{item.n}</span>
+              {c.afternoon.map((item, i) => (
+                <li key={i} className="grid grid-cols-[3.5rem_1fr] gap-4 py-6">
+                  <span className="font-serif text-2xl text-[#87102C]">{String(i + 1).padStart(2, "0")}</span>
                   <div>
                     <h3 className={`text-lg font-semibold ${INK}`}>{item.title}</h3>
                     <p className="mt-1.5 text-[15px] leading-relaxed text-[#1B1714]/65">{item.body}</p>
@@ -72,9 +50,9 @@ export default function PicnicAfternoon() {
         <ScrollReveal className="w-full">
           <blockquote className="mx-auto max-w-4xl px-5 pb-16 text-center sm:px-8 sm:pb-20">
             <p className="text-balance font-serif text-3xl leading-[1.2] text-[#FBF4E6] [text-shadow:0_2px_24px_rgba(20,12,6,0.6)] sm:text-5xl">
-              &ldquo;Behold, how good and how pleasant it is for brethren to dwell together in unity!&rdquo;
+              &ldquo;{c.verseText}&rdquo;
             </p>
-            <footer className="mt-6 text-[15px] font-medium text-[#FBF4E6]/80">Psalm 133:1</footer>
+            <footer className="mt-6 text-[15px] font-medium text-[#FBF4E6]/80">{c.verseRef}</footer>
           </blockquote>
         </ScrollReveal>
       </section>

@@ -1,39 +1,37 @@
 import Image from "next/image";
 import { ArrowDown, Icon } from "@/components/icons";
-import { PHOTOS, PICNIC, type formatPicnicDate } from "./picnic-config";
+import { PHOTOS } from "./picnic-config";
+import { timeSuffix, venueLabel, type DateParts, type PicnicContent } from "./picnic-content";
 import { INK } from "./picnic-styles";
 
-type PicnicDate = ReturnType<typeof formatPicnicDate>;
-
 /** Headline, ticket stub with the date, and the taped prints. */
-export default function PicnicHero({ d }: { d: PicnicDate }) {
+export default function PicnicHero({ d, c }: { d: DateParts; c: PicnicContent }) {
   return (
       <section className="relative">
         <div className="gingham h-3 w-full" aria-hidden="true" />
         <div className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-20 pt-28 sm:px-8 sm:pt-36 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:pb-28">
           <div>
             <p className="text-sm font-medium text-[#87102C]">
-              Everlasting Hills Church · End-of-year picnic
+              {c.kicker}
             </p>
             <h1 className={`mt-6 font-serif text-[3.4rem] leading-[0.95] tracking-[-0.02em] ${INK} sm:text-7xl lg:text-[5.6rem]`}>
-              Pack a blanket.
+              {c.headline}
               <br />
-              We&apos;re having
+              {c.headlineMiddle}
               <br />
-              <span className="text-[#87102C]">a picnic.</span>
+              <span className="text-[#87102C]">{c.headlineAccent}</span>
             </h1>
             <p className="mt-7 max-w-[30rem] text-[17px] leading-relaxed text-[#1B1714]/70">
-              One unhurried Sunday afternoon to close the year — good food, open grass, games for the children, and the
-              whole church family in one place.
+              {c.intro}
             </p>
 
             {/* Ticket stub */}
             <div className="mt-9 flex max-w-md overflow-hidden rounded-xl bg-white shadow-[0_18px_40px_-24px_rgba(27,23,20,0.45)] ring-1 ring-[#1B1714]/[0.06]">
               <div className="flex w-28 flex-shrink-0 flex-col items-center justify-center bg-[#87102C] px-3 py-5 text-[#F7F0E3]">
-                <span className="text-xs font-medium uppercase tracking-[0.12em] opacity-85">{d.weekdayShort}</span>
-                <span className="font-serif text-5xl leading-none">{d.day}</span>
+                <span className="text-xs font-medium uppercase tracking-[0.12em] opacity-85">{d.top}</span>
+                <span className="font-serif text-5xl leading-none">{d.big}</span>
                 <span className="mt-1 text-xs font-medium uppercase tracking-[0.12em] opacity-85">
-                  {d.monthShort} {d.year}
+                  {d.bottom} {d.year}
                 </span>
               </div>
               <div className="relative flex-1 border-l-2 border-dashed border-[#1B1714]/15 px-5 py-4">
@@ -43,13 +41,13 @@ export default function PicnicHero({ d }: { d: PicnicDate }) {
                   <div>
                     <dt className="text-xs font-medium text-[#1B1714]/50">When</dt>
                     <dd className={`font-semibold ${INK}`}>
-                      {d.weekday}, {Number(d.day)} {d.month}
-                      {PICNIC.time ? ` · ${PICNIC.time}` : ""}
+                      {d.when}
+                      {timeSuffix(c.time)}
                     </dd>
                   </div>
                   <div>
                     <dt className="text-xs font-medium text-[#1B1714]/50">Where</dt>
-                    <dd className={`font-semibold ${INK}`}>{PICNIC.venue ?? "Venue to be announced"}</dd>
+                    <dd className={`font-semibold ${INK}`}>{venueLabel(c.venue)}</dd>
                   </div>
                 </dl>
               </div>

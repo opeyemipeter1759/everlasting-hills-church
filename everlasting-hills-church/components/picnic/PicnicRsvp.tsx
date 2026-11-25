@@ -25,7 +25,7 @@ const label = "mb-1.5 block text-sm font-medium text-[#F7F0E3]/80";
  * Open registration — anyone can sign up, no account needed. Saved as an RSVP on
  * the "ehc-picnic" event, so the list lives in Dashboard → Events → RSVPs.
  */
-export default function PicnicRsvp({ fallbackDate }: { fallbackDate: string }) {
+export default function PicnicRsvp({ target }: { target: string | null }) {
   const user = useCurrentUser();
   const [saved, setSaved] = useState<Saved | null>(null);
   const [form, setForm] = useState({ fullName: "", phone: "", email: "", attendees: 1 });
@@ -79,8 +79,8 @@ export default function PicnicRsvp({ fallbackDate }: { fallbackDate: string }) {
     const first = saved.fullName.split(/\s+/)[0];
     return (
       <div>
-        <Countdown target={fallbackDate} />
-        <p className="mt-8 flex items-center gap-3 font-serif text-2xl text-[#F7F0E3]">
+        {target && <Countdown target={target} />}
+        <p className={`${target ? "mt-8" : ""} flex items-center gap-3 font-serif text-2xl text-[#F7F0E3]`}>
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F7F0E3] text-[#1E3A2A]">
             <Icon icon={Check} size={18} weight="bold" />
           </span>
@@ -106,7 +106,7 @@ export default function PicnicRsvp({ fallbackDate }: { fallbackDate: string }) {
 
   return (
     <form onSubmit={submit}>
-      <Countdown target={fallbackDate} />
+      {target && <Countdown target={target} />}
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="picnic-name" className={label}>Full name</label>

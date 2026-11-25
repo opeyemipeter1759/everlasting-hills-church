@@ -10,6 +10,7 @@ import {
   useWithdrawGiftExchange,
   type GiftChoice,
 } from "@/lib/api/gift-exchange";
+import { usePicnicDayLabel } from "@/lib/api/picnic";
 import { GiftCountdown, giftDayLabel } from "./GiftCountdown";
 import { GIFT_OPTIONS, GiftChoiceForm } from "./GiftChoiceForm";
 import { GiftJoinedSummary } from "./GiftJoinedSummary";
@@ -37,6 +38,7 @@ export function GiftExchangeCard() {
   const [choosing, setChoosing] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const still = useReducedMotion() ?? false;
+  const dayLabel = usePicnicDayLabel();
   const saving = register.isPending;
   const closeChooser = useCallback(() => {
     if (!saving) setChoosing(false);
@@ -46,7 +48,6 @@ export function GiftExchangeCard() {
   const inNow = data.status === "INTERESTED";
   const busy = register.isPending || withdraw.isPending;
   const joined = GIFT_OPTIONS.filter((o) => data[o.key]);
-  const dayLabel = data.targetDate ? giftDayLabel(data.targetDate) : null;
   const view = data.status === "REJECTED" ? "rejected" : !inNow ? "open" : confirming ? "confirm" : "joined";
 
   const save = (choice: GiftChoice) =>
@@ -79,7 +80,7 @@ export function GiftExchangeCard() {
 
           {view === "open" && (
             <motion.div key="open" {...swap} className="flex flex-col gap-4">
-              <p className={bodyText}>Close the year with the church family on the grass. The picnic includes the gift exchange, or join the exchange on its own.</p>
+              <p className={bodyText}>Close the year with the church family on the grass. The gift exchange happens at the picnic{data.targetDate ? <>, and gift partners are revealed on <strong>{giftDayLabel(data.targetDate)}</strong></> : null}.</p>
               <motion.button
                 type="button"
                 onClick={() => setChoosing(true)}
@@ -133,7 +134,7 @@ export function GiftExchangeCard() {
         open={choosing}
         onClose={closeChooser}
         title={inNow ? "Change your registration" : "Register for the fellowship"}
-        dayLabel={dayLabel}
+        subtitle={inNow ? "Switch what you're joining, or keep it as it is." : "Close the year with the church family: one afternoon of food, games and gifts."}
       >
         <GiftChoiceForm
           initial={inNow ? { giftExchange: data.giftExchange, picnic: data.picnic } : { giftExchange: true, picnic: false }}

@@ -1,6 +1,7 @@
 "use client";
 
-import { PHOTOS, PICNIC, formatPicnicDate, picnicDate } from "./picnic-config";
+import { PHOTOS, PICNIC } from "./picnic-config";
+import { dateParts, timeSuffix, venueLabel } from "./picnic-content";
 import { cssFont, drawCover, gingham, loadImage, roundRect } from "./status-canvas";
 
 /**
@@ -22,11 +23,14 @@ const M = 64; // outer margin
 
 export interface StatusImageInput {
   name: string | null;
-  dateLong: string;
+  /** YYYY-MM-DD from the CMS, or null while to be announced. */
+  date: string | null;
   siteHost: string;
+  time: string | null;
+  venue: string | null;
 }
 
-export async function drawPicnicStatus({ name, siteHost }: StatusImageInput): Promise<Blob> {
+export async function drawPicnicStatus({ name, siteHost, date, time, venue }: StatusImageInput): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -36,7 +40,7 @@ export async function drawPicnicStatus({ name, siteHost }: StatusImageInput): Pr
   await document.fonts?.ready;
   const serif = cssFont("--nf-playfair", "Georgia, serif");
   const sans = cssFont("--nf-jakarta", "Helvetica, Arial, sans-serif");
-  const d = formatPicnicDate(picnicDate());
+  const d = dateParts(date);
   const [photo, logo] = await Promise.all([
     loadImage(PHOTOS.hero.src.replace(/w=\d+/, "w=1600"), true),
     loadImage("/logoblack.png", false),
@@ -96,11 +100,11 @@ export async function drawPicnicStatus({ name, siteHost }: StatusImageInput): Pr
   ctx.textAlign = "center";
   ctx.font = `600 24px ${sans}`;
   ctx.letterSpacing = "5px";
-  ctx.fillText(d.weekdayShort.toUpperCase(), M + 98, ty + 60);
-  ctx.fillText(`${d.monthShort.toUpperCase()} ${d.year}`, M + 98, ty + 190);
+  ctx.fillText(d.top.toUpperCase(), M + 98, ty + 60);
+  ctx.fillText(`${d.bottom.toUpperCase()} ${d.year}`.trim(), M + 98, ty + 190);
   ctx.letterSpacing = "0px";
   ctx.font = `600 84px ${serif}`;
-  ctx.fillText(d.day, M + 98, ty + 148);
+  ctx.fillText(d.big, M + 98, ty + 148);
   ctx.textAlign = "left";
 
   // Perforation between stub and details
@@ -121,8 +125,8 @@ export async function drawPicnicStatus({ name, siteHost }: StatusImageInput): Pr
   ctx.letterSpacing = "0px";
   ctx.fillStyle = INK;
   ctx.font = `600 36px ${sans}`;
-  ctx.fillText(`${d.weekday}, ${Number(d.day)} ${d.month}${PICNIC.time ? ` · ${PICNIC.time}` : ""}`, dx, ty + 100);
-  ctx.fillText(PICNIC.venue ?? "Venue to be announced", dx, ty + 190);
+  ctx.fillText(`${d.when}${timeSuffix(time)}`, dx, ty + 100);
+  ctx.fillText(venueLabel(venue), dx, ty + 190);
 
   // Footer: the link, centred on its own
   ctx.fillStyle = "rgba(27,23,20,0.15)";

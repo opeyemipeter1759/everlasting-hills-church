@@ -1,16 +1,10 @@
 import Image from "next/image";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import { PHOTOS } from "./picnic-config";
-
-const BRING = [
-  "A blanket or a mat",
-  "Something to share (if you can)",
-  "A hat — the Ibadan sun is no joke",
-  "Someone who needs a church family",
-];
+import type { PicnicContent } from "./picnic-content";
 
 /** A small wall of prints beside the "bring along" list. */
-export default function PicnicBring() {
+export default function PicnicBring({ c }: { c: PicnicContent }) {
   return (
       <section className="py-20 sm:py-28">
         <div className="mx-auto grid max-w-6xl items-center gap-16 px-5 sm:px-8 lg:grid-cols-[1.1fr_0.9fr]">
@@ -27,8 +21,8 @@ export default function PicnicBring() {
               <span className="tape -top-3 right-10 rotate-3" aria-hidden="true" />
               <p className="text-sm font-medium text-[#87102C]">Bring along</p>
               <ul className="mt-6 space-y-[14px]">
-                {BRING.map((thing) => (
-                  <li key={thing} className="flex items-center gap-4 text-[17px] leading-[26px] text-[#1B1714]">
+                {c.bring.filter((t) => t.trim()).map((thing, i) => (
+                  <li key={i} className="flex items-center gap-4 text-[17px] leading-[26px] text-[#1B1714]">
                     <svg viewBox="0 0 24 24" className="h-5 w-5 flex-shrink-0 text-[#1E3A2A]" fill="none" aria-hidden="true">
                       <path d="M4 13c2 1.5 3.5 3.5 5 6 3-6 6.5-10.5 11-14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -36,7 +30,7 @@ export default function PicnicBring() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-8 text-[15px] font-medium text-[#87102C]">…and your appetite.</p>
+              <p className="mt-8 text-[15px] font-medium text-[#87102C]">{c.bringClose}</p>
             </div>
           </ScrollReveal>
         </div>
