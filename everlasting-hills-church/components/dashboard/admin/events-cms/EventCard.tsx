@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, CheckCircle2, EyeOff, Pencil, Trash2, Users } from "lucide-react";
+import { CalendarDays, CheckCircle2, EyeOff, Lock, Pencil, Trash2, Users } from "lucide-react";
 import Loader from "@/components/ui/feedback/Loader";
 import Image from "next/image";
 import type { EventDetail } from "@/types";
@@ -49,6 +49,11 @@ export default function EventCard({
 
       <div className="p-4 flex flex-col flex-1">
         <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+          {ev.visibility === "PRIVATE" && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#87102C]/10 text-[#87102C] dark:text-rose-300">
+              <Lock size={10} /> Private
+            </span>
+          )}
           {ev.status === "PUBLISHED" ? (
             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
               Published

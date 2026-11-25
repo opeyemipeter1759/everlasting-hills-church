@@ -2106,6 +2106,7 @@ model Event {
   featured             Boolean             @default(false)
   rsvpEnabled          Boolean             @default(true)
   registrationRequired Boolean             @default(true)
+  visibility           EventVisibility     @default(PUBLIC)
   capacity             Int?
   customPath           String?
   order                Int                 @default(0)
@@ -3314,6 +3315,12 @@ enum EventStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+/// PUBLIC: shown to everyone. PRIVATE: only shown to signed-in users.
+enum EventVisibility {
+  PUBLIC
+  PRIVATE
 }
 
 enum EventLocationType {

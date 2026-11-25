@@ -1,17 +1,13 @@
-import { serverApi } from "@/lib/api/server";
+import { getEventsAsViewer } from "@/lib/api/events-server";
 import type { EventSummary } from "@/types";
-import { getEventStatus } from "@/components/events/detail/event-format";
+import { getEventTiming } from "@/components/events/detail/event-format";
 import { getStructuredContent } from "@/lib/cms-page";
 import EventsPageClient from "./EventsPageClient";
 import type { EventsHeroProps } from "./EventsHero";
 
 async function fetchAllEvents(): Promise<EventSummary[]> {
   try {
-    return await serverApi.get<EventSummary[]>("/events", {
-      withAuth: false,
-      revalidate: 300,
-      tags: ["events"],
-    });
+    return await getEventsAsViewer<EventSummary[]>("/events");
   } catch {
     return [];
   }
@@ -47,17 +43,23 @@ export default async function EventPage() {
     }),
   ]);
 
-  const ongoing = events
-    .filter((e) => getEventStatus(e.startAt, e.endAt) === "ongoing")
-    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  // Status uses the real date and time. A recurring event (daily/weekly
+  // sessions) stays ongoing/upcoming for its whole run, and its card shows the
+  // current or next session rather than its first day.
+  const now = new Date();
+  const timed = events.map((e) => {
+    const t = getEventTiming(e, now);
+    return { event: { ...e, nextStartAt: t.occurrence.start.toISOString() }, status: t.status, at: t.occurrence.start.getTime() };
+  });
+  const pick = (status: string, dir: 1 | -1) =>
+    timed
+      .filter((x) => x.status === status)
+      .sort((a, b) => dir * (a.at - b.at))
+      .map((x) => x.event);
 
-  const upcoming = events
-    .filter((e) => getEventStatus(e.startAt, e.endAt) === "upcoming")
-    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
-
-  const past = events
-    .filter((e) => getEventStatus(e.startAt, e.endAt) === "past")
-    .sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+  const ongoing = pick("ongoing", 1);
+  const upcoming = pick("upcoming", 1);
+  const past = pick("past", -1);
 
   const heroProps: EventsHeroProps = {
     eyebrow: hero.eyebrow,

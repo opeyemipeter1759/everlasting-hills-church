@@ -55,7 +55,7 @@
     "components/dashboard/admin/emails/EmailComposerPage.tsx": 159,
     "components/dashboard/admin/emails/SendEmailModal.tsx": 325,
     "components/dashboard/admin/events-cms/FastingScheduleEditor.tsx": 152,
-    "components/dashboard/admin/events-cms/useEventForm.ts": 200,
+    "components/dashboard/admin/events-cms/useEventForm.ts": 189,
     "components/dashboard/admin/EventsCmsClient.tsx": 179,
     "components/dashboard/admin/finance/FinanceEntryForm.tsx": 264,
     "components/dashboard/admin/finance/FinanceOverview.tsx": 475,
@@ -263,7 +263,7 @@
     "middleware.ts": 394,
     "scripts/generate-plan-artwork.mjs": 589,
     "types/follow-up.ts": 242,
-    "types/index.ts": 561,
+    "types/index.ts": 533,
     "ui/EHCSlider.tsx": 402
   }
 }

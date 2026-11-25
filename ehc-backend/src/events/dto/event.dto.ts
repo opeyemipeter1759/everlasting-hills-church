@@ -1,5 +1,5 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { EventLocationType, EventSectionType, EventStatus } from '@prisma/client';
+import { EventLocationType, EventSectionType, EventStatus, EventVisibility } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
@@ -306,6 +306,16 @@ export class CreateEventDto {
   @IsOptional()
   @IsBoolean()
   registrationRequired?: boolean;
+
+  @ApiProperty({
+    enum: EventVisibility,
+    required: false,
+    default: EventVisibility.PUBLIC,
+    description: 'PUBLIC: everyone can see it. PRIVATE: only signed-in users.',
+  })
+  @IsOptional()
+  @IsEnum(EventVisibility)
+  visibility?: EventVisibility;
 
   @ApiProperty({ required: false, description: 'Max attendees across all RSVPs.' })
   @IsOptional()

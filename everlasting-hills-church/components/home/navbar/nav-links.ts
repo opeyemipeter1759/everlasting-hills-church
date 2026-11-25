@@ -109,7 +109,7 @@ export const giveLink: NavLink = {
 export const ATTENDANCE_HREF = "/#attendance";
 
 /** Public pages that open on a light background, so the bar starts with dark text. */
-export const LIGHT_PAGES = ["/articles", "/Pastor", "/pledge"];
+export const LIGHT_PAGES = ["/articles", "/Pastor", "/pledge", "/picnic"];
 
 /** Mega-menu (two columns) for dropdowns with more items than this. */
 export const MEGA_THRESHOLD = 4;

@@ -64,32 +64,9 @@ export function formatEventDateRange(startIso: string, endIso: string | null, ti
   return `${a.day} ${a.month} ${a.year} – ${b.day} ${b.month} ${b.year}`;
 }
 
-/** "YYYY-MM-DD" for the given instant, in the church's timezone — sortable/comparable as a string. */
-function dateKey(iso: string, timeZone = TZ): string {
-  return new Date(iso).toLocaleDateString("en-CA", { timeZone });
-}
-
-export type EventTemporalStatus = "ongoing" | "upcoming" | "past";
-
-/**
- * Calendar-day status (ignores time-of-day) in the church's timezone:
- * "upcoming" if the start day hasn't arrived yet, "past" once the end day
- * (or start day, if no end date) has gone by, and "ongoing" for everything
- * in between — i.e. today falls within the event's day span.
- */
-export function getEventStatus(startIso: string, endIso: string | null, timeZone = TZ): EventTemporalStatus {
-  const today = dateKey(new Date().toISOString(), timeZone);
-  const startDay = dateKey(startIso, timeZone);
-  const endDay = dateKey(endIso ?? startIso, timeZone);
-  if (today < startDay) return "upcoming";
-  if (today > endDay) return "past";
-  return "ongoing";
-}
-
-/** Calendar-day comparison (ignores time-of-day) in the church's timezone. */
-export function isPastEventDate(startIso: string, endIso: string | null, timeZone = TZ): boolean {
-  return getEventStatus(startIso, endIso, timeZone) === "past";
-}
+// Status (ongoing / upcoming / past) lives in ./event-timing — it needs the
+// event's time of day and recurring sessions, not just its dates.
+export { getEventStatus, getEventTiming, type EventTemporalStatus } from "./event-timing";
 
 export function formatEventTime(iso: string, timeZone = TZ): string {
   const d = new Date(iso);

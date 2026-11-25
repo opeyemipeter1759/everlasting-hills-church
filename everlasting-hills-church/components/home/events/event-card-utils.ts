@@ -1,5 +1,5 @@
 import type { EventSummary } from "@/types";
-import { formatEventTime } from "@/components/events/detail/event-format";
+import { formatEventTime, getEventTiming } from "@/components/events/detail/event-format";
 import { TZ } from "./constants";
 
 export const LOCATION_LABEL: Record<EventSummary["locationType"], string> = {
@@ -22,13 +22,15 @@ export function daysBetween(a: Date, b: Date) {
   return Math.round((Date.parse(dayKey(b)) - Date.parse(dayKey(a))) / DAY_MS);
 }
 
-/** "Happening now" / "Today · 5:00 PM WAT" / "Tomorrow · …" / "In 4 days" / "Upcoming". */
+/** "Happening now" / "Today · 5:00 PM WAT" / "Tomorrow · …" / "In 4 days" / "Upcoming" / "Ended". */
 export function statusLabel(event: EventSummary, now: Date) {
-  const start = new Date(event.startAt);
-  const end = event.endAt ? new Date(event.endAt) : null;
-  if (start <= now && (!end || now < end)) return "Happening now";
-  const time = `${formatEventTime(event.startAt)} WAT`;
-  const days = daysBetween(now, start);
+  // Same rules as the events page tabs: real date + time, recurring sessions included.
+  const { status, occurrence } = getEventTiming(event, now);
+  if (status === "ongoing") return "Happening now";
+  if (status === "past") return "Ended";
+  const iso = occurrence.start.toISOString();
+  const time = `${formatEventTime(iso)} WAT`;
+  const days = daysBetween(now, occurrence.start);
   if (days <= 0) return `Today · ${time}`;
   if (days === 1) return `Tomorrow · ${time}`;
   if (days <= 6) return `In ${days} days`;

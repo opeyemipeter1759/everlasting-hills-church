@@ -67,6 +67,8 @@ export class CalendarEventService {
       where: {
         tenantId: this.tenantId,
         status: EventStatus.PUBLISHED,
+        // Anonymous download link — private events stay members-only.
+        visibility: 'PUBLIC',
         OR: [{ id: idOrSlug }, { slug: idOrSlug }],
       },
       select: {
