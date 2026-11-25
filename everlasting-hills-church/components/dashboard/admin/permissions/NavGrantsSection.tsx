@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Loader2, Trash2, UserPlus, Users, Crown } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
 import { NAV_GROUPS } from "@/config/config";
 import { Select } from "@/components/ui/select";
 import {
@@ -9,8 +9,10 @@ import {
   useAddNavGrant,
   useNavGrants,
   useRemoveNavGrant,
+  type NavGrantAccess,
   type NavGrantType,
 } from "@/lib/nav-permissions";
+import { ACCESS_OPTIONS, NavGrantRow } from "./NavGrantRow";
 import { useUnitOptions } from "@/lib/api/people";
 import HeadPicker, { Avatar } from "../departments/HeadPicker";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
@@ -20,12 +22,6 @@ import type { ApiError } from "@/lib/api/axios";
 function errorMessage(err: unknown, fallback: string): string {
   return (err as ApiError)?.message || fallback;
 }
-
-const TYPE_ICON: Record<NavGrantType, React.ElementType> = {
-  MEMBER: UserPlus,
-  UNIT_MEMBER: Users,
-  UNIT_LEAD: Crown,
-};
 
 export default function NavGrantsSection() {
   const grants = useNavGrants();
@@ -44,6 +40,7 @@ export default function NavGrantsSection() {
 
   const [itemHref, setItemHref] = useState(allItems[0]?.items[0]?.href ?? "");
   const [type, setType] = useState<NavGrantType>("MEMBER");
+  const [access, setAccess] = useState<NavGrantAccess>("VIEW");
   const [targetId, setTargetId] = useState<string | null>(null);
   const [targetLabel, setTargetLabel] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -57,7 +54,7 @@ export default function NavGrantsSection() {
   const handleAdd = async () => {
     if (!itemHref || !targetId) return;
     try {
-      await addGrant.mutateAsync({ itemHref, type, targetId });
+      await addGrant.mutateAsync({ itemHref, type, targetId, access });
       resetTarget();
     } catch (err) {
       showToast.error(errorMessage(err, "Couldn't add that exception"));
@@ -71,7 +68,8 @@ export default function NavGrantsSection() {
       </h2>
       <p className="mb-4 max-w-2xl text-xs text-gray-500 dark:text-white/50">
         Let one specific person, every member of a unit, or just a unit&apos;s leader into an item — on top of
-        whatever the role table above already allows. These only ever add access; to block someone, use the role
+        whatever the role table above already allows. Choose View only to let them see a page without adding,
+        editing or deleting anything there; Full access lets them do everything. To block someone, use the role
         checkboxes instead.
       </p>
 
@@ -140,6 +138,17 @@ export default function NavGrantsSection() {
           )}
         </div>
 
+        <div className="min-w-[140px]">
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">Access</label>
+          <Select
+            aria-label="What they can do"
+            value={access}
+            onChange={(next) => setAccess(next as NavGrantAccess)}
+            className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-2 text-xs text-gray-800 dark:text-white/80"
+            options={ACCESS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+          />
+        </div>
+
         <button
           type="button"
           disabled={!itemHref || !targetId || addGrant.isPending}
@@ -174,37 +183,16 @@ export default function NavGrantsSection() {
         <p className="text-xs text-gray-400">No exceptions yet.</p>
       ) : (
         <ul className="space-y-1.5">
-          {grants.data.map((g) => {
-            const Icon = TYPE_ICON[g.type];
-            const isRemoving = removeGrant.isPending && confirmRemoveId === g.id;
-            return (
-              <li
-                key={g.id}
-                className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-white/10 px-3 py-2"
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#87102C]/10 dark:bg-[#87102C]/15">
-                  <Icon size={13} className="text-[#87102C] dark:text-[#e8768a]" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-semibold text-gray-800 dark:text-white/80">
-                    {g.name ?? <span className="italic text-gray-400">Deleted</span>}
-                  </p>
-                  <p className="truncate text-[11px] text-gray-400">
-                    {NAV_GRANT_TYPE_LABELS[g.type]} · {hrefToLabel.get(g.itemHref) ?? g.itemHref}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  disabled={removeGrant.isPending}
-                  onClick={() => setConfirmRemoveId(g.id)}
-                  className="shrink-0 rounded-lg p-1.5 text-gray-300 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 dark:hover:bg-rose-500/10"
-                  aria-label={`Remove exception for ${g.name ?? "this target"}`}
-                >
-                  {isRemoving ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                </button>
-              </li>
-            );
-          })}
+          {grants.data.map((g) => (
+            <NavGrantRow
+              key={g.id}
+              grant={g}
+              pageLabel={hrefToLabel.get(g.itemHref) ?? g.itemHref}
+              removing={removeGrant.isPending && confirmRemoveId === g.id}
+              disabled={removeGrant.isPending}
+              onRemove={() => setConfirmRemoveId(g.id)}
+            />
+          ))}
         </ul>
       )}
 

@@ -107,9 +107,13 @@ export interface NavPermissionGrantEntry {
   itemHref: string;
   type: NavGrantType;
   targetId: string;
+  /** VIEW = read only; FULL = everything on the page. */
+  access: NavGrantAccess;
   name: string | null;
   photoUrl: string | null;
 }
+
+export type NavGrantAccess = "VIEW" | "FULL";
 
 export interface MatchableNavItem {
   href: string;
