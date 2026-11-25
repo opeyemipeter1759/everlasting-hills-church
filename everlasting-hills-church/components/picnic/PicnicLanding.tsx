@@ -26,7 +26,7 @@ export default function PicnicLanding() {
               Will we see <span className="italic">you</span> there?
             </h2>
             <p className="mt-6 max-w-md text-[16px] leading-relaxed text-[#F7F0E3]/65">
-              Let us know you&apos;re coming so we plan enough of everything. You can change your mind any time before the day.
+              Everyone is welcome — friends, family, neighbours. Leave your details so we plan enough of everything for everyone.
             </p>
             <p className="mt-10 font-[family-name:var(--nf-dancing)] text-3xl text-[#F2B33D]">{d.long}</p>
           </div>

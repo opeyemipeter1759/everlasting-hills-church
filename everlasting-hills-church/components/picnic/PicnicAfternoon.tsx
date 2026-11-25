@@ -66,11 +66,12 @@ export default function PicnicAfternoon() {
 
       {/* ── Scripture over the park ──────────────────────────────────────── */}
       <section className="relative isolate flex h-[520px] items-end overflow-hidden sm:h-[620px]">
-        <Image src={PHOTOS.park.src} alt={PHOTOS.park.alt} fill sizes="100vw" className="-z-10 object-cover" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#10241A]/90 via-[#10241A]/50 to-[#10241A]/5" />
+        <Image src={PHOTOS.park.src} alt={PHOTOS.park.alt} fill sizes="100vw" quality={92} className="-z-10 object-cover" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#0B1A12]/85 via-[#0B1A12]/25 via-45% to-transparent" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0B1A12]/65 via-[#0B1A12]/15 via-55% to-transparent" />
         <ScrollReveal className="w-full">
           <blockquote className="mx-auto max-w-6xl px-5 pb-16 sm:px-8 sm:pb-24">
-            <p className="max-w-3xl font-serif text-3xl leading-[1.2] text-[#F7F0E3] sm:text-5xl">
+            <p className="max-w-3xl font-serif text-3xl leading-[1.2] text-[#F7F0E3] [text-shadow:0_2px_18px_rgba(0,0,0,0.45)] sm:text-5xl">
               &ldquo;Behold, how good and how pleasant it is for brethren to dwell together in unity!&rdquo;
             </p>
             <footer className="mt-5 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#F7F0E3]/70">Psalm 133:1</footer>

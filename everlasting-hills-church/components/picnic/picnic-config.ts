@@ -14,6 +14,8 @@ export const PICNIC = {
   /** e.g. "From 2:00 PM". Leave null until confirmed. */
   time: null as string | null,
   path: "/picnic",
+  /** Registrations are RSVPs on this event (Dashboard → Events → RSVPs). */
+  eventSlug: "ehc-picnic",
 };
 
 const unsplash = (id: string, w = 1600) =>
@@ -52,7 +54,7 @@ export const PHOTOS = {
     page: "https://unsplash.com/photos/picnic-blanket-with-grapes-apples-hat-and-flowers-on-grass-R6QLiEQwROc",
   },
   park: {
-    src: unsplash("1792868769292-f82c526bc029", 2000),
+    src: "https://images.unsplash.com/photo-1792868769292-f82c526bc029?auto=format&fit=crop&w=3840&q=92",
     alt: "A sunny park with acacia trees by the water",
     by: "Samina Musharraf",
     page: "https://unsplash.com/photos/dirt-path-through-grassy-lakeside-park-AFHPHSU7V4I",

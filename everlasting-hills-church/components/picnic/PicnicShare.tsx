@@ -6,6 +6,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { PICNIC } from "./picnic-config";
 import StatusPreview, { WhatsAppGlyph } from "./PicnicStatusPreview";
 import { drawPicnicStatus } from "./picnic-status-image";
+import { RSVP_STORAGE_KEY } from "./PicnicRsvp";
 
 type Phase = "idle" | "working" | "shared" | "downloaded" | "error";
 
@@ -16,7 +17,18 @@ type Phase = "idle" | "working" | "shared" | "downloaded" | "error";
  */
 export default function PicnicShare({ dateLong }: { dateLong: string }) {
   const user = useCurrentUser();
-  const firstName = user?.fullName?.trim().split(/\s+/)[0] ?? null;
+  // Signed-in name, else the name they just registered with on this device.
+  const [rsvpName, setRsvpName] = useState<string | null>(null);
+  useEffect(() => {
+    const read = () => {
+      try { setRsvpName((JSON.parse(localStorage.getItem(RSVP_STORAGE_KEY) ?? "null") as { fullName?: string } | null)?.fullName ?? null); } catch { /* ignore */ }
+    };
+    read();
+    window.addEventListener(RSVP_STORAGE_KEY, read);
+    return () => window.removeEventListener(RSVP_STORAGE_KEY, read);
+  }, []);
+  const fullName = user?.fullName?.trim() || rsvpName;
+  const firstName = fullName?.split(/\s+/)[0] ?? null;
   const [phase, setPhase] = useState<Phase>("idle");
   const [copied, setCopied] = useState(false);
 
@@ -29,7 +41,7 @@ export default function PicnicShare({ dateLong }: { dateLong: string }) {
   async function shareStatus() {
     setPhase("working");
     try {
-      const blob = await drawPicnicStatus({ name: user?.fullName ?? null, dateLong, siteHost: window.location.host });
+      const blob = await drawPicnicStatus({ name: fullName ?? null, dateLong, siteHost: window.location.host });
       const file = new File([blob], "ehc-picnic-status.png", { type: "image/png" });
       if (navigator.canShare?.({ files: [file] })) {
         try {
