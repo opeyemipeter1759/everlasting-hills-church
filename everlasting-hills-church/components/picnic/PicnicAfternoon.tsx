@@ -64,11 +64,11 @@ export default function PicnicAfternoon() {
         </div>
       </section>
 
-      {/* ── Scripture over friends standing together ─────────────────────── */}
+      {/* ── Scripture over the savanna at sunset ─────────────────────────── */}
       <section className="relative isolate flex h-[600px] items-end overflow-hidden sm:h-[760px] lg:h-[860px]">
-        <Image src={PHOTOS.unity.src} alt={PHOTOS.unity.alt} fill sizes="100vw" quality={92} className="-z-10 object-cover object-[center_30%]" />
+        <Image src={PHOTOS.unity.src} alt={PHOTOS.unity.alt} fill sizes="100vw" quality={92} className="-z-10 object-cover object-[center_45%]" />
         {/* Warm dark shade from the ground up: the sunset stays golden, the verse stays readable. */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#140C06]/90 via-[#140C06]/35 via-40% to-transparent" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#140C06]/85 via-[#140C06]/30 via-35% to-transparent" />
         <ScrollReveal className="w-full">
           <blockquote className="mx-auto max-w-4xl px-5 pb-16 text-center sm:px-8 sm:pb-20">
             <p className="text-balance font-serif text-3xl leading-[1.2] text-[#FBF4E6] [text-shadow:0_2px_24px_rgba(20,12,6,0.6)] sm:text-5xl">
