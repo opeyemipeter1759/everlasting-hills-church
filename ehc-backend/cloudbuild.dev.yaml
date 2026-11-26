@@ -1,0 +1,44 @@
+# Builds the API from this folder and deploys it to the DEVELOPMENT backend
+# (everlasting-hills-church-backend). The live API, ehc-backend-api, is not
+# touched. Point a Cloud Build trigger for the develop branch at this file
+# (Configuration: ehc-backend/cloudbuild.dev.yaml).
+#
+# The service's settings (database, Supabase, secrets) are copied once from the
+# live API with scripts/copy-env-to-dev-backend.ps1. Deploys keep them: no
+# --set-env-vars here, which would wipe them.
+#
+# It shares the live database, so content published from the develop site is
+# live too. Migrations still run only through the migrate workflow.
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_IMAGE}', '.']
+    dir: 'ehc-backend'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_IMAGE}']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE}'
+      - '--image=${_IMAGE}'
+      - '--region=${_REGION}'
+      - '--port=8080'
+      - '--allow-unauthenticated'
+      # Never run in-process timers here: the live API's Cloud Scheduler jobs
+      # already do that work against the same database.
+      - '--update-env-vars=CRON_ENABLED=false'
+
+images:
+  - '${_IMAGE}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamicSubstitutions: true
+
+substitutions:
+  _SERVICE: 'everlasting-hills-church-backend'
+  _REGION: 'europe-west1'
+  _IMAGE: 'europe-west1-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy/${_SERVICE}'
