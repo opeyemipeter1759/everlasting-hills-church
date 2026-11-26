@@ -25,9 +25,7 @@ const TABS = [
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-}
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
 /**
  * Everything about a sermon that isn't the media player itself: title/meta, reactions,
@@ -54,6 +52,8 @@ export default function SermonEngagementContent({
   const [copied, setCopied] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
   const [tab, setTab] = useState<TabId>('comments');
+  // The sermons library's "Notes" link (…#notes) opens straight on My Notes.
+  useEffect(() => { if (window.location.hash === '#notes') { setTab('notes'); document.getElementById('notes')?.scrollIntoView({ block: 'start' }); } }, []);
 
   const setReactionMutation = useSermonReaction();
   const toggleBookmarkMutation = useSermonBookmark();
@@ -219,7 +219,7 @@ export default function SermonEngagementContent({
       )}
 
       {/* ── Tabs ─────────────────────────────────────────────────── */}
-      <div>
+      <div id="notes" className="scroll-mt-24">
         <div className="flex items-center gap-1 border-b border-gray-100 dark:border-white/8 mb-4 overflow-x-auto no-scrollbar">
           {TABS.map((t) => {
             const Glyph = t.icon;
