@@ -16,7 +16,7 @@ type Phase = "idle" | "working" | "shared" | "downloaded" | "error";
  * phone's share sheet (WhatsApp → My status, Instagram story, …). Where a browser
  * can't share files, the image downloads and WhatsApp opens with the link instead.
  */
-export default function PicnicShare({ date, time, venue }: { date: string | null; time: string | null; venue: string | null }) {
+export default function PicnicShare({ date, time, venue, photo }: { date: string | null; time: string | null; venue: string | null; photo: string }) {
   const { long } = dateParts(date);
   const user = useCurrentUser();
   // Signed-in name, else the name they just registered with on this device.
@@ -43,7 +43,7 @@ export default function PicnicShare({ date, time, venue }: { date: string | null
   async function shareStatus() {
     setPhase("working");
     try {
-      const blob = await drawPicnicStatus({ name: fullName ?? null, date, time, venue, siteHost: window.location.host });
+      const blob = await drawPicnicStatus({ name: fullName ?? null, date, time, venue, photo, siteHost: window.location.host });
       const file = new File([blob], "ehc-picnic-status.png", { type: "image/png" });
       if (navigator.canShare?.({ files: [file] })) {
         try {
@@ -126,7 +126,7 @@ export default function PicnicShare({ date, time, venue }: { date: string | null
         </p>
       </div>
 
-      <StatusPreview firstName={firstName} date={date} venue={venue} />
+      <StatusPreview firstName={firstName} date={date} venue={venue} photo={photo} />
     </div>
   );
 }

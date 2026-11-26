@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 import { apiClient } from "@/lib/api/axios";
-
+import { tidyContent } from "@/lib/cms-tidy";
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export type ContentStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
@@ -131,7 +131,7 @@ export function useSaveDraft(key: string) {
   return useMutation({
     // content is { blocks } for block pages, or a structured object for structured pages
     mutationFn: (body: { title?: string; content: unknown }) =>
-      api.post(`/cms/pages/${enc(key)}/draft`, body),
+      api.post(`/cms/pages/${enc(key)}/draft`, { ...body, content: tidyContent(body.content) }),
     onSuccess: invalidate,
   });
 }

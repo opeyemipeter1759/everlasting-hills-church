@@ -1,11 +1,13 @@
 import Image from "next/image";
 import ScrollReveal from "@/components/home/ScrollReveal";
-import { PHOTOS } from "./picnic-config";
+import { picnicPhoto } from "./picnic-photos";
 import type { PicnicContent } from "./picnic-content";
 import { INK } from "./picnic-styles";
 
 /** What the day is, then Psalm 133 over the park. */
 export default function PicnicAfternoon({ c }: { c: PicnicContent }) {
+  const family = picnicPhoto(c.photos, "family");
+  const verse = picnicPhoto(c.photos, "verse");
   return (
     <>
       {/* ── The afternoon ────────────────────────────────────────────────── */}
@@ -14,7 +16,7 @@ export default function PicnicAfternoon({ c }: { c: PicnicContent }) {
           <ScrollReveal>
             <div className="relative">
               <div className="relative aspect-[5/4] overflow-hidden rounded-[2px]">
-                <Image src={PHOTOS.family.src} alt={PHOTOS.family.alt} fill sizes="(max-width: 1024px) 100vw, 560px" className="object-cover" />
+                <Image src={family.src} alt={family.alt} fill sizes="(max-width: 1024px) 100vw, 560px" className="object-cover" />
               </div>
               <p className="absolute -bottom-6 right-4 max-w-[15rem] rotate-[-2deg] bg-[#87102C] px-4 py-3 text-[15px] font-medium leading-snug text-[#F7F0E3] shadow-md sm:right-[-1.5rem]">
                 {c.familyNote}
@@ -44,7 +46,7 @@ export default function PicnicAfternoon({ c }: { c: PicnicContent }) {
 
       {/* ── Scripture over a picnic spread ──────────────────────────────── */}
       <section className="relative isolate flex h-[600px] items-end overflow-hidden sm:h-[760px] lg:h-[860px]">
-        <Image src={PHOTOS.unity.src} alt={PHOTOS.unity.alt} fill sizes="100vw" quality={92} className="-z-10 object-cover object-[center_60%]" />
+        <Image src={verse.src} alt={verse.alt} fill sizes="100vw" quality={92} className="-z-10 object-cover object-[center_60%]" />
         {/* Warm dark shade from the ground up: the sunset stays golden, the verse stays readable. */}
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#140C06]/90 via-[#140C06]/45 via-40% to-[#140C06]/5" />
         <ScrollReveal className="w-full">

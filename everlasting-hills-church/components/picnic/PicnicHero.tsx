@@ -1,11 +1,13 @@
 import Image from "next/image";
 import { ArrowDown, Icon } from "@/components/icons";
-import { PHOTOS } from "./picnic-config";
+import { picnicPhoto } from "./picnic-photos";
 import { timeSuffix, venueLabel, type DateParts, type PicnicContent } from "./picnic-content";
 import { INK } from "./picnic-styles";
 
 /** Headline, ticket stub with the date, and the taped prints. */
 export default function PicnicHero({ d, c }: { d: DateParts; c: PicnicContent }) {
+  const main = picnicPhoto(c.photos, "hero");
+  const small = picnicPhoto(c.photos, "heroSmall");
   return (
       <section className="relative">
         <div className="gingham h-3 w-full" aria-hidden="true" />
@@ -74,16 +76,16 @@ export default function PicnicHero({ d, c }: { d: DateParts; c: PicnicContent })
             <figure className="picnic-float relative ml-auto w-[86%] bg-white p-3 pb-12 shadow-[0_30px_60px_-28px_rgba(27,23,20,0.55)] [--r:-2deg]">
               <span className="tape -top-3 left-1/2 -translate-x-1/2 -rotate-3" aria-hidden="true" />
               <div className="relative aspect-[4/5] overflow-hidden bg-[#e9e1d2]">
-                <Image src={PHOTOS.hero.src} alt={PHOTOS.hero.alt} fill priority sizes="(max-width: 1024px) 90vw, 480px" className="object-cover" />
+                <Image src={main.src} alt={main.alt} fill priority sizes="(max-width: 1024px) 90vw, 480px" className="object-cover" />
               </div>
-              <figcaption className="absolute bottom-3 right-5 text-sm font-medium text-[#1B1714]/60">
-                see you on the grass
-              </figcaption>
+              {main.caption && (
+                <figcaption className="absolute bottom-3 right-5 text-sm font-medium text-[#1B1714]/60">{main.caption}</figcaption>
+              )}
             </figure>
             <figure className="absolute -bottom-2 left-0 w-[44%] rotate-[5deg] bg-white p-2 pb-8 shadow-[0_24px_50px_-24px_rgba(27,23,20,0.6)]">
               <span className="tape -top-3 left-6 rotate-6" aria-hidden="true" />
               <div className="relative aspect-square overflow-hidden bg-[#e9e1d2]">
-                <Image src={PHOTOS.fruit.src} alt={PHOTOS.fruit.alt} fill sizes="220px" className="object-cover" />
+                <Image src={small.src} alt={small.alt} fill sizes="220px" className="object-cover" />
               </div>
             </figure>
             {/* Hand-drawn arrow */}

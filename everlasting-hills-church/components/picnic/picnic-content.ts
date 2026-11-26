@@ -1,7 +1,8 @@
 import { formatPicnicDate } from "./picnic-config";
+import type { PicnicPhotos } from "./picnic-photos";
 
 /**
- * The picnic page's words, editable in Dashboard → Public Site (CMS) → Picnic.
+ * The picnic page's words and photos, editable in Dashboard → Public Site (CMS) → Picnic.
  * Mirrors ehc-backend/src/cms/schemas/structured/picnic.schema.ts. The fallback
  * is the original copy, shown if the CMS is unreachable or never edited.
  */
@@ -30,32 +31,37 @@ export interface PicnicContent {
   bringClose: string;
   rsvpTitle: string;
   rsvpBody: string;
+  /** Words drifting along the strip under the hero. */
+  vibes?: string[];
+  /** Blank spots show the page's own photos (picnic-photos.ts). */
+  photos?: PicnicPhotos;
 }
 
 export const PICNIC_FALLBACK: PicnicContent = {
-  kicker: "Everlasting Hills Church · End-of-year picnic",
-  headline: "Pack a blanket.",
-  headlineMiddle: "We're having",
-  headlineAccent: "a picnic.",
+  kicker: "Everlasting Hills Church · End-of-year hangout",
+  headline: "Grab a mat.",
+  headlineMiddle: "Bring friends.",
+  headlineAccent: "Let's hang out.",
   intro:
-    "One unhurried Sunday afternoon to close the year — good food, open grass, games for the children, and the whole church family in one place.",
+    "One long, easy afternoon to close the year. Music playing, jollof going round, games on the grass and nowhere else to be. Come as you are, stay as long as you like.",
   date: null,
   time: null,
   venue: null,
-  afternoonKicker: "The afternoon",
-  afternoonTitle: "Nothing fancy. Just us, outside.",
-  familyNote: "Aunties, uncles, little ones — everybody's invited.",
+  afternoonKicker: "The vibe",
+  afternoonTitle: "Good food, good music, good people.",
+  familyNote: "Aunties, uncles, little ones. Bring them all.",
   afternoon: [
-    { title: "Food to share", body: "Coolers, plates, something from your kitchen if you'd like to bring it. Nobody goes home hungry." },
-    { title: "Games on the grass", body: "Something for the children, and something for the ones who still think they can win a race." },
+    { title: "Food going round", body: "Jollof, small chops, chilled drinks and whatever you bring from your kitchen. Nobody leaves hungry." },
+    { title: "Music all afternoon", body: "A playlist that keeps the mood easy, and a few songs everyone knows the words to. Requests welcome." },
+    { title: "Games on the grass", body: "Something for the children, and something for the grown-ups who still think they can win a race." },
     { title: "The gift exchange", body: "Signed up for the gift exchange? This is where the gifts change hands." },
-    { title: "Time with each other", body: "No programme to rush through. Sit, talk, laugh, pray — and meet the people you only ever wave at on Sunday." },
+    { title: "Gist and catch-up", body: "No programme to rush through. Pull up a chair, laugh, pray, and finally talk to the people you only wave at on Sunday." },
   ],
   verseText: "Behold, how good and how pleasant it is for brethren to dwell together in unity!",
   verseRef: "Psalm 133:1",
   gamesKicker: "Games",
-  gamesTitle: "Something for every age.",
-  gamesIntro: "Join in, cheer from the blanket, or keep score. Prizes for the winners, bragging rights for everyone else.",
+  gamesTitle: "Join in, or just cheer.",
+  gamesIntro: "Play, cheer from the mat or keep score. Prizes for the winners, bragging rights for everyone else.",
   games: [
     { name: "Sack race", description: "Into the sack and hop for the line. Children first, then the brave grown-ups.", forWho: "Everyone", image: "https://images.unsplash.com/photo-1756113438470-2b1f166801b4?auto=format&fit=crop&w=800&q=80" },
     { name: "Tug of war", description: "Men against women, or one unit against another. Hold the rope; the grass is soft.", forWho: "Adults", image: "https://images.unsplash.com/photo-1748698534410-867798220fa8?auto=format&fit=crop&w=800&q=80" },
@@ -66,10 +72,11 @@ export const PICNIC_FALLBACK: PicnicContent = {
     { name: "Bible quiz", description: "Teams, a buzzer and questions from Genesis to Revelation.", forWho: "Everyone", image: null },
     { name: "Face painting and colouring", description: "A quiet corner with crayons and colours for the little ones.", forWho: "Children", image: "https://images.unsplash.com/photo-1764662367028-9d70a9942d95?auto=format&fit=crop&w=800&q=80" },
   ],
-  bring: ["A blanket or a mat", "Something to share (if you can)", "A hat — the Ibadan sun is no joke", "Someone who needs a church family"],
-  bringClose: "…and your appetite.",
-  rsvpTitle: "Will we see you there?",
-  rsvpBody: "Everyone is welcome — friends, family, neighbours. Leave your details so we plan enough of everything for everyone.",
+  bring: ["A mat, a blanket or a camping chair", "Something to share, if you can", "A hat and sunglasses (the Ibadan sun is no joke)", "Your playlist requests", "A friend who needs a church family"],
+  bringClose: "…and your best gist.",
+  rsvpTitle: "You coming through?",
+  rsvpBody: "Everyone's welcome: friends, family, neighbours. Tell us you're coming so there's enough food to go round.",
+  vibes: ["Good music", "Jollof", "Suya", "Small chops", "Chilled drinks", "Games on the grass", "Gist", "Gift exchange", "Sunshine", "The whole family"],
 };
 
 export function isPicnicContent(c: unknown): c is PicnicContent {

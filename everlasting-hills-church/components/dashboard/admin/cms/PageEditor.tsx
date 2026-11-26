@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  AlertTriangle, ArrowLeft, Check, Eye, History, Plus, Rocket, Save, Undo2,
-} from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, Eye, History, Plus, Rocket, Save, Undo2 } from "lucide-react";
+import { cmsSaveError, tidyContent } from "@/lib/cms-tidy";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import {
   mintPreviewToken, useCmsPage, useCmsVersions, usePublishPage,
@@ -58,7 +57,7 @@ export default function PageEditor({ pageKey }: { pageKey: string }) {
     ? (content as { blocks: Block[] }).blocks
     : [];
 
-  function update(next: unknown) { setContent(next); setDirty(true); setSaved(false); }
+  function update(next: unknown) { setContent(next); setDirty(true); setSaved(false); saveDraft.reset(); publish.reset(); }
   function updateBlocks(next: Block[]) { update({ blocks: next }); }
   function addBlock(type: BlockType) { updateBlocks([...blocks, createBlock(type)]); setAddOpen(false); }
   function move(i: number, dir: -1 | 1) {
@@ -69,18 +68,17 @@ export default function PageEditor({ pageKey }: { pageKey: string }) {
     updateBlocks(next);
   }
 
+  // A refused save or publish shows its reason in the toolbar (saveFailed) instead of failing silently.
   async function doSave() {
-    await saveDraft.mutateAsync({ content });
-    setDirty(false);
-    setSaved(true);
+    try { await saveDraft.mutateAsync({ content }); } catch { return; }
+    setContent(tidyContent(content)); setDirty(false); setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   }
   async function doPublish() {
-    if (dirty) await saveDraft.mutateAsync({ content });
-    await publish.mutateAsync();
-    setConfirmPublish(false);
-    setDirty(false);
+    try { if (dirty) await saveDraft.mutateAsync({ content }); await publish.mutateAsync(); } catch { setConfirmPublish(false); return; }
+    setContent(tidyContent(content)); setConfirmPublish(false); setDirty(false);
   }
+  const saveFailed = saveDraft.error ?? publish.error;
   const route = data.def.route;
   async function doPreview() {
     if (dirty) await doSave();
@@ -111,7 +109,8 @@ export default function PageEditor({ pageKey }: { pageKey: string }) {
           {dirty && <span className="text-[10px] font-semibold text-gray-400">Unsaved</span>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {saved && <span className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400"><Check size={14} /> Saved</span>}
+          {saved ? <span className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400"><Check size={14} /> Saved</span>
+            : saveFailed && <span role="alert" className="max-w-md text-sm font-semibold text-red-600 dark:text-red-400">{cmsSaveError(saveFailed)}</span>}
           {!isStructured && <button type="button" onClick={() => setShowPreview((v) => !v)} className={tbBtn}><Eye size={15} /> {showPreview ? "Editing" : "Preview"}</button>}
           <button type="button" onClick={doPreview} className={tbBtn}><Eye size={15} /> Live preview</button>
           <button type="button" onClick={() => setShowHistory((v) => !v)} className={tbBtn}><History size={15} /> History</button>

@@ -48,8 +48,8 @@ export default function StructuredForm({
 
   return (
     <div className="space-y-6">
-      {fields.map((f) => (
-        <FieldView key={f.key} field={f} value={obj[f.key]} onChange={(v) => set(f.key, v)} />
+      {fields.map((f, i) => (
+        <FieldView key={`${i}-${f.key}`} field={f} value={obj[f.key]} onChange={(v) => set(f.key, v)} />
       ))}
     </div>
   );
