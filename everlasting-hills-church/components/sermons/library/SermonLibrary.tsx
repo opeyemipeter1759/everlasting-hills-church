@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CaretDown, Icon, SlidersHorizontal } from "@/components/icons";
 import { usePublishedSermons } from "@/lib/api";
 import SermonLibraryCard from "./SermonLibraryCard";
@@ -27,8 +27,25 @@ export default function SermonLibrary({ onListen }: { onListen: (slug: string) =
   const options = useMemo(() => libraryOptions(sermons), [sermons]);
   const results = useMemo(() => applyFilters(sermons, filters), [sermons, filters]);
   const filtered = filters.search.trim() !== "" || !!filters.year || !!filters.speaker || !!filters.series;
-  const set = (patch: Partial<LibraryFilters>) => { setFilters((f) => ({ ...f, ...patch })); setShown(PAGE); };
-  const clear = () => { setFilters((f) => ({ ...NO_FILTERS, sort: f.sort })); setShown(PAGE); };
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Filtering never yanks the page. Fewer results make the page shorter, and the
+   * browser used to snap the view upward. Now: if the reader is down in the
+   * results, hold the page's height, glide back to the top of the results, then
+   * let go. If the top of the results is already in view, nothing moves.
+   */
+  const keepPlace = () => {
+    const el = resultsRef.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top;
+    if (top >= 0) return;
+    el.style.minHeight = `${el.offsetHeight}px`;
+    window.scrollTo({ top: window.scrollY + top - 96, behavior: "smooth" });
+    window.setTimeout(() => { el.style.minHeight = ""; }, 800);
+  };
+  const set = (patch: Partial<LibraryFilters>) => { keepPlace(); setFilters((f) => ({ ...f, ...patch })); setShown(PAGE); };
+  const clear = () => { keepPlace(); setFilters((f) => ({ ...NO_FILTERS, sort: f.sort })); setShown(PAGE); };
 
   return (
     <section id="library" aria-labelledby="library-heading" className="scroll-mt-20 bg-[#FBF8F8]">
@@ -41,12 +58,14 @@ export default function SermonLibrary({ onListen }: { onListen: (slug: string) =
           <Icon icon={CaretDown} size={16} className={`transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
         </button>
         <aside id="sermon-filters" className={`${filtersOpen ? "block" : "hidden"} lg:block`}>
-          <div className="lg:sticky lg:top-24">
-            <SermonLibraryFilters filters={filters} set={set} options={options} />
+          {/* Pinned beside the results, with its own scroll: every filter is reachable without scrolling the page. */}
+          <div className="lg:sticky lg:top-24 lg:-mr-4 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:overscroll-contain lg:pb-6 lg:pr-4 lg:[scrollbar-color:#D9C6CB_transparent] lg:[scrollbar-width:thin]">
+            <SermonLibraryFilters filters={filters} set={set} options={options} total={sermons.length} />
           </div>
         </aside>
 
-        <div className="min-w-0">
+        {/* At least a screen tall, so a short result list never collapses the page under the reader. */}
+        <div ref={resultsRef} className="min-h-[70vh] min-w-0 lg:min-h-[calc(100vh-6rem)]">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E7DADD] pb-5">
             <p className={`text-[#8A7A7E] ${LABEL}`} aria-live="polite">
               {isLoading ? "Loading sermons…" : `Showing ${results.length} result${results.length === 1 ? "" : "s"}`}
