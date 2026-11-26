@@ -8,7 +8,7 @@ import SermonLibraryFilters from "./SermonLibraryFilters";
 import { NO_FILTERS, SORTS, applyFilters, libraryOptions, type LibraryFilters, type SortKey } from "./sermon-library";
 
 const PAGE = 12;
-const LABEL = "text-[13px] font-bold uppercase tracking-[0.24em]";
+const LABEL = "text-[12px] font-bold uppercase tracking-[0.22em]";
 
 /**
  * The public sermons library: filters down the left (search, year, speaker,
@@ -32,7 +32,7 @@ export default function SermonLibrary({ onListen }: { onListen: (slug: string) =
 
   return (
     <section id="library" aria-labelledby="library-heading" className="scroll-mt-20 bg-[#FBF8F8]">
-      <div className="mx-auto grid max-w-[1880px] grid-cols-[minmax(0,1fr)] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-14 lg:py-20 xl:grid-cols-[340px_minmax(0,1fr)] xl:gap-16">
+      <div className="mx-auto grid max-w-[1880px] grid-cols-[minmax(0,1fr)] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-14 lg:py-20 xl:grid-cols-[300px_minmax(0,1fr)] xl:gap-14 min-[1700px]:grid-cols-[340px_minmax(0,1fr)] min-[1700px]:gap-16">
         <h2 id="library-heading" className="sr-only">All sermons</h2>
 
         <button type="button" onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen} aria-controls="sermon-filters"
@@ -47,7 +47,7 @@ export default function SermonLibrary({ onListen }: { onListen: (slug: string) =
         </aside>
 
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E7DADD] pb-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E7DADD] pb-5">
             <p className={`text-[#8A7A7E] ${LABEL}`} aria-live="polite">
               {isLoading ? "Loading sermons…" : `Showing ${results.length} result${results.length === 1 ? "" : "s"}`}
               {filtered && !isLoading && (
@@ -58,7 +58,7 @@ export default function SermonLibrary({ onListen }: { onListen: (slug: string) =
               <span className={`text-[#2B0A13] ${LABEL}`}>Sort by:</span>
               <span className="relative">
                 <select value={filters.sort} onChange={(e) => set({ sort: e.target.value as SortKey })}
-                  className="appearance-none rounded-md border border-[#E2D3D7] bg-white py-3 pl-5 pr-12 text-[17px] text-[#2B0A13] focus:border-[#87102C]/50 focus:outline-none focus:ring-2 focus:ring-[#87102C]/15">
+                  className="appearance-none rounded-md border border-[#E2D3D7] bg-white py-2.5 pl-4 pr-11 text-[14px] text-[#2B0A13] focus:border-[#87102C]/50 focus:outline-none focus:ring-2 focus:ring-[#87102C]/15">
                   {SORTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
                 <Icon icon={CaretDown} size={16} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#2B0A13]" />
@@ -72,11 +72,11 @@ export default function SermonLibrary({ onListen }: { onListen: (slug: string) =
               <button type="button" onClick={() => refetch()} className={`mt-6 rounded-md bg-[#87102C] px-6 py-3.5 text-white hover:bg-[#6E0C24] ${LABEL}`}>Try again</button>
             </div>
           ) : isLoading ? (
-            <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-8 sm:grid-cols-2 min-[1760px]:grid-cols-3">
+            <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-6 sm:grid-cols-2 min-[1380px]:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="overflow-hidden rounded-lg border border-[#EADFE2] bg-white">
-                  <div className="aspect-[4/3] animate-pulse bg-[#F1E8EA]" />
-                  <div className="space-y-4 p-7"><div className="h-3 w-1/3 rounded bg-[#F1E8EA]" /><div className="h-6 w-4/5 rounded bg-[#F1E8EA]" /><div className="h-4 w-full rounded bg-[#F6F0F1]" /><div className="h-4 w-2/3 rounded bg-[#F6F0F1]" /></div>
+                  <div className="aspect-video animate-pulse bg-[#F1E8EA]" />
+                  <div className="space-y-3 p-5"><div className="h-3 w-1/3 rounded bg-[#F1E8EA]" /><div className="h-6 w-4/5 rounded bg-[#F1E8EA]" /><div className="h-4 w-full rounded bg-[#F6F0F1]" /><div className="h-4 w-2/3 rounded bg-[#F6F0F1]" /></div>
                 </div>
               ))}
             </div>
@@ -88,7 +88,7 @@ export default function SermonLibrary({ onListen }: { onListen: (slug: string) =
             </div>
           ) : (
             <>
-              <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-8 sm:grid-cols-2 min-[1760px]:grid-cols-3">
+              <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-6 sm:grid-cols-2 min-[1380px]:grid-cols-3">
                 {results.slice(0, shown).map((s) => <SermonLibraryCard key={s.id} s={s} onListen={onListen} />)}
               </div>
               {results.length > shown && (
