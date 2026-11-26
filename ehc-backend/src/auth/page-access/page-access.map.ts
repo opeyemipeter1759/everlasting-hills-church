@@ -126,7 +126,9 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
   { href: '/dashboard/usher', role: Role.HEAD_USHER, paths: ['/headcount', '/attendance/services'] },
 
   // ── Pastoral ──────────────────────────────────────────────────────────────
-  { href: '/dashboard/cms', role: Role.PASTOR, paths: ['/cms', '/uploads/image'] },
+  // The CMS's Homepage row opens the homepage editor (/dashboard/settings/homepage),
+  // which saves through /site-settings, so the CMS page covers that too.
+  { href: '/dashboard/cms', role: Role.PASTOR, paths: ['/cms', '/uploads/image', '/site-settings'] },
   { href: '/dashboard/pastor/follow-ups', role: Role.PASTOR, paths: ['/follow-up'] },
   { href: '/dashboard/pastor/reports', role: Role.PASTOR, paths: ['/status-reports', '/emails', '/uploads/document'] },
   { href: '/dashboard/pastor/sermons/analytics', role: Role.PASTOR, paths: ['/sermons/analytics'] },

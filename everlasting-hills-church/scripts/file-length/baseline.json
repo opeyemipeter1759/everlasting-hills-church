@@ -259,7 +259,7 @@
     "lib/scripture-share.ts": 695,
     "lib/site-settings.ts": 539,
     "lib/youtube-videos.ts": 169,
-    "middleware.ts": 394,
+    "middleware.ts": 390,
     "scripts/generate-plan-artwork.mjs": 589,
     "types/follow-up.ts": 242,
     "types/index.ts": 533,
