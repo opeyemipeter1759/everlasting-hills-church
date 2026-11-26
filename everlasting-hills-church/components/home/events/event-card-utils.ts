@@ -8,6 +8,12 @@ export const LOCATION_LABEL: Record<EventSummary["locationType"], string> = {
   HYBRID: "In person & online",
 };
 
+/** The church's YouTube live page: it opens whatever is streaming now. */
+export const CHURCH_LIVE_URL = "https://www.youtube.com/@everlastinghillschurch/live";
+
+/** Where "Watch live" goes: the event's own stream, or the church's live page when it has none. */
+export const watchLiveUrl = (event: Pick<EventSummary, "liveUrl">) => event.liveUrl?.trim() || CHURCH_LIVE_URL;
+
 export const focusRing =
   "rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/40 focus-visible:ring-offset-2";
 
