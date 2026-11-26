@@ -1,3 +1,4 @@
+import { MyFollowUpService } from './services/my-follow-up.service';
 import { Module } from '@nestjs/common';
 import { FollowUpPipelineController } from './follow-up-pipeline.controller';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -53,6 +54,7 @@ import { FollowUpRemindersService } from './services/follow-up-reminders.service
   // registration order, so the more specific literal path must come first.
   controllers: [FollowUpServiceReportsController, FollowUpPipelineController, FollowUpStageController, FollowUpController, FollowUpMemberStatusController],
   providers: [
+    MyFollowUpService,
     FollowUpAuthService,
     FollowUpAssignableService,
     FollowUpMasterListService,

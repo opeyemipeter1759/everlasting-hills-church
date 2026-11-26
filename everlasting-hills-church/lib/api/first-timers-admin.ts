@@ -32,6 +32,8 @@ export interface AdminFirstTimerPage {
   };
   /** The first-timer pipeline's total for the same month and year: the Follow Up page's figure. */
   onRecord: number;
+  /** First Timer Team only: whether the viewer may edit records (its lead, head of department, admins). */
+  canEdit?: boolean;
 }
 
 /**

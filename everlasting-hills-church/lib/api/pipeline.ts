@@ -62,6 +62,8 @@ export interface PipelineQuery {
   month?: number;
   search?: string;
   notContacted?: boolean;
+  /** Only integrated members, including any the Integration Team has since marked Away. */
+  integrated?: boolean;
   absentFrom?: string;
   /** A service id: only people with an account who were checked in at it. */
   presentAt?: string;

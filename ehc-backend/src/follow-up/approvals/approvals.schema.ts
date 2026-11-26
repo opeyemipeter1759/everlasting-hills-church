@@ -10,7 +10,8 @@ const note = z.string().trim().max(1000, 'Keep the note under 1,000 characters')
 
 export const requestApprovalSchema = z.object({
   visitorId: z.string().trim().min(1, 'Pick a first-timer'),
-  note: note.optional().nullable(),
+  /** Asking for integration always says how they are doing, for the team leads to decide on. */
+  note: z.string({ error: 'Say how they are doing for the team leads' }).trim().min(1, 'Say how they are doing for the team leads').max(1000, 'Keep the note under 1,000 characters'),
 });
 
 export const decideApprovalSchema = z.object({

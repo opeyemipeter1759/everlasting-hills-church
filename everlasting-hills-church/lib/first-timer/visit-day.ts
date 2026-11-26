@@ -20,3 +20,8 @@ export function visitDayError(day: string): string | null {
   const result = visitDaySchema.safeParse(day);
   return result.success ? null : result.error.issues[0].message;
 }
+
+/** The Lagos date `n` days before today, "YYYY-MM-DD": how far back "Came again" lets you pick. */
+export function daysAgo(n: number, now = new Date()): string {
+  return lagosToday(new Date(now.getTime() - n * 24 * 60 * 60 * 1000));
+}

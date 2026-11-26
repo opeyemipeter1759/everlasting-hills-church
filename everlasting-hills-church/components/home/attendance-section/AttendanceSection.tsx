@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useAnnouncementsFeed, useSessionReady } from "@/hooks";
+import { useSessionReady } from "@/hooks";
 import { useCanMark, useCheckIn } from "@/lib/api";
 import CosmicBackdrop from "./CosmicBackdrop";
 import SectionHeading from "./SectionHeading";
 import AttendancePanel, { type AttendanceState } from "./AttendancePanel";
-import AnnouncementsPanel from "./AnnouncementsPanel";
 import AnonymousInvitation from "./AnonymousInvitation";
 import { firstNameOf } from "./utils";
 
@@ -18,7 +17,6 @@ export default function AttendanceSection() {
   const [error, setError] = useState<string | null>(null);
 
   const isLoggedIn = !!session?.loggedIn;
-  const { announcements, loading: announcementsLoading } = useAnnouncementsFeed(isLoggedIn);
   const { data: canMarkData, isLoading: canMarkLoading, refetch: refetchCanMark } = useCanMark({ enabled: isLoggedIn });
   const checkIn = useCheckIn();
 
@@ -80,7 +78,7 @@ export default function AttendanceSection() {
             <AnonymousInvitation />
           </>
         ) : (
-          <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
+          <div className="mx-auto w-full max-w-[640px]">
             <AttendancePanel
               eyebrow={`Welcome back, ${firstName}`}
               heading={attendanceHeading}
@@ -92,7 +90,6 @@ export default function AttendanceSection() {
               opensAt={opensAt}
               onCountdownComplete={() => refetchCanMark()}
             />
-            <AnnouncementsPanel announcements={announcements} loading={announcementsLoading} />
           </div>
         )}
 

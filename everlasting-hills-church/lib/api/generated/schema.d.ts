@@ -3369,7 +3369,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List published events (public) */
+        /** List published events (public; private events included when signed in) */
         get: operations["EventsController_listPublished"];
         put?: never;
         post?: never;
@@ -3386,7 +3386,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a published event by slug (public) */
+        /** Get a published event by slug (public; private events need sign-in) */
         get: operations["EventsController_getBySlug"];
         put?: never;
         post?: never;
@@ -3688,7 +3688,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Correct a first-timer record; the prayer request is not editable here (First Timer Team) */
+        /** Correct a first-timer record; the prayer request is not editable here (the First Timer Team's lead, its head of department, or an admin) */
         patch: operations["FirstTimerTeamController_update"];
         trace?: never;
     };
@@ -4248,6 +4248,23 @@ export interface paths {
         };
         /** Every church member with their follow-up status (Follow-Up team only) */
         get: operations["FollowUpController_masterList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/my-activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's own follow-up: who they have, and what they have logged this month and in all */
+        get: operations["FollowUpPipelineController_myActivity"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6794,7 +6811,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** First-timers nobody has contacted yet, oldest first, each with a ready WhatsApp link */
+        /** First-timers nobody has contacted yet, newest registration first, each with a ready WhatsApp link */
         get: operations["OpeningMessageController_list"];
         put?: never;
         post?: never;
@@ -8421,6 +8438,23 @@ export interface paths {
         };
         /** Add a program to a calendar (confirmed dates only) */
         get: operations["ProgramsPublicController_calendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/programs/anchor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The scripture under the Programs hero (Genesis 49:26), from the Bible tables */
+        get: operations["ProgramsPublicController_anchor"];
         put?: never;
         post?: never;
         delete?: never;
@@ -11038,6 +11072,12 @@ export interface components {
             title: string;
             venueAddress?: string;
             venueName?: string;
+            /**
+             * @description PUBLIC: everyone can see it. PRIVATE: only signed-in users.
+             * @default PUBLIC
+             * @enum {string}
+             */
+            visibility: "PUBLIC" | "PRIVATE";
         };
         CreateEventRsvpDto: {
             /** @default 1 */
@@ -12646,6 +12686,12 @@ export interface components {
             title?: string;
             venueAddress?: string;
             venueName?: string;
+            /**
+             * @description PUBLIC: everyone can see it. PRIVATE: only signed-in users.
+             * @default PUBLIC
+             * @enum {string}
+             */
+            visibility: "PUBLIC" | "PRIVATE";
         };
         UpdateFinanceEntryDto: {
             /** @example 50000 */
@@ -23462,6 +23508,37 @@ export interface operations {
             };
         };
     };
+    FollowUpPipelineController_myActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpController_myUnit: {
         parameters: {
             query?: never;
@@ -23782,6 +23859,8 @@ export interface operations {
                 presentAt?: unknown;
                 /** @description A service id: who missed it */
                 absentFrom?: unknown;
+                /** @description true: only integrated members (and any since marked Away) */
+                integrated?: unknown;
                 notContacted?: unknown;
                 /** @description A member id, or "none" */
                 assigneeId?: unknown;
@@ -32954,6 +33033,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ProgramsPublicController_anchor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
             };
             /** @description Error response */
             default: {

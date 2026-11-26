@@ -47,8 +47,27 @@ describe('the First Timer Team view', () => {
     const page = await controller.list(actor(), {});
     expect(JSON.stringify(page)).not.toContain('private');
 
-    const saved = await controller.update(actor(), 'v1', { firstName: 'Adaeze', prayerPoint: 'rewritten' } as never);
+    const lead = actor({ unitLeadOf: ['u-team'] });
+    const saved = await controller.update(lead, 'v1', { firstName: 'Adaeze', prayerPoint: 'rewritten' } as never);
     expect(visitors.update).toHaveBeenCalledWith('v1', { firstName: 'Adaeze' });
     expect(JSON.stringify(saved)).not.toContain('private');
+  });
+
+  it('lets only the lead, the department head and admins edit; the rest of the team reads', async () => {
+    expect(await access({ members: ['m'] }).canEdit(actor())).toBe(false);
+    expect(await access().canEdit(actor({ unitLeadOf: ['u-team'] }))).toBe(true);
+    expect(await access({ heads: ['p'] }).canEdit(actor())).toBe(true);
+    expect(await access().canEdit(actor({ effectiveRoles: [Role.MEMBER, Role.ADMIN_HEAD] }))).toBe(true);
+    expect(await access().canEdit(actor({ unitLeadOf: ['u-other'] }))).toBe(false);
+
+    const visitors = {
+      firstTimers: jest.fn().mockResolvedValue({ rows: [], total: 0, counts: {} }),
+      update: jest.fn(),
+    };
+    const pipeline = { list: jest.fn().mockResolvedValue({ counts: { all: 0 } }) };
+    const controller = new FirstTimerTeamController(visitors as never, pipeline as never, access({ members: ['m'] }));
+    expect(await controller.list(actor(), {})).toMatchObject({ canEdit: false });
+    await expect(controller.update(actor(), 'v1', { firstName: 'Adaeze' } as never)).rejects.toBeInstanceOf(ForbiddenException);
+    expect(visitors.update).not.toHaveBeenCalled();
   });
 });

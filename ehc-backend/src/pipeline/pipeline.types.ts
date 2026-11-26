@@ -27,6 +27,8 @@ export interface PipelineFilters {
   search?: string;
   /** Only people nobody has contacted yet. */
   notContacted?: boolean;
+  /** Only integrated members, including any the Integration Team has since marked Away. */
+  integrated?: boolean;
   /** A service id: only people with an account who missed that service. */
   absentFromServiceId?: string;
   /** A service id: only people with an account who were checked in at that service. */
@@ -37,8 +39,8 @@ export interface PipelineFilters {
   visitorIds?: string[];
   take?: number;
   skip?: number;
-  /** newest (first visit, newest first, the default), oldest, or name. */
-  sort?: 'newest' | 'oldest' | 'name';
+  /** newest (first visit, newest first, the default), oldest, name, or registered (newest registration first). */
+  sort?: 'newest' | 'oldest' | 'name' | 'registered';
 }
 
 export interface PipelineRow {

@@ -10,7 +10,6 @@ import slugify from 'slugify';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import { CmsRevalidateService } from '../cms/services/cms-revalidate.service';
-import { AnnouncementsService } from '../announcements/announcements.service';
 import type { CreateEventDto, UpdateEventDto } from './dto/event.dto';
 import type { CreateEventRsvpDto } from './dto/event-rsvp.dto';
 import { eventSectionInputSchema } from './schemas/event-section.schema';
@@ -29,7 +28,6 @@ export class EventsService {
     private readonly prisma: PrismaService,
     config: ConfigService<Env, true>,
     private readonly revalidate: CmsRevalidateService,
-    private readonly announcements: AnnouncementsService,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
@@ -265,7 +263,6 @@ export class EventsService {
     });
 
     this.revalidateEvent(slug);
-    if (status === EventStatus.PUBLISHED) await this.announceIfPublished(event);
     return event;
   }
 
@@ -345,32 +342,7 @@ export class EventsService {
 
     this.revalidateEvent(current.slug);
     if (slug) this.revalidateEvent(slug);
-    if (nowPublishing) await this.announceIfPublished(event);
     return event;
-  }
-
-  /**
-   * Publishing an event tells the church about it: the announcement it raises
-   * reaches the dashboard and the notification inbox, where members already
-   * look, rather than waiting to be found on the events page.
-   *
-   * announceEvent is idempotent on the event id and swallows its own failures,
-   * so a republish announces nothing twice and a failed announcement never
-   * fails the publish.
-   */
-  private async announceIfPublished(event: {
-    id: string;
-    slug: string;
-    title: string;
-    tagline: string | null;
-    shortDescription: string | null;
-    description: string | null;
-    startAt: Date;
-    venueName: string | null;
-    flyerImageUrl: string | null;
-    customPath: string | null;
-  }) {
-    await this.announcements.announceEvent(event);
   }
 
   async delete(id: string) {

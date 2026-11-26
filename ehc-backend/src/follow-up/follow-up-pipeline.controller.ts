@@ -11,6 +11,7 @@ import { allAnswers, publicAnswers, teamAnswers } from '../visitors/first-timer-
 import { ADMIN_PLUS } from './follow-up.types';
 import { FollowUpAuthService } from './services/follow-up-auth.service';
 import { PhotoUrlService } from './photos/photo-url.service';
+import { MyFollowUpService } from './services/my-follow-up.service';
 
 const STAGES = ['UNASSIGNED', 'ASSIGNED', 'IN_PROGRESS', 'AWAITING_REVIEW', 'CONFIRMED', 'REOPENED', 'OPTED_OUT'];
 
@@ -35,6 +36,7 @@ export function parsePipelineFilters(q: Record<string, string | undefined>): Pip
     month,
     search: q.search || undefined,
     notContacted: q.notContacted === 'true',
+    integrated: q.integrated === 'true',
     absentFromServiceId: q.absentFrom || undefined,
     presentAtServiceId: q.presentAt || undefined,
     possibleReturn: q.possibleReturn === 'true',
@@ -59,7 +61,15 @@ export class FollowUpPipelineController {
     private readonly auth: FollowUpAuthService,
     private readonly prisma: PrismaService,
     private readonly photos: PhotoUrlService,
+    private readonly myFollowUp: MyFollowUpService,
   ) {}
+
+  @Get('my-activity')
+  @ApiOperation({ summary: "The caller's own follow-up: who they have, and what they have logged this month and in all" })
+  async myActivity(@CurrentUser() actor: AuthUser) {
+    await this.auth.requireAccess(actor);
+    return this.myFollowUp.activity(actor);
+  }
 
   @Get('pipeline')
   @ApiOperation({ summary: 'First-timers and the status counts beside them, under the same filters' })
@@ -69,6 +79,7 @@ export class FollowUpPipelineController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'assigneeId', required: false, description: 'A member id, or "none"' })
   @ApiQuery({ name: 'notContacted', required: false })
+  @ApiQuery({ name: 'integrated', required: false, description: 'true: only integrated members (and any since marked Away)' })
   @ApiQuery({ name: 'absentFrom', required: false, description: 'A service id: who missed it' })
   @ApiQuery({ name: 'presentAt', required: false, description: 'A service id: who came' })
   @ApiQuery({ name: 'take', required: false })

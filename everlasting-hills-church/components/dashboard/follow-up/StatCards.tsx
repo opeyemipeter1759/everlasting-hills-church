@@ -52,10 +52,14 @@ function StatCard({
   );
 }
 
-/** The four figures the team watches, stated plainly. Every number is the API's, from the first-timer pipeline. */
-export function StatCards({ summary }: { summary: FollowUpSummary }) {
+/**
+ * The figures the team watches, stated plainly. Every number is the API's, from
+ * the first-timer pipeline. A member of the team sees two (total visitors and
+ * their own); Integrated and Opted out are for whoever runs the unit.
+ */
+export function StatCards({ summary, showOutcomes = true }: { summary: FollowUpSummary; showOutcomes?: boolean }) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${showOutcomes ? "xl:grid-cols-4" : ""}`}>
       <StatCard
         loading={summary.isLoading}
         icon={Users}
@@ -72,22 +76,27 @@ export function StatCards({ summary }: { summary: FollowUpSummary }) {
         label="Assigned to you"
         note="Yours to reach. Everyone sees their own"
       />
-      <StatCard
-        loading={summary.isLoading}
-        icon={HeartHandshake}
-        tone="emerald"
-        value={summary.integrated}
-        label="Integrated"
-        note="Settled in, and approved by their unit lead"
-      />
-      <StatCard
-        loading={summary.isLoading}
-        icon={ShieldOff}
-        tone="slate"
-        value={summary.optedOut}
-        label="Opted out"
-        note="Asked not to be contacted for now"
-      />
+      {/* Integrated and Opted out are the unit's own figures, for whoever runs it. */}
+      {showOutcomes && (
+        <>
+          <StatCard
+            loading={summary.isLoading}
+            icon={HeartHandshake}
+            tone="emerald"
+            value={summary.integrated}
+            label="Integrated"
+            note="Settled in, and approved by their unit lead"
+          />
+          <StatCard
+            loading={summary.isLoading}
+            icon={ShieldOff}
+            tone="slate"
+            value={summary.optedOut}
+            label="Opted out"
+            note="Asked not to be contacted for now"
+          />
+        </>
+      )}
     </div>
   );
 }

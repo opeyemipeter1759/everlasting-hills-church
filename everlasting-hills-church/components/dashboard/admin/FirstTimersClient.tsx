@@ -36,6 +36,8 @@ export default function FirstTimersClient({ team = false }: { team?: boolean }) 
 
 function FirstTimersPage({ team }: { team: boolean }) {
   const f = useFirstTimersFilter();
+  // On the team page, Edit is only for whoever the API says may edit.
+  const mode = team ? { ...TEAM_MODE, canEdit: f.data?.canEdit === true } : ADMIN_MODE;
   const refreshEverywhere = useRefreshEverywhere();
   const [editTarget, setEditTarget] = useState<VisitorRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<VisitorRow | null>(null);
@@ -57,12 +59,13 @@ function FirstTimersPage({ team }: { team: boolean }) {
   }
 
   return (
+    <FirstTimersModeProvider value={mode}>
     <div className="space-y-5 px-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">{team ? "First Timer Team" : "First Timers"}</h1>
           <p className="text-sm text-gray-500 dark:text-white/50 mt-1">
-            {team ? "Every first-timer's details, to follow up and correct. Prayer requests stay with the pastors." : "Review newcomer submissions and create member accounts."}
+            {team ? `Every first-timer's details, to follow up${mode.canEdit ? " and correct" : ""}. Prayer requests stay with the pastors.` : "Review newcomer submissions and create member accounts."}
           </p>
         </div>
         <MonthYearFilter />
@@ -130,5 +133,6 @@ function FirstTimersPage({ team }: { team: boolean }) {
         onCancel={() => setDeleteTarget(null)}
       />
     </div>
+    </FirstTimersModeProvider>
   );
 }

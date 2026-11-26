@@ -1033,6 +1033,15 @@
           },
           "venueName": {
             "type": "string"
+          },
+          "visibility": {
+            "default": "PUBLIC",
+            "description": "PUBLIC: everyone can see it. PRIVATE: only signed-in users.",
+            "enum": [
+              "PUBLIC",
+              "PRIVATE"
+            ],
+            "type": "string"
           }
         },
         "required": [
@@ -4777,6 +4786,15 @@
             "type": "string"
           },
           "venueName": {
+            "type": "string"
+          },
+          "visibility": {
+            "default": "PUBLIC",
+            "description": "PUBLIC: everyone can see it. PRIVATE: only signed-in users.",
+            "enum": [
+              "PUBLIC",
+              "PRIVATE"
+            ],
             "type": "string"
           }
         },
@@ -19753,7 +19771,7 @@
             "description": "Error response"
           }
         },
-        "summary": "List published events (public)",
+        "summary": "List published events (public; private events included when signed in)",
         "tags": [
           "events"
         ]
@@ -19804,7 +19822,7 @@
             "description": "Error response"
           }
         },
-        "summary": "Get a published event by slug (public)",
+        "summary": "Get a published event by slug (public; private events need sign-in)",
         "tags": [
           "events"
         ]
@@ -21264,7 +21282,7 @@
             "access-token": []
           }
         ],
-        "summary": "Correct a first-timer record; the prayer request is not editable here (First Timer Team)",
+        "summary": "Correct a first-timer record; the prayer request is not editable here (the First Timer Team's lead, its head of department, or an admin)",
         "tags": [
           "first-timer-team"
         ]
@@ -23486,6 +23504,53 @@
         ]
       }
     },
+    "/follow-up/my-activity": {
+      "get": {
+        "operationId": "FollowUpPipelineController_myActivity",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "The caller's own follow-up: who they have, and what they have logged this month and in all",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/my-unit": {
       "get": {
         "operationId": "FollowUpController_myUnit",
@@ -24066,6 +24131,13 @@
             "description": "A service id: who missed it",
             "in": "query",
             "name": "absentFrom",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "description": "true: only integrated members (and any since marked Away)",
+            "in": "query",
+            "name": "integrated",
             "required": false,
             "schema": {}
           },
@@ -33637,7 +33709,7 @@
             "access-token": []
           }
         ],
-        "summary": "First-timers nobody has contacted yet, oldest first, each with a ready WhatsApp link",
+        "summary": "First-timers nobody has contacted yet, newest registration first, each with a ready WhatsApp link",
         "tags": [
           "opening-message"
         ]
@@ -39244,6 +39316,48 @@
           }
         },
         "summary": "Add a program to a calendar (confirmed dates only)",
+        "tags": [
+          "programs-public"
+        ]
+      }
+    },
+    "/public/programs/anchor": {
+      "get": {
+        "operationId": "ProgramsPublicController_anchor",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "The scripture under the Programs hero (Genesis 49:26), from the Bible tables",
         "tags": [
           "programs-public"
         ]

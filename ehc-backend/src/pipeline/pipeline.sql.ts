@@ -64,7 +64,8 @@ export function pipelineCte(tenantId: string): Prisma.Sql {
              COALESCE(vs.n, 1) AS visits, COALESCE(vs.dates, ARRAY[]::text[]) AS "visitDates",
              CASE
                WHEN e.stage = 'OPTED_OUT' OR (p."memberStatus" IS NOT NULL AND p."memberStatus" <> 'ACTIVE') THEN 'OPTED_OUT'
-               WHEN e.stage = 'CONFIRMED' THEN 'INTEGRATED'
+               -- Integrated, unless the Integration Team has marked them Away since.
+               WHEN e.stage = 'CONFIRMED' THEN CASE WHEN p."statusOverride" = 'AWAY' THEN 'AWAY' ELSE 'INTEGRATED' END
                -- Set by hand on the board: wins over their visits until it is cleared.
                WHEN p."statusOverride" IS NOT NULL THEN p."statusOverride"
                WHEN COALESCE(vs.n, 1) >= 4 THEN 'FOURTH_TIMER'
@@ -104,6 +105,7 @@ export function pipelineWhere(f: PipelineFilters, withStatus = true): Prisma.Sql
     );
   }
   if (f.notContacted) parts.push(Prisma.sql`pl."firstContactedAt" IS NULL`);
+  if (f.integrated) parts.push(Prisma.sql`pl.stage = 'CONFIRMED' AND pl.status <> 'OPTED_OUT'`);
   if (f.possibleReturn) parts.push(Prisma.sql`pl."possibleReturn"`);
   if (f.visitorIds) parts.push(f.visitorIds.length ? Prisma.sql`pl."visitorId" IN (${Prisma.join(f.visitorIds)})` : Prisma.sql`FALSE`);
   if (f.absentFromServiceId) {
@@ -121,6 +123,7 @@ export function pipelineWhere(f: PipelineFilters, withStatus = true): Prisma.Sql
 
 export function pipelineOrder(sort: PipelineFilters['sort']): Prisma.Sql {
   if (sort === 'oldest') return Prisma.sql`pl."firstVisitDate" ASC, pl."submittedAt" ASC`;
+  if (sort === 'registered') return Prisma.sql`pl."submittedAt" DESC`;
   if (sort === 'name') return Prisma.sql`pl."firstName" ASC, pl."lastName" ASC`;
   return Prisma.sql`pl."firstVisitDate" DESC, pl."submittedAt" DESC`;
 }
