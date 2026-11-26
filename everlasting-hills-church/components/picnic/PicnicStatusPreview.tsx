@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { PHOTOS, PICNIC } from "./picnic-config";
+import { PICNIC } from "./picnic-config";
 import { dateParts, venueLabel } from "./picnic-content";
 
 const SITE_HOST = (() => {
@@ -15,7 +15,7 @@ const SITE_HOST = (() => {
  * the same proportions — positions are percentages of the 1080×1920 canvas and
  * type is in container-width units — so what people see is what they post.
  */
-export default function StatusPreview({ firstName, date, venue }: { firstName: string | null; date: string | null; venue: string | null }) {
+export default function StatusPreview({ firstName, date, venue, photo }: { firstName: string | null; date: string | null; venue: string | null; photo: string }) {
   const d = dateParts(date);
   return (
     <div className="order-1 mx-auto w-full max-w-[300px] lg:order-2">
@@ -34,7 +34,7 @@ export default function StatusPreview({ firstName, date, venue }: { firstName: s
 
           {/* Inset photo + fine gingham ribbon */}
           <div className="absolute left-[5.9%] right-[5.9%] top-[11.5%] h-[44.8%] overflow-hidden rounded-[3.3cqw]">
-            <Image src={PHOTOS.hero.src} alt="" fill sizes="300px" className="object-cover" />
+            <Image src={photo} alt="" fill sizes="300px" className="object-cover" />
           </div>
           <div className="gingham-sm absolute left-[5.9%] right-[5.9%] top-[55.4%] h-[1.5%] [background-size:2.6cqw_2.6cqw]" />
 

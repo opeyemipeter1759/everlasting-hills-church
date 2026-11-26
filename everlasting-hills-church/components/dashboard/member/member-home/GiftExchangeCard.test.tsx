@@ -12,7 +12,11 @@ vi.mock("@/lib/api/gift-exchange", () => ({
   useRegisterGiftExchange: () => ({ mutate: register, isPending: false }),
   useWithdrawGiftExchange: () => ({ mutate: withdraw, isPending: false }),
 }));
-vi.mock("@/lib/api/picnic", () => ({ usePicnicDayLabel: () => "Picnic: date to be announced", usePicnicContent: () => ({ data: null }) }));
+vi.mock("@/lib/api/picnic", () => ({
+  usePicnicDayLabel: () => "Picnic: date to be announced",
+  usePicnicContent: () => ({ data: null }),
+  usePicnicPhoto: () => ({ src: "https://images.unsplash.com/photo-1?w=800", alt: "", caption: null, credit: null }),
+}));
 vi.mock("@/components/ui/toast/toast", () => ({ showToast: { success: vi.fn(), error: vi.fn() } }));
 
 const TARGET = "2026-12-06T00:00:00.000+01:00";

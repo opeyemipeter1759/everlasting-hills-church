@@ -33,4 +33,11 @@
     0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
     50% { transform: translateY(-8px) rotate(var(--r, 0deg)); }
   }
+  /* The hangout strip: slides left by one of its two identical runs, then loops. */
+  .picnic-drift { animation: picnic-drift 45s linear infinite; }
+  .picnic-drift:hover { animation-play-state: paused; }
+  @keyframes picnic-drift {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
 }

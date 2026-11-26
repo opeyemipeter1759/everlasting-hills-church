@@ -1,6 +1,5 @@
-import Image from "next/image";
 import { Gift, Sun, Users, UtensilsCrossed } from "lucide-react";
-import { PHOTOS } from "@/components/picnic/picnic-config";
+import PicnicCmsImage from "@/components/picnic/PicnicCmsImage";
 import { dateParts } from "@/components/picnic/picnic-content";
 import { usePicnicContent } from "@/lib/api/picnic";
 
@@ -29,7 +28,7 @@ export function GiftModalAside() {
 
   return (
     <aside className="relative isolate flex min-h-[150px] shrink-0 flex-col justify-end overflow-hidden text-[#FBF4E6] md:min-h-0">
-      <Image src={PHOTOS.unity.src.replace(/w=\d+/, "w=1200")} alt="" fill sizes="(max-width: 768px) 100vw, 400px" className="-z-10 object-cover object-[center_60%]" />
+      <PicnicCmsImage spot="verse" width={1200} fill sizes="(max-width: 768px) 100vw, 400px" className="-z-10 object-cover object-[center_60%]" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#140C06]/95 via-[#140C06]/55 to-[#140C06]/10" />
 
       <div className="p-5 md:p-7">

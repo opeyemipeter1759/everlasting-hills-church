@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { CalendarDays, UtensilsCrossed } from "lucide-react";
-import { PHOTOS } from "@/components/picnic/picnic-config";
+import PicnicCmsImage from "@/components/picnic/PicnicCmsImage";
 
 /** Fine red gingham, drawn in CSS so the dashboard needs no extra stylesheet. */
 const GINGHAM = {
@@ -31,7 +30,7 @@ export function GiftPartyHeader({ titleId, kicker, title, dayLabel, level = "h3"
 
   return (
     <div className={`relative isolate overflow-hidden text-white ${className}`}>
-      <Image src={PHOTOS.unity.src.replace(/w=\d+/, "w=900")} alt="" fill sizes="420px" className="-z-10 object-cover object-[center_62%]" />
+      <PicnicCmsImage spot="verse" width={900} fill sizes="420px" className="-z-10 object-cover object-[center_62%]" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#1A0E07]/85 via-[#1A0E07]/45 to-[#1A0E07]/10" />
 
       <div className="px-5 pb-6 pt-14">

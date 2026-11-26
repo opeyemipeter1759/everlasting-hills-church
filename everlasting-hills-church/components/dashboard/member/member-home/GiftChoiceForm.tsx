@@ -4,7 +4,8 @@ import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Gift, Loader2, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import type { GiftChoice } from "@/lib/api/gift-exchange";
-import { PHOTOS } from "@/components/picnic/picnic-config";
+import { atWidth } from "@/components/picnic/picnic-photos";
+import { usePicnicPhoto } from "@/lib/api/picnic";
 import { GiftOptionTile } from "./GiftOptionTile";
 
 export const GIFT_OPTIONS: { key: keyof GiftChoice; label: string; hint: string; Icon: LucideIcon }[] = [
@@ -35,6 +36,7 @@ export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: 
   const [choice, setChoice] = useState<GiftChoice>(initial);
   const nothingPicked = !choice.giftExchange && !choice.picnic;
   const still = useReducedMotion() ?? false;
+  const picnicTile = usePicnicPhoto("bring2");
   const summary = choice.picnic ? "The picnic and the gift exchange" : choice.giftExchange ? "The gift exchange only" : "Nothing yet";
 
   return (
@@ -55,7 +57,7 @@ export function GiftChoiceForm({ initial, changing, saving, onSave, onCancel }: 
                 label={label}
                 hint={hint}
                 Icon={Icon}
-                photo={key === "picnic" ? PHOTOS.gingham.src.replace(/w=\d+/, "w=600") : undefined}
+                photo={key === "picnic" ? atWidth(picnicTile.src, 600) : undefined}
                 badge={key === "picnic" ? "Includes the gift exchange" : undefined}
                 checked={choice[key] || locked}
                 locked={locked}

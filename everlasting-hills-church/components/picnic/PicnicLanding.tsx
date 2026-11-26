@@ -5,15 +5,20 @@ import PicnicGames from "./PicnicGames";
 import PicnicHero from "./PicnicHero";
 import PicnicRsvp from "./PicnicRsvp";
 import PicnicShare from "./PicnicShare";
-import { GAME_PHOTO_CREDITS, PHOTOS } from "./picnic-config";
+import PicnicVibes from "./PicnicVibes";
+import { GAME_PHOTO_CREDITS } from "./picnic-config";
+import { picnicPhoto, stockCredits } from "./picnic-photos";
 import { TBA_DATE, dateParts, type PicnicContent } from "./picnic-content";
 
 export default function PicnicLanding({ c }: { c: PicnicContent }) {
   const d = dateParts(c.date);
+  // Credit only the stock photos still on the page (games keep their own list).
+  const credits = [...stockCredits(c.photos), ...GAME_PHOTO_CREDITS];
 
   return (
     <main className="paper-grain overflow-x-hidden">
       <PicnicHero d={d} c={c} />
+      <PicnicVibes c={c} />
       <PicnicAfternoon c={c} />
       <PicnicGames c={c} />
       <PicnicBring c={c} />
@@ -39,7 +44,7 @@ export default function PicnicLanding({ c }: { c: PicnicContent }) {
       {/* ── Share ────────────────────────────────────────────────────────── */}
       <section id="share" className="scroll-mt-20 py-20 sm:py-28">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <PicnicShare date={c.date ?? null} time={c.time ?? null} venue={c.venue ?? null} />
+          <PicnicShare date={c.date ?? null} time={c.time ?? null} venue={c.venue ?? null} photo={picnicPhoto(c.photos, "hero").src} />
         </div>
       </section>
 
@@ -51,8 +56,8 @@ export default function PicnicLanding({ c }: { c: PicnicContent }) {
             Unsplash
           </a>{" "}
           by{" "}
-          {[...Object.values(PHOTOS), ...GAME_PHOTO_CREDITS].map((p, i, all) => (
-            <span key={p.src}>
+          {credits.map((p, i, all) => (
+            <span key={`${p.page}-${p.by}`}>
               <a href={p.page} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
                 {p.by}
               </a>

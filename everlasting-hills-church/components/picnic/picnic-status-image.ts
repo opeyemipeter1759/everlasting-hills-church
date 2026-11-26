@@ -2,6 +2,7 @@
 
 import { PHOTOS, PICNIC } from "./picnic-config";
 import { dateParts, timeSuffix, venueLabel } from "./picnic-content";
+import { atWidth } from "./picnic-photos";
 import { cssFont, drawCover, gingham, loadImage, roundRect } from "./status-canvas";
 
 /**
@@ -28,9 +29,11 @@ export interface StatusImageInput {
   siteHost: string;
   time: string | null;
   venue: string | null;
+  /** The hero photo from the CMS; the stock photo when blank or when it can't be drawn. */
+  photo?: string | null;
 }
 
-export async function drawPicnicStatus({ name, siteHost, date, time, venue }: StatusImageInput): Promise<Blob> {
+export async function drawPicnicStatus({ name, siteHost, date, time, venue, photo: photoSrc }: StatusImageInput): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -42,7 +45,7 @@ export async function drawPicnicStatus({ name, siteHost, date, time, venue }: St
   const sans = cssFont("--nf-jakarta", "Helvetica, Arial, sans-serif");
   const d = dateParts(date);
   const [photo, logo] = await Promise.all([
-    loadImage(PHOTOS.hero.src.replace(/w=\d+/, "w=1600"), true),
+    loadImage(atWidth(photoSrc || PHOTOS.hero.src, 1600), true).catch(() => loadImage(atWidth(PHOTOS.hero.src, 1600), true)),
     loadImage("/logoblack.png", false),
   ]);
 

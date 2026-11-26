@@ -1,6 +1,7 @@
 /**
- * Fixed facts about the picnic: path, event, date rule and photographs. The
- * words, time and venue are edited in the CMS (see picnic-content.ts).
+ * Fixed facts about the picnic: path, event and date formatting, plus the
+ * stock photographs every photo spot falls back to. The words, date, games and
+ * photos are edited in the CMS (picnic-content.ts, picnic-photos.ts).
  *
  * Public registrations are RSVPs on the picnic event; members sign up from the
  * dashboard's Picnic & gift exchange card.

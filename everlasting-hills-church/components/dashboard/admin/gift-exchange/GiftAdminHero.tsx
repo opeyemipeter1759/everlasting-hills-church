@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { CalendarDays } from "lucide-react";
 import { giftDayLabel } from "@/components/dashboard/member/member-home/GiftCountdown";
-import { PHOTOS, PICNIC } from "@/components/picnic/picnic-config";
+import { PICNIC } from "@/components/picnic/picnic-config";
+import PicnicCmsImage from "@/components/picnic/PicnicCmsImage";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -22,7 +22,7 @@ const GINGHAM = {
 export default function GiftAdminHero({ targetDate }: { targetDate: string | null }) {
   return (
     <section className="relative isolate overflow-hidden rounded-2xl text-white">
-      <Image src={PHOTOS.unity.src.replace(/w=\d+/, "w=1800")} alt="" fill sizes="(max-width: 1024px) 100vw, 1000px" className="-z-10 object-cover object-[center_62%]" />
+      <PicnicCmsImage spot="verse" width={1800} fill sizes="(max-width: 1024px) 100vw, 1000px" className="-z-10 object-cover object-[center_62%]" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#1A0E07]/90 via-[#1A0E07]/65 to-[#1A0E07]/20" />
 
       <div className="flex flex-wrap items-end justify-between gap-6 px-6 pb-7 pt-12 sm:px-8 sm:pt-16">

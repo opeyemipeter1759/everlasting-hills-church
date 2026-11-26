@@ -1,6 +1,6 @@
 import Image from "next/image";
 import ScrollReveal from "@/components/home/ScrollReveal";
-import { PHOTOS } from "./picnic-config";
+import { picnicPhoto, type ResolvedPhoto } from "./picnic-photos";
 import type { PicnicContent } from "./picnic-content";
 
 /** A small wall of prints beside the "bring along" list. */
@@ -9,10 +9,10 @@ export default function PicnicBring({ c }: { c: PicnicContent }) {
       <section className="py-20 sm:py-28">
         <div className="mx-auto grid max-w-6xl items-center gap-16 px-5 sm:px-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="relative grid grid-cols-2 items-center gap-5 sm:gap-7">
-            <Print photo={PHOTOS.reading} caption="slow afternoons" rotate="-rotate-2" />
+            <Print photo={picnicPhoto(c.photos, "bring1")} rotate="-rotate-2" />
             <div className="space-y-6 sm:space-y-8">
-              <Print photo={PHOTOS.gingham} caption="the good blanket" rotate="rotate-2" />
-              <Print photo={PHOTOS.fruit} caption="someone always brings fruit" rotate="-rotate-1" square />
+              <Print photo={picnicPhoto(c.photos, "bring2")} rotate="rotate-2" />
+              <Print photo={picnicPhoto(c.photos, "bring3")} rotate="-rotate-1" square />
             </div>
           </div>
 
@@ -40,13 +40,11 @@ export default function PicnicBring({ c }: { c: PicnicContent }) {
 
 function Print({
   photo,
-  caption,
   rotate,
   className = "",
   square = false,
 }: {
-  photo: { src: string; alt: string };
-  caption: string;
+  photo: ResolvedPhoto;
   rotate: string;
   className?: string;
   square?: boolean;
@@ -57,9 +55,9 @@ function Print({
       <div className={`relative overflow-hidden bg-[#e9e1d2] ${square ? "aspect-square" : "aspect-[3/4]"}`}>
         <Image src={photo.src} alt={photo.alt} fill sizes="(max-width: 1024px) 45vw, 300px" className="object-cover" />
       </div>
-      <figcaption className="absolute bottom-2.5 left-3 text-[13px] font-medium text-[#1B1714]/60">
-        {caption}
-      </figcaption>
+      {photo.caption && (
+        <figcaption className="absolute bottom-2.5 left-3 text-[13px] font-medium text-[#1B1714]/60">{photo.caption}</figcaption>
+      )}
     </figure>
   );
 }
