@@ -3,19 +3,17 @@
 import { useState } from 'react';
 import { useSermonPlayer } from '@/context/SermonPlayerContext';
 import SermonHero from './SermonHero';
-import SermonArchiveSections from './SermonArchiveSections';
-import LatestSermonSummary from '@/components/sermon-digest/LatestSermonSummary';
+import SermonLibrary from './library/SermonLibrary';
 
 export default function SermonsPageClient() {
   const { play } = useSermonPlayer();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#111]">
+    <div className="min-h-screen bg-[#FBF8F8]">
       <SermonHero onPlay={play} />
-
-      <div className="max-w-6xl mx-auto px-4 py-8 xs:py-10 space-y-6">
-        <LatestSermonSummary />
-        <SermonArchiveSections onPlay={play} />
+      {/* Every sermon: filters on the left, the grid on the right. */}
+      <SermonLibrary onListen={play} />
+      <div className="max-w-6xl mx-auto px-4 pb-16 xs:pb-20">
         <EmailSubscribeCard />
       </div>
     </div>
@@ -42,9 +40,9 @@ function EmailSubscribeCard() {
     <div className="bg-[#87102C] text-white rounded-2xl p-5 xs:p-8 text-center space-y-4">
       <p className="text-sm font-bold uppercase tracking-widest text-white/60">Stay Connected</p>
       <h3 className="text-xl xs:text-2xl font-black">Get new sermons in your inbox</h3>
-      <p className="text-white/70 text-sm max-w-sm mx-auto">No account needed. Just your email — we'll notify you when a new message is published.</p>
+      <p className="text-white/70 text-sm max-w-sm mx-auto">No account needed. Just your email — we&rsquo;ll notify you when a new message is published.</p>
       {state === 'done' ? (
-        <p className="text-white font-semibold">You're subscribed!</p>
+        <p className="text-white font-semibold">You&rsquo;re subscribed!</p>
       ) : (
         <form onSubmit={subscribe} className="flex flex-col xs:flex-row gap-2 max-w-sm mx-auto">
           <input
