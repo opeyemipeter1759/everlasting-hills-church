@@ -66,7 +66,7 @@ export class FirstTimerVisitsController {
   @ApiOperation({ summary: 'Set their status by hand (wins over visits), or null to follow their visits again. Fourth timer asks for integration.' })
   async setStatus(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string, @Body() body: unknown) {
     await this.auth.requireAccess(actor);
-    const person = await this.visits.setStatus(actor, visitorId, parseSchema(setStatusSchema, body).status);
+    const person = await this.visits.setStatus(actor, visitorId, parseSchema(setStatusSchema, body).status, () => this.auth.onIntegrationTeam(actor));
     await this.integrateIfDue(visitorId);
     return person;
   }

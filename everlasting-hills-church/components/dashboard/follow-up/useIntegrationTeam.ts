@@ -10,12 +10,14 @@ import { useFollowUpLeadership } from "./useFollowUpLeadership";
  * the same people the API lets make an Integration Team assignment. Leading
  * Follow Up doesn't count; that is the other team.
  */
-export function useIntegrationTeam(): { unitId: string | null; canAssign: boolean } {
+export function useIntegrationTeam(): { unitId: string | null; canAssign: boolean; onTeam: boolean } {
   const { data: departments = [] } = useMyDepartmentUnits();
   const { data: mine = [] } = useMyUnits();
   const { isHod, churchWide } = useFollowUpLeadership();
 
   const unit = departments.flatMap((d) => d.units).find((u) => isIntegrationUnit(u.name)) ?? null;
   const leadsIt = mine.some((u) => isIntegrationUnit(u.name) && (u.isLead || u.isAssistant));
-  return { unitId: unit?.id ?? null, canAssign: leadsIt || isHod || churchWide };
+  // On the team at all (any member, or whoever may lead it): may mark an integrated member Away.
+  const onTeam = mine.some((u) => isIntegrationUnit(u.name)) || isHod || churchWide;
+  return { unitId: unit?.id ?? null, canAssign: leadsIt || isHod || churchWide, onTeam };
 }

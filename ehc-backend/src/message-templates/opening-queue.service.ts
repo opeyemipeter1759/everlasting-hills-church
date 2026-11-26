@@ -23,7 +23,7 @@ const QUEUE_MAX = 200;
 /**
  * The list the first-timer contact works through after each Sunday: everyone
  * still being followed up (not integrated, not opted out) whom nobody has
- * contacted yet, oldest first. Reads the pipeline's own query, so a person
+ * contacted yet, newest registration first. Reads the pipeline's own query, so a person
  * leaves the queue the moment any contact is logged, from any screen.
  */
 @Injectable()
@@ -49,7 +49,7 @@ export class OpeningQueueService {
        WHERE ${pipelineWhere({ notContacted: true })}
          AND pl.status IN ('FIRST_TIMER', 'SECOND_TIMER', 'THIRD_TIMER', 'FOURTH_TIMER')
          AND pl."firstVisitDate" >= ${since}::date
-       ORDER BY ${pipelineOrder('oldest')}, pl."visitorId"
+       ORDER BY ${pipelineOrder('registered')}, pl."visitorId"
        LIMIT ${QUEUE_MAX}`);
     return rows.map((r) => r.visitorId);
   }
@@ -99,7 +99,7 @@ export class OpeningQueueService {
   async queue(actor: AuthUser) {
     requireOpeningSender(actor);
     const ids = await this.queueIds();
-    const page = await this.pipeline.list({ visitorIds: ids, sort: 'oldest', take: QUEUE_MAX });
+    const page = await this.pipeline.list({ visitorIds: ids, sort: 'registered', take: QUEUE_MAX });
     const active = await this.templates.active(OPENING_KEY);
     const sender = active ? await this.opening.sender(actor) : null;
     return {

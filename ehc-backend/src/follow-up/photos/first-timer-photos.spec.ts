@@ -57,7 +57,7 @@ function setup(opts: { photoKey?: string | null; onRecord?: boolean; allowed?: b
   const urls = new PhotoUrlService(storage, config);
   const service = new FirstTimerPhotosService(prisma as never, pipeline as never, auth as never, storage, urls, config);
   const controller = new FirstTimerPhotosController(service);
-  const pipelineController = new FollowUpPipelineController(pipeline as never, auth as never, prisma as never, urls);
+  const pipelineController = new FollowUpPipelineController(pipeline as never, auth as never, prisma as never, urls, {} as never);
   return { bucket, from, prisma, pipeline, controller, pipelineController, urls, row };
 }
 

@@ -1,13 +1,13 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { FirstTimerVisitsService } from './first-timer-visits.service';
 import { setStatusSchema } from './visit-day.schema';
 
 const config = { get: () => 'tenant' } as never;
 const actor = { userId: 'u1', profileId: 'p1' } as never;
 
-function setup(status: string) {
+function setup(status: string, stage: string | null = null) {
   const prisma = { visitor: { update: jest.fn() }, auditLog: { create: jest.fn() } };
-  const pipeline = { one: jest.fn().mockResolvedValue({ visitorId: 'v1', status, statusOverride: null }) };
+  const pipeline = { one: jest.fn().mockResolvedValue({ visitorId: 'v1', status, stage, statusOverride: null }) };
   return { svc: new FirstTimerVisitsService(prisma as never, pipeline as never, config), prisma };
 }
 
@@ -29,8 +29,23 @@ describe('Setting a first-timer’s status by hand', () => {
   });
 
   it('leaves integrated and opted-out people to their own flows', async () => {
-    await expect(setup('INTEGRATED').svc.setStatus(actor, 'v1', 'FIRST_TIMER')).rejects.toBeInstanceOf(BadRequestException);
+    await expect(setup('INTEGRATED', 'CONFIRMED').svc.setStatus(actor, 'v1', 'FIRST_TIMER', async () => true)).rejects.toBeInstanceOf(BadRequestException);
     await expect(setup('OPTED_OUT').svc.setStatus(actor, 'v1', 'FIRST_TIMER')).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('lets the Integration Team mark an integrated member Away, and back to Integrated', async () => {
+    const away = setup('INTEGRATED', 'CONFIRMED');
+    await away.svc.setStatus(actor, 'v1', 'AWAY', async () => true);
+    expect(away.prisma.visitor.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ statusOverride: 'AWAY' }) }));
+    const back = setup('AWAY', 'CONFIRMED');
+    await back.svc.setStatus(actor, 'v1', null, async () => true);
+    expect(back.prisma.visitor.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ statusOverride: null }) }));
+  });
+
+  it('keeps anyone off the Integration Team from marking an integrated member Away', async () => {
+    const { svc, prisma } = setup('INTEGRATED', 'CONFIRMED');
+    await expect(svc.setStatus(actor, 'v1', 'AWAY', async () => false)).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.visitor.update).not.toHaveBeenCalled();
   });
 
   it('accepts only the statuses the board may set', () => {

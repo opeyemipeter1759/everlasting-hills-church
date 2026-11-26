@@ -22,7 +22,7 @@ export default function VisitorRowItem({
   onDelete: (visitor: VisitorRow) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const { team } = useFirstTimersMode();
+  const { team, canEdit } = useFirstTimersMode();
   const name = `${visitor.firstName} ${visitor.lastName}`;
 
   return (
@@ -53,29 +53,31 @@ export default function VisitorRowItem({
         <td className="px-5 py-3.5 hidden lg:table-cell">
           <span className="text-xs text-[#8a7e80] dark:text-white/40">{relativeDate(visitor.submittedAt)}</span>
         </td>
-        <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center gap-1.5">
-            {!team && <CreateAccountBtn visitor={visitor} onCreated={onCreated} />}
-            <button
-              type="button"
-              onClick={() => onEdit(visitor)}
-              aria-label={`Edit ${name}`}
-              title="Edit"
-              className="w-7 h-7 flex-shrink-0 rounded-lg flex items-center justify-center text-[#8a7e80] dark:text-white/40 hover:text-[#87102C] dark:hover:text-[#FFB3C1] hover:bg-[#FFF4F6] dark:hover:bg-white/10 transition-colors"
-            >
-              <Pencil size={13} />
-            </button>
-            {!team && <button
-              type="button"
-              onClick={() => onDelete(visitor)}
-              aria-label={`Delete ${name}`}
-              title="Delete"
-              className="w-7 h-7 flex-shrink-0 rounded-lg flex items-center justify-center text-[#8a7e80] dark:text-white/40 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
-            >
-              <Trash2 size={13} />
-            </button>}
-          </div>
-        </td>
+        {(!team || canEdit) && (
+          <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-1.5">
+              {!team && <CreateAccountBtn visitor={visitor} onCreated={onCreated} />}
+              {canEdit && <button
+                type="button"
+                onClick={() => onEdit(visitor)}
+                aria-label={`Edit ${name}`}
+                title="Edit"
+                className="w-7 h-7 flex-shrink-0 rounded-lg flex items-center justify-center text-[#8a7e80] dark:text-white/40 hover:text-[#87102C] dark:hover:text-[#FFB3C1] hover:bg-[#FFF4F6] dark:hover:bg-white/10 transition-colors"
+              >
+                <Pencil size={13} />
+              </button>}
+              {!team && <button
+                type="button"
+                onClick={() => onDelete(visitor)}
+                aria-label={`Delete ${name}`}
+                title="Delete"
+                className="w-7 h-7 flex-shrink-0 rounded-lg flex items-center justify-center text-[#8a7e80] dark:text-white/40 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+              >
+                <Trash2 size={13} />
+              </button>}
+            </div>
+          </td>
+        )}
         <td className="px-3 py-3.5">
           <div className={`text-[#b8a8ac] dark:text-white/25 transition-transform duration-200 ${open ? "rotate-90" : ""}`}>
             <ChevronRight size={14} />

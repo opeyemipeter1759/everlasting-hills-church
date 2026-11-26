@@ -10,9 +10,12 @@ import type { VisitorRow } from "./types";
 export default function CreateAccountBtn({
   visitor,
   onCreated,
+  className,
 }: {
   visitor: VisitorRow;
   onCreated: (visitorId: string) => void;
+  /** Replaces the button's own look, so it can match the buttons around it. */
+  className?: string;
 }) {
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -53,7 +56,7 @@ export default function CreateAccountBtn({
         onClick={handleCreate}
         disabled={loading}
         title={needsEarlyAccountOverride ? "No second online visit is recorded" : undefined}
-        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors disabled:opacity-50 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/30 focus-visible:ring-offset-2 ${
+        className={className ? `inline-flex items-center justify-center gap-1.5 whitespace-nowrap ${className}` : `inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors disabled:opacity-50 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/30 focus-visible:ring-offset-2 ${
           needsEarlyAccountOverride
             ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/25 hover:bg-amber-500/15"
             : highlighted

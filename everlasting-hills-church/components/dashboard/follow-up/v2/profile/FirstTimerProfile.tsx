@@ -12,6 +12,7 @@ import FollowUpSection from "./FollowUpSection";
 import OpeningMessageSection from "./OpeningMessageSection";
 import PhotoSection from "./PhotoSection";
 import VisitsSection from "./VisitsSection";
+import { StickyName } from "./StickyName";
 
 /**
  * A first-timer's full profile: who they are, where they stand, and every
@@ -43,13 +44,11 @@ export default function FirstTimerProfile() {
       <button type="button" onClick={back} className="inline-flex min-h-9 items-center gap-1 text-sm font-medium text-gray-500 hover:text-[#111] dark:text-white/55 dark:hover:text-white">
         <ArrowLeft size={15} aria-hidden="true" /> Back
       </button>
+      <StickyName name={`${person.firstName} ${person.lastName}`} />
       <header className="flex items-start gap-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
         <PersonAvatar row={person} size={64} />
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-bold text-[#111] dark:text-white">
-            {person.firstName} {person.lastName}
-          </h1>
-          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <StatusChip status={person.status} />
             <span className="text-sm text-gray-600 dark:text-white/60">{stageText(person)}</span>
           </div>
@@ -62,8 +61,8 @@ export default function FirstTimerProfile() {
         </div>
       </header>
       <OpeningMessageSection {...props} />
-      <FollowUpSection {...props} />
       <ApprovalSection {...props} />
+      <FollowUpSection {...props} />
       <VisitsSection {...props} />
       <PhotoSection {...props} />
       <AnswersSection {...props} />

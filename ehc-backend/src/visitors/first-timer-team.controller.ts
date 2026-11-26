@@ -40,18 +40,20 @@ export class FirstTimerTeamController {
   async list(@CurrentUser() actor: AuthUser, @Query() query: Record<string, string | undefined>) {
     await this.access.require(actor);
     const filters = parseFirstTimerFilters(query);
-    const [page, pipeline] = await Promise.all([
+    const [page, pipeline, canEdit] = await Promise.all([
       this.visitors.firstTimers(filters),
       this.pipeline.list({ year: filters.year, month: filters.month, take: 1 }),
+      this.access.canEdit(actor),
     ]);
-    return { ...page, rows: page.rows.map((row) => withoutPrayer(row)), onRecord: pipeline.counts.all };
+    // canEdit: whether this viewer may correct records, so the page offers Edit only to them.
+    return { ...page, rows: page.rows.map((row) => withoutPrayer(row)), onRecord: pipeline.counts.all, canEdit };
   }
 
   @Patch('first-timers/:id')
-  @ApiOperation({ summary: 'Correct a first-timer record; the prayer request is not editable here (First Timer Team)' })
+  @ApiOperation({ summary: "Correct a first-timer record; the prayer request is not editable here (the First Timer Team's lead, its head of department, or an admin)" })
   @ApiBody({ type: UpdateVisitorDto })
   async update(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: UpdateVisitorDto) {
-    await this.access.require(actor);
+    await this.access.requireEdit(actor);
     const { prayerPoint: _prayer, ...edit } = body;
     void _prayer;
     return withoutPrayer(await this.visitors.update(id, edit as UpdateVisitorDto));

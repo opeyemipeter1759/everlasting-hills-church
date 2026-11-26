@@ -1,5 +1,6 @@
 import type { VisitorRow } from "./types";
 import VisitorRowItem from "./VisitorRowItem";
+import { useFirstTimersMode } from "./mode";
 
 const TH =
   "text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.2em]";
@@ -15,6 +16,9 @@ export default function VisitorsTable({
   onEdit: (visitor: VisitorRow) => void;
   onDelete: (visitor: VisitorRow) => void;
 }) {
+  // A team member who can only read has no actions, so the column goes.
+  const { team, canEdit } = useFirstTimersMode();
+  const actions = !team || canEdit;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -24,7 +28,7 @@ export default function VisitorsTable({
             <th className={`${TH} hidden sm:table-cell`}>Type</th>
             <th className={`${TH} hidden md:table-cell`}>Interest</th>
             <th className={`${TH} hidden lg:table-cell`}>Date</th>
-            <th className={TH}>Action</th>
+            {actions && <th className={TH}>Action</th>}
             <th className="w-8" />
           </tr>
         </thead>

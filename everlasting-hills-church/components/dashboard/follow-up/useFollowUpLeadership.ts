@@ -15,6 +15,8 @@ export interface FollowUpLeadership {
   canRunUnit: boolean;
   /** Approve a status change someone asked for. */
   canApprove: boolean;
+  /** False until who they are is known, so nothing is shown for the wrong role first. */
+  ready: boolean;
 }
 
 /**
@@ -26,8 +28,8 @@ export interface FollowUpLeadership {
  * head of department oversees the unit's leads, so they count too.
  */
 export function useFollowUpLeadership(): FollowUpLeadership {
-  const { data: me } = useMe();
-  const { data: reportsUnit } = useFollowUpReportsUnit();
+  const { data: me, isLoading: meLoading } = useMe();
+  const { data: reportsUnit, isLoading: unitLoading } = useFollowUpReportsUnit();
 
   const churchWide = (me?.effectiveRoles ?? []).some((role) => CHURCH_WIDE.includes(role));
   const isFollowUpLead = !!reportsUnit;
@@ -39,5 +41,6 @@ export function useFollowUpLeadership(): FollowUpLeadership {
     churchWide,
     canRunUnit: isFollowUpLead || isHod || churchWide,
     canApprove: isFollowUpLead || isHod || churchWide,
+    ready: !meLoading && !unitLoading,
   };
 }

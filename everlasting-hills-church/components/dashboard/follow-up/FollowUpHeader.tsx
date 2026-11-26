@@ -4,25 +4,11 @@ import { CalendarDays, PhoneCall } from "lucide-react";
 import { useMe } from "@/lib/api";
 import { freshness, RefreshButton } from "./header-parts";
 import { StatCards } from "./StatCards";
-import { rollWords, weekWords, type Words } from "./summary-words";
+import { Figures } from "./Figures";
+import { MemberRoll } from "./MemberRoll";
+import { rollWords, weekWords } from "./summary-words";
+import { useFollowUpLeadership } from "./useFollowUpLeadership";
 import { useFollowUpSummary } from "./useFollowUpSummary";
-
-/** A sentence with its figures in bold, so the numbers can be read at a glance. */
-function Figures({ words }: { words: Words }) {
-  return (
-    <>
-      {words.map((word, i) =>
-        typeof word === "number" ? (
-          <strong key={i} className="font-semibold tabular-nums text-white">
-            {word}
-          </strong>
-        ) : (
-          word
-        ),
-      )}
-    </>
-  );
-}
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -34,6 +20,8 @@ function greeting(): string {
 export function FollowUpHeader() {
   const { data: me } = useMe();
   const summary = useFollowUpSummary();
+  // The team's figures are for whoever runs the unit; a member sees their own people.
+  const { ready, canRunUnit } = useFollowUpLeadership();
   const firstName = me?.member?.firstName ?? null;
   const today = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
@@ -69,13 +57,15 @@ export function FollowUpHeader() {
               {firstName ? `${greeting()}, ${firstName}. ` : null}
               {/* Until the figures land, say nothing: a zero would be a claim
                   we can't yet make. */}
-              {summary.isLoading ? (
+              {summary.isLoading || !ready ? (
                 <span className="inline-block h-4 w-56 animate-pulse rounded bg-white/20 align-middle" />
-              ) : summary.denied ? null : (
+              ) : summary.denied ? null : canRunUnit ? (
                 <Figures words={rollWords(summary)} />
+              ) : (
+                <MemberRoll />
               )}
             </p>
-            {!summary.isLoading && !summary.denied && summary.followingUp > 0 && summary.thisWeek && (
+            {ready && canRunUnit && !summary.isLoading && !summary.denied && summary.followingUp > 0 && summary.thisWeek && (
               <p className="mt-1 max-w-xl text-sm leading-relaxed text-white/75">
                 <Figures words={weekWords(summary.thisWeek)} />
               </p>
@@ -91,7 +81,7 @@ export function FollowUpHeader() {
         </div>
       </header>
 
-      {!summary.denied && <StatCards summary={summary} />}
+      {!summary.denied && <StatCards summary={summary} showOutcomes={ready && canRunUnit} />}
     </section>
   );
 }

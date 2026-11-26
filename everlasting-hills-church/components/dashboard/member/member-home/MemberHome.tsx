@@ -1,4 +1,5 @@
 "use client";
+import { AnnouncementTicker } from "@/components/announcements/AnnouncementTicker";
 import type { MemberHomePropsOptional, StreakState } from "./types";
 import { QrCheckinBanner } from "./QrCheckinBanner";
 import { WelcomeHero } from "./WelcomeHero";
@@ -10,7 +11,6 @@ import { WarmStreakStat } from "./WarmStreakStat";
 import { FeaturedSermonCard } from "./FeaturedSermonCard";
 import { ContinueListeningCard } from "./ContinueListeningCard";
 import { GatheringsPanel } from "./GatheringsPanel";
-import { AnnouncementsPanel } from "../AnnouncementsPanel";
 import { ProfileCompletionToast } from "./ProfileCompletionToast";
 import TodayReadingCard from "../reading-plan/TodayReadingCard";
 import DailyScriptureCard from "./DailyScriptureCard";
@@ -73,6 +73,8 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         <PushOptInCard />
       </div>
 
+      <AnnouncementTicker announcements={announcements} />
+
       <WelcomeHero
         firstName={firstName}
         initials={initials}
@@ -90,8 +92,9 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           <Tile order={1}><PledgeAppeal member={member} userEmail={userEmail} /></Tile>
           <Tile order={4}><DailyScriptureCard /></Tile>
           <Tile order={7}><TodayReadingCard /></Tile>
-          <Tile order={10}><AnnouncementsPanel announcements={announcements} /></Tile>
           <Tile order={13}><LatestSermonSummary compact /></Tile>
+          <Tile order={14}><OneOnOneCard /></Tile>
+          <Tile order={15}><EvangelismTallyCard /></Tile>
           {featuredSermon && <Tile order={15}><FeaturedSermonCard sermon={featuredSermon} /></Tile>}
           <Tile order={16}><GatheringsPanel /></Tile>
         </MainColumn>
@@ -125,8 +128,6 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           <Tile order={11}>
             <BirthdayCard memberId={member?.id ?? null} birthdayDaysUntil={birthdayDaysUntil} communityBirthdays={communityBirthdays} />
           </Tile>
-          <Tile order={12}><OneOnOneCard /></Tile>
-          <Tile order={14}><EvangelismTallyCard /></Tile>
         </SideColumn>
       </DashboardColumns>
     </div>

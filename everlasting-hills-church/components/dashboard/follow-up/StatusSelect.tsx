@@ -6,7 +6,9 @@ import { useFirstTimerProfile } from "@/lib/api/first-timer-profile";
 import { useSetFirstTimerStatus } from "@/lib/api/first-timer-visits";
 import { useFollowUpActions, useStageAction } from "@/lib/api/follow-up-stage";
 import type { OverrideStatus, PipelineStatus } from "@/lib/api/pipeline";
+import { Select } from "@/components/ui/select/Select";
 import { STATUS_META } from "./v2/status";
+import { useIntegrationTeam } from "./useIntegrationTeam";
 
 const CHOICES: OverrideStatus[] = ["FIRST_TIMER", "SECOND_TIMER", "THIRD_TIMER", "FOURTH_TIMER", "AWAY"];
 const FOLLOW = "FOLLOW_VISITS";
@@ -27,7 +29,10 @@ export function StatusSelect({ visitorId, firstName, fallback }: { visitorId: st
   const status = data?.person.status ?? fallback;
   const byHand = data?.person.statusOverride ?? null;
   const busy = setStatus.isPending || optOut.isPending;
-  const locked = status === "INTEGRATED" || status === "OPTED_OUT";
+  // Integrated (perhaps since marked Away): the Integration Team may switch them between Integrated and Away.
+  const integrated = data?.person.stage === "CONFIRMED" && status !== "OPTED_OUT";
+  const { onTeam } = useIntegrationTeam();
+  const locked = status === "OPTED_OUT" || (integrated && !onTeam);
 
   async function pick(value: string) {
     if (value === OPT_OUT) {
@@ -37,7 +42,8 @@ export function StatusSelect({ visitorId, firstName, fallback }: { visitorId: st
     const next = value === FOLLOW ? null : (value as OverrideStatus);
     try {
       await setStatus.mutateAsync(next);
-      toast.success(next ? `${firstName} is now ${STATUS_META[next].label.toLowerCase()}` : `${firstName} follows their visits again`);
+      const cleared = integrated ? `${firstName} is integrated again` : `${firstName} follows their visits again`;
+      toast.success(next ? `${firstName} is now ${STATUS_META[next].label.toLowerCase()}` : cleared);
     } catch (err) {
       toast.error(errorText(err));
     }
@@ -53,26 +59,30 @@ export function StatusSelect({ visitorId, firstName, fallback }: { visitorId: st
         {locked ? (
           <span className="text-sm font-semibold text-[#111] dark:text-white">{STATUS_META[status].label}</span>
         ) : (
-          <select
+          <Select
             id={`status-${visitorId}`}
             value={byHand ?? FOLLOW}
             disabled={busy}
-            onChange={(e) => pick(e.target.value)}
-            className="min-h-10 min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-2.5 text-sm font-semibold text-[#111] focus:border-[#87102C] focus:outline-none disabled:opacity-60 dark:border-white/10 dark:bg-white/[0.05] dark:text-white"
-          >
-            <option value={FOLLOW}>Follow their visits{byHand ? "" : ` (${STATUS_META[status].label})`}</option>
-            {CHOICES.map((s) => (
-              <option key={s} value={s}>
-                {STATUS_META[s].label}
-              </option>
-            ))}
-            {actions.data?.canOptOut && <option value={OPT_OUT}>Opted out</option>}
-          </select>
+            onChange={pick}
+            options={integrated ? [
+              { value: FOLLOW, label: "Integrated" },
+              { value: "AWAY", label: STATUS_META.AWAY.label },
+            ] : [
+              { value: FOLLOW, label: `Follow their visits${byHand ? "" : ` (${STATUS_META[status].label})`}` },
+              ...CHOICES.map((s) => ({ value: s, label: STATUS_META[s].label })),
+              ...(actions.data?.canOptOut ? [{ value: OPT_OUT, label: "Opted out" }] : []),
+            ]}
+            className="min-h-10 min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-2.5 text-sm font-semibold text-[#111] dark:border-white/10 dark:bg-white/[0.05] dark:text-white"
+          />
         )}
         {busy && <Clock3 size={14} className="flex-shrink-0 animate-pulse text-gray-400" aria-label="Saving" />}
       </div>
       <p className="ml-24 mt-2 text-xs text-gray-400 dark:text-white/35">
-        {status === "INTEGRATED"
+        {integrated && onTeam
+          ? status === "AWAY"
+            ? "Integrated, but marked Away. Pick Integrated when they are back."
+            : "Integrated by the team leads' approval. Mark them Away if they stop coming."
+          : status === "INTEGRATED"
           ? "Integrated by the team leads' approval."
           : status === "OPTED_OUT"
             ? "Restore them from their profile to change this."

@@ -3,8 +3,10 @@ import { decideApprovalSchema, firstProblem, requestApprovalSchema } from "./app
 import { updateRoutingRuleSchema } from "./routing-schema";
 
 describe("approval forms", () => {
-  it("asking needs only the first-timer; the note is optional", () => {
-    expect(firstProblem(requestApprovalSchema, { visitorId: "v1" })).toBeNull();
+  it("asking needs the first-timer and a note for the team leads", () => {
+    expect(firstProblem(requestApprovalSchema, { visitorId: "v1" })).toBe("Say how they are doing for the team leads");
+    expect(firstProblem(requestApprovalSchema, { visitorId: "v1", note: "   " })).toBe("Say how they are doing for the team leads");
+    expect(firstProblem(requestApprovalSchema, { visitorId: "v1", note: "Settled in the choir" })).toBeNull();
     expect(firstProblem(requestApprovalSchema, { visitorId: "v1", note: "x".repeat(1001) })).toMatch(/1,000/);
   });
 

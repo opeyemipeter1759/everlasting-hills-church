@@ -11,7 +11,7 @@ import { EveryoneList } from "./EveryoneList";
 
 /**
  * The Guest Care Coordinator's workspace. "Waiting for a message": everyone
- * nobody has contacted yet, oldest first; one tap sends the opening message on
+ * nobody has contacted yet, newest first; one tap sends the opening message on
  * WhatsApp and logs it, and the person leaves the list. "All first-timers":
  * everyone ever, to reach anyone again. Nobody emails from here: new
  * first-timers get the church's welcome email automatically.
@@ -34,8 +34,8 @@ export default function FirstTimerWorkspace() {
           <h1 className="mt-1 text-2xl font-bold text-[#111] dark:text-white">Welcome queue</h1>
           <p className="mt-1 max-w-xl text-sm text-gray-600 dark:text-white/60">
             {queue.data
-              ? `${rows.length} ${rows.length === 1 ? "person" : "people"} from the last ${queue.data.windowDays} days nobody has contacted yet, oldest first. Send each one the opening message and they leave this list.`
-              : "Everyone nobody has contacted yet, oldest first."}
+              ? `${rows.length} ${rows.length === 1 ? "person" : "people"} from the last ${queue.data.windowDays} days nobody has contacted yet, newest first. Send each one the opening message and they leave this list.`
+              : "Everyone nobody has contacted yet, newest first."}
           </p>
         </div>
         <Link

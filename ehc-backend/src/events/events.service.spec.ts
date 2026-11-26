@@ -20,7 +20,6 @@ describe('EventsService rich event persistence', () => {
   };
   const config = { get: jest.fn().mockReturnValue('tenant-1') };
   const revalidate = { trigger: jest.fn() };
-  const announcements = { announceEvent: jest.fn().mockResolvedValue(null) };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -33,7 +32,6 @@ describe('EventsService rich event persistence', () => {
       prisma as never,
       config as never,
       revalidate as never,
-      announcements as never,
     );
   }
 
@@ -73,21 +71,18 @@ describe('EventsService rich event persistence', () => {
     })).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  // Publishing an event is what tells the church about it, so the announcement
-  // rides on the status rather than on a separate button an admin can forget.
-  it('announces an event created straight into PUBLISHED', async () => {
+  // An event is not an announcement: publishing one puts it on the events
+  // page only. Announcements are written on their own (2026-11-26).
+  it('raises no announcement when an event is published', async () => {
+    const announcement = { create: jest.fn(), findUnique: jest.fn() };
+    Object.assign(prisma, { announcement });
     await service().create({
       title: 'Furnace 2026',
       startAt: '2026-10-02T06:00:00Z',
       status: EventStatus.PUBLISHED,
     });
 
-    expect(announcements.announceEvent).toHaveBeenCalledTimes(1);
-  });
-
-  it('says nothing for an event saved as a draft', async () => {
-    await service().create({ title: 'Quiet draft', startAt: '2026-10-02T06:00:00Z' });
-
-    expect(announcements.announceEvent).not.toHaveBeenCalled();
+    expect(announcement.create).not.toHaveBeenCalled();
+    expect(tx.event.findUniqueOrThrow).toHaveBeenCalled();
   });
 });

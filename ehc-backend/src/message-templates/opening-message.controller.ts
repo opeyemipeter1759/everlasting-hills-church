@@ -28,7 +28,7 @@ export class OpeningMessageController {
 
   @Get('queue')
   @Roles(...SENDERS)
-  @ApiOperation({ summary: 'First-timers nobody has contacted yet, oldest first, each with a ready WhatsApp link' })
+  @ApiOperation({ summary: 'First-timers nobody has contacted yet, newest registration first, each with a ready WhatsApp link' })
   list(@CurrentUser() actor: AuthUser) {
     return this.queue.queue(actor);
   }

@@ -5,8 +5,7 @@ import { useDecideApproval, type ApprovalView } from "@/lib/api/approvals";
 import { useFollowUpTeam } from "@/lib/api/follow-up-pipeline";
 import { Select } from "@/components/ui/select";
 
-const BUTTON = "h-11 rounded-xl px-4 text-sm font-semibold disabled:opacity-60";
-const QUIET = `${BUTTON} border border-gray-300 text-gray-800 hover:bg-gray-50 dark:border-white/15 dark:text-white/85 dark:hover:bg-white/[0.06]`;
+import { APPROVE, BUTTON, QUIET, ROW } from "./decision-styles";
 
 /**
  * Who a new first-timer goes to: approve the person proposed, give them to
@@ -25,9 +24,9 @@ export default function AssignmentDecision({ request, firstName, onDone }: { req
       <p className="text-sm text-gray-700 dark:text-white/75">
         {proposed?.name ? `${firstName} is proposed to ${proposed.name}.` : `Pick who ${firstName} goes to.`}
       </p>
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className={ROW}>
         {proposed && (
-          <button type="button" onClick={() => send("APPROVED")} disabled={decide.isPending} className={`${BUTTON} bg-emerald-600 text-white hover:bg-emerald-700`}>
+          <button type="button" onClick={() => send("APPROVED")} disabled={decide.isPending} className={APPROVE}>
             Approve: assign to {proposed.name?.split(" ")[0] ?? "them"}
           </button>
         )}

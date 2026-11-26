@@ -23,14 +23,13 @@ const ALL_TABS: TabDef[] = [
 /**
  * Which tabs a person gets.
  *
- * Master list, Overview, Assigned to me and Opted out are for everyone on the
- * team: someone who opts out leaves the Master list and Assigned to me and
- * waits on Opted out. Report is the
- * Follow Up unit's own write-up, so it goes to its lead, or the head of
- * department over it. Leading some other team does not qualify.
+ * A member of the team sees only Assigned to me: the people given to them.
+ * The Master list, Overview, Opted out and the Report are for whoever runs the
+ * Follow Up unit: its lead, the head of department over it, or anyone
+ * church-wide. Leading some other team does not qualify.
  */
 export function useFollowUpTabs(): TabDef[] {
   const { canRunUnit } = useFollowUpLeadership();
 
-  return ALL_TABS.filter((tab) => (tab.id === "report" ? canRunUnit : true));
+  return ALL_TABS.filter((tab) => tab.id === "mine" || canRunUnit);
 }

@@ -4,7 +4,7 @@ import { Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
-import { findFollowUpUnit } from '../follow-up-unit.util';
+import { findFollowUpUnit, findIntegrationUnit } from '../follow-up-unit.util';
 import { ADMIN_PLUS } from '../follow-up.types';
 
 /** Authorization + unit-resolution helpers shared across the Follow-Up pipeline. */
@@ -31,6 +31,19 @@ export class FollowUpAuthService {
     if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) return true;
     if (actor.unitLeadOf.includes(unitId)) return true;
     return !!departmentId && this.headsDepartment(actor, departmentId);
+  }
+
+  /**
+   * On the Integration Team: a member of its unit, or someone who may lead it
+   * (its lead, their head of department, church-wide staff).
+   */
+  async onIntegrationTeam(actor: AuthUser): Promise<boolean> {
+    const unit = await findIntegrationUnit(this.prisma, this.tenantId);
+    if (!unit) return actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r));
+    if (await this.canLeadUnit(actor, unit.id)) return true;
+    if (!actor.memberId) return false;
+    const member = await this.prisma.unitMember.findFirst({ where: { tenantId: this.tenantId, unitId: unit.id, memberId: actor.memberId }, select: { id: true } });
+    return !!member;
   }
 
   /** `canLead()` for call sites that don't already have the unit's department. */

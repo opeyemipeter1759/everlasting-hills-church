@@ -30,8 +30,9 @@ export default function MasterListPipeline({
   filters,
   empty,
   onPage,
+  statuses,
 }: {
-  fixed?: Pick<PipelineQuery, "status" | "assigneeId" | "absentFrom" | "presentAt">;
+  fixed?: Pick<PipelineQuery, "status" | "assigneeId" | "absentFrom" | "presentAt" | "integrated">;
   /** The chip it opens on; the viewer can change it. */
   defaultStatus?: PipelineStatus | "";
   /** Open the conversation an alert links to (`?thread=KIND:id`). Only the main list does this. */
@@ -41,6 +42,8 @@ export default function MasterListPipeline({
   empty?: ReactNode;
   /** Told each page of results, e.g. for figures above the list that must match it. */
   onPage?: (page: PipelinePage | undefined) => void;
+  /** Which status chips to offer; every status when left out. */
+  statuses?: PipelineStatus[];
 }) {
   const { year, month } = useMonthYearParams();
   const [status, setStatus] = useState<PipelineStatus | "">(defaultStatus);
@@ -57,6 +60,7 @@ export default function MasterListPipeline({
     assigneeId: fixed.assigneeId ?? assigneeId,
     absentFrom: fixed.absentFrom,
     presentAt: fixed.presentAt,
+    integrated: fixed.integrated,
     search,
     year,
     month,
@@ -81,7 +85,7 @@ export default function MasterListPipeline({
         {filters}
       </MasterListToolbar>
 
-      {!fixed.status && <MasterListChips counts={data?.counts} value={status} onChange={setStatus} />}
+      {!fixed.status && <MasterListChips counts={data?.counts} value={status} onChange={setStatus} statuses={statuses} />}
 
       <PeopleTable
         rows={data?.rows ?? []}
