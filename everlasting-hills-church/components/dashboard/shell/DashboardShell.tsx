@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { UserRole } from "./role-utils";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
+import DashboardAnnouncementBar from "./DashboardAnnouncementBar";
 import MobileBottomNav from "./MobileBottomNav";
 
 export type SessionUser = {
@@ -42,6 +43,7 @@ export default function DashboardShell({ user, children }: Props) {
       {/* Content area — offset by sidebar width on desktop */}
       <div className="md:pl-64 flex flex-col min-h-screen">
         <TopBar user={user} onMenuClick={() => setSidebarOpen(true)} />
+        <DashboardAnnouncementBar />
         {/* Bottom padding clears the mobile tab bar (h-16) plus the iPhone
             home-indicator inset the bar now pads itself with. */}
         <main className="flex-1 p-4 sm:p-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">
