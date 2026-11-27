@@ -4,12 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 
 /** Where a first-timer stands: from their stage and visits, or as the team set it by hand. */
-export type PipelineStatus = "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "AWAY" | "INTEGRATED" | "OPTED_OUT";
+export type PipelineStatus = "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "AWAY" | "INTEGRATED" | "REMOTE" | "OPTED_OUT";
 
-export const PIPELINE_STATUSES: PipelineStatus[] = ["FIRST_TIMER", "SECOND_TIMER", "THIRD_TIMER", "FOURTH_TIMER", "AWAY", "INTEGRATED", "OPTED_OUT"];
+export const PIPELINE_STATUSES: PipelineStatus[] = ["FIRST_TIMER", "SECOND_TIMER", "THIRD_TIMER", "FOURTH_TIMER", "AWAY", "INTEGRATED", "REMOTE", "OPTED_OUT"];
 
 /** What the board may set by hand; Integrated and Opted out keep their own flows. */
-export type OverrideStatus = "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "AWAY";
+/** REMOTE (EHC Remote Church) is only for an integrated member, set by the Integration Team. */
+export type OverrideStatus = "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "AWAY" | "REMOTE";
 
 export interface PipelineRow {
   visitorId: string;

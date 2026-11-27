@@ -1,3 +1,4 @@
+import { datedFilename } from "@/lib/export-date";
 import { AlignmentType, Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
 import type { ReportRow } from "@/lib/api/status-reports";
 
@@ -97,7 +98,7 @@ export async function exportReportDocx(report: ReportRow): Promise<void> {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${report.title.replace(/[^\w\s-]/g, "").trim() || "report"}.docx`;
+  a.download = datedFilename(report.title.replace(/[^\w\s-]/g, "").trim() || "report", "docx");
   document.body.appendChild(a);
   a.click();
   a.remove();

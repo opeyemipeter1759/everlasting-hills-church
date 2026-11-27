@@ -62,7 +62,7 @@ describe("Setting a first-timer's status by hand", () => {
   it("lets the Integration Team mark an integrated member Away, and back to Integrated", async () => {
     Object.assign(state, { status: "INTEGRATED", stage: "CONFIRMED", onTeam: true });
     render(<StatusSelect visitorId="v1" firstName="Wayne" fallback="FIRST_TIMER" />);
-    expect(options()).toEqual(["Integrated", "Away"]);
+    expect(options()).toEqual(["Integrated", "Away", "EHC Remote Church"]);
     pickOption("Away");
     await waitFor(() => expect(setStatus).toHaveBeenCalledWith("AWAY"));
   });
@@ -72,6 +72,13 @@ describe("Setting a first-timer's status by hand", () => {
     render(<StatusSelect visitorId="v1" firstName="Wayne" fallback="FIRST_TIMER" />);
     pickOption("Integrated");
     await waitFor(() => expect(setStatus).toHaveBeenCalledWith(null));
+  });
+
+  it("moves an integrated member from Away to EHC Remote Church", async () => {
+    Object.assign(state, { status: "AWAY", override: "AWAY", stage: "CONFIRMED", onTeam: true });
+    render(<StatusSelect visitorId="v1" firstName="Wayne" fallback="FIRST_TIMER" />);
+    pickOption("EHC Remote Church");
+    await waitFor(() => expect(setStatus).toHaveBeenCalledWith("REMOTE"));
   });
 
   it("leaves someone integrated to the team leads' approval", () => {

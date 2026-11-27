@@ -66,7 +66,7 @@ describe('FollowUpCountsService', () => {
     const { service } = makeService(people);
     const counts = await service.summary(viewer);
 
-    expect(counts.byStatus).toEqual({ FIRST_TIMER: 2, SECOND_TIMER: 1, THIRD_TIMER: 1, FOURTH_TIMER: 0, AWAY: 0, INTEGRATED: 1, OPTED_OUT: 1 });
+    expect(counts.byStatus).toEqual({ FIRST_TIMER: 2, SECOND_TIMER: 1, THIRD_TIMER: 1, FOURTH_TIMER: 0, AWAY: 0, INTEGRATED: 1, REMOTE: 0, OPTED_OUT: 1 });
     expect(counts.total).toBe(6);
     expect(counts.total).toBe(PIPELINE_STATUSES.reduce((n, s) => n + counts.byStatus[s], 0));
     expect(counts.visitors).toBe(counts.total);

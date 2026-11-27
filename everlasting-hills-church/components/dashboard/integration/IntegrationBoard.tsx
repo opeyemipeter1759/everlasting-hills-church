@@ -46,7 +46,7 @@ export default function IntegrationBoard() {
       </p>
 
       <MasterListPipeline
-        statuses={["INTEGRATED", "AWAY"]}
+        statuses={["INTEGRATED", "AWAY", "REMOTE"]}
         fixed={{
           integrated: true,
           presentAt: serviceId && attendance === "came" ? serviceId : undefined,

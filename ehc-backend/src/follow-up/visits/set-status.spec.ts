@@ -42,6 +42,13 @@ describe('Setting a first-timer’s status by hand', () => {
     expect(back.prisma.visitor.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ statusOverride: null }) }));
   });
 
+  it('moves an integrated member from Away to EHC Remote Church, and keeps it for the integrated', async () => {
+    const remote = setup('AWAY', 'CONFIRMED');
+    await remote.svc.setStatus(actor, 'v1', 'REMOTE', async () => true);
+    expect(remote.prisma.visitor.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ statusOverride: 'REMOTE' }) }));
+    await expect(setup('SECOND_TIMER').svc.setStatus(actor, 'v1', 'REMOTE')).rejects.toBeInstanceOf(BadRequestException);
+  });
+
   it('keeps anyone off the Integration Team from marking an integrated member Away', async () => {
     const { svc, prisma } = setup('INTEGRATED', 'CONFIRMED');
     await expect(svc.setStatus(actor, 'v1', 'AWAY', async () => false)).rejects.toBeInstanceOf(ForbiddenException);

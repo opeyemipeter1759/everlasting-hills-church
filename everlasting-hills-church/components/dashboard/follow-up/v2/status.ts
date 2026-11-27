@@ -36,6 +36,11 @@ export const STATUS_META: Record<PipelineStatus, { label: string; chip: string; 
     chip: "bg-emerald-50 text-emerald-700 ring-emerald-600/15 dark:bg-emerald-500/10 dark:text-emerald-300",
     dot: "bg-emerald-500",
   },
+  REMOTE: {
+    label: "EHC Remote Church",
+    chip: "bg-teal-50 text-teal-700 ring-teal-600/15 dark:bg-teal-500/10 dark:text-teal-300",
+    dot: "bg-teal-500",
+  },
   OPTED_OUT: {
     label: "Opted out",
     chip: "bg-gray-100 text-gray-600 ring-gray-500/15 dark:bg-white/[0.07] dark:text-white/50",

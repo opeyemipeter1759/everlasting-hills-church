@@ -1,5 +1,6 @@
 "use client";
 
+import type { VisitorRow } from "@/components/dashboard/admin/FirstTimer/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 import type { PipelineRow } from "@/lib/api/pipeline";
@@ -31,4 +32,13 @@ export function useFirstTimerAnswers(visitorId: string, enabled: boolean) {
 export function useRefreshFollowUp() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: ["follow-up"] });
+}
+
+/** Their record for the edit form (no prayer request), and whether the viewer may edit it. */
+export function useFirstTimerRecord(visitorId: string | undefined) {
+  return useQuery({
+    queryKey: ["follow-up", "first-timer", visitorId, "record"],
+    queryFn: () => api.get<{ record: VisitorRow; canEdit: boolean }>(`/follow-up/first-timers/${visitorId}/record`),
+    enabled: !!visitorId && typeof window !== "undefined",
+  });
 }

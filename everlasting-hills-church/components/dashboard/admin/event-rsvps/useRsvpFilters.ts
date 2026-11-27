@@ -1,3 +1,4 @@
+import { datedFilename } from "@/lib/export-date";
 import { useMemo, useState } from "react";
 import type { EventDetail, EventRsvp } from "@/types";
 import type { RsvpFilter } from "./RsvpFilterTabs";
@@ -41,7 +42,7 @@ export function useRsvpFilters(rsvps: EventRsvp[], event: EventDetail) {
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `rsvps-${event.slug}.csv`;
+    a.download = datedFilename(`rsvps-${event.slug}`, "csv");
     a.click();
     URL.revokeObjectURL(url);
   }

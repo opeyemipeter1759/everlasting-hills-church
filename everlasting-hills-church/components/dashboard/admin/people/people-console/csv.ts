@@ -1,3 +1,4 @@
+import { exportDate } from "@/lib/export-date";
 import type { PersonRow } from "@/lib/api/people";
 
 // Date of birth is collected as day + month only — the year on the stored
@@ -30,7 +31,7 @@ export function exportRowsCsv(people: PersonRow[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `people-selected-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `people-selected-${exportDate()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

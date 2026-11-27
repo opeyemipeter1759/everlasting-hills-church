@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FollowUpHeader } from "./FollowUpHeader";
 import { FollowUpTabs, TABS_BOTTOM_SPACE } from "./FollowUpTabs";
 import { useFollowUpTabs, type FollowUpTab } from "./useFollowUpTabs";
@@ -16,9 +17,26 @@ import OverviewYear from "./v2/overview/OverviewYear";
  * Master list, your caseload on Assigned to me, the opted out on Opted out.
  */
 export default function FollowUpBoard() {
+  return (
+    <Suspense fallback={null}>
+      <Board />
+    </Suspense>
+  );
+}
+
+function Board() {
   const tabs = useFollowUpTabs();
   const summary = useFollowUpSummary();
-  const [picked, setActive] = useState<FollowUpTab>("master");
+  // The open tab lives in the address (?tab=mine), so Back from a profile returns to it.
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const picked = (params.get("tab") as FollowUpTab | null) ?? "master";
+  const setActive = (tab: FollowUpTab) => {
+    const q = new URLSearchParams(params.toString());
+    q.set("tab", tab);
+    router.replace(`${pathname}?${q}`, { scroll: false });
+  };
   // A tab the viewer doesn't get falls back to their first, without being
   // remembered, so a lead whose access is still loading still lands on the Master list.
   const active = tabs.some((tab) => tab.id === picked) ? picked : (tabs[0]?.id ?? "mine");

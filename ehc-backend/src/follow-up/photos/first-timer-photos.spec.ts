@@ -52,6 +52,7 @@ function setup(opts: { photoKey?: string | null; onRecord?: boolean; allowed?: b
     requireAccess: jest.fn(async () => {
       if (opts.allowed === false) throw new ForbiddenException('Only the follow-up team can see this');
     }),
+    firstTimerScope: jest.fn(async () => null),
   };
   const storage = new FirstTimerPhotoStorage(config);
   const urls = new PhotoUrlService(storage, config);

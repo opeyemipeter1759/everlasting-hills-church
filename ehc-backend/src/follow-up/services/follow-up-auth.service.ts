@@ -93,6 +93,36 @@ export class FollowUpAuthService {
     return !!membership;
   }
 
+  /**
+   * Whose first-timers this person may read. The whole list goes to whoever
+   * runs or feeds the work: admins, the first-timer contact, the Follow-Up
+   * lead, heads of department, and the Integration Team (who work the
+   * integrated). Everyone else, a Follow-Up team member included, sees only the
+   * first-timers assigned to them. Returns null for the whole list, otherwise
+   * the member id to pin the list to.
+   */
+  async firstTimerScope(actor: AuthUser): Promise<string | null> {
+    if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) return null;
+    if (actor.effectiveRoles.includes(Role.FIRST_TIMER_CONTACT)) return null;
+    if (actor.hodOf?.length) return null;
+    if (await this.resolveReportsUnit(actor)) return null;
+    if (await this.onIntegrationTeam(actor)) return null;
+    // No member record means nothing can be assigned to them: an id no one has.
+    return actor.memberId ?? 'no-member';
+  }
+
+  /**
+   * May correct a first-timer's record (name, phone, answers): a Follow-Up
+   * team member for the first-timers assigned to them, and the Follow-Up lead,
+   * heads of department and admins for anyone.
+   */
+  async canEditRecord(actor: AuthUser, assigneeId: string | null): Promise<boolean> {
+    if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) return true;
+    if (actor.hodOf?.length) return true;
+    if (await this.resolveReportsUnit(actor)) return true;
+    return !!actor.memberId && assigneeId === actor.memberId;
+  }
+
   /** Same gate as hasUnitAccess, for routes that must refuse rather than report. */
   async requireAccess(actor: AuthUser): Promise<void> {
     if (!(await this.hasUnitAccess(actor))) {

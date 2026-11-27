@@ -3,6 +3,7 @@
 import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ReactNode, useEffect, useState } from "react";
+import { LIVE_REFRESH_MS } from "./live-refresh";
 import type { ApiError } from "./axios";
 import { patchFrontendSession, SESSION_CLEARED_EVENT } from "@/lib/auth/frontend-session";
 import type { MeResponse } from "@/lib/api";
@@ -30,14 +31,20 @@ export function QueryProvider({ children }: { children: ReactNode }) {
         }),
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000,
+            staleTime: 15 * 1000,
             gcTime: 5 * 60 * 1000,
             retry: (failureCount, error) => {
               const status = (error as ApiError)?.status;
               if (status && status >= 400 && status < 500) return false;
               return failureCount < 2;
             },
-            refetchOnWindowFocus: false,
+            // Changes show without anyone refreshing: an open page re-reads its data
+            // every 30 seconds while the tab is visible, and at once when the tab
+            // comes back into view or the connection returns.
+            refetchOnWindowFocus: true,
+            refetchOnReconnect: true,
+            refetchInterval: LIVE_REFRESH_MS,
+            refetchIntervalInBackground: false,
           },
           mutations: { retry: false },
         },

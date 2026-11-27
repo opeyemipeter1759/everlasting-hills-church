@@ -4153,6 +4153,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/follow-up/first-timers/{visitorId}/record": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A first-timer's record without the prayer request, and whether the viewer may edit it */
+        get: operations["FollowUpRecordController_record"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Correct a first-timer's record (their assignee, the Follow-Up lead, heads of department, admins) */
+        patch: operations["FollowUpRecordController_update"];
+        trace?: never;
+    };
     "/follow-up/first-timers/{visitorId}/restore": {
         parameters: {
             query?: never;
@@ -6170,7 +6188,8 @@ export interface paths {
         delete: operations["NavPermissionsController_removeGrant"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Make a grant view only or full access (SUPER_ADMIN only) */
+        patch: operations["NavPermissionsController_updateGrant"];
         trace?: never;
     };
     "/nav-permissions/my-grants": {
@@ -11669,7 +11688,7 @@ export interface components {
         GiftExchangeChoiceDto: {
             /** @description Take part in the gift exchange */
             giftExchange: boolean;
-            /** @description Come to the picnic */
+            /** @description Come to the picnic (includes the gift exchange) */
             picnic: boolean;
         };
         HeartbeatDto: {
@@ -12814,6 +12833,7 @@ export interface components {
              */
             weddingAnniversary?: Record<string, never>;
         };
+        UpdateNavGrantDto: Record<string, never>;
         UpdatePrayerRequestStatusDto: {
             /**
              * @example PRAYED
@@ -23261,6 +23281,76 @@ export interface operations {
             };
         };
     };
+    FollowUpRecordController_record: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visitorId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpRecordController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visitorId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateVisitorDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpStageController_restore: {
         parameters: {
             query?: never;
@@ -23867,7 +23957,7 @@ export interface operations {
                 search?: unknown;
                 month?: unknown;
                 year?: unknown;
-                status?: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "AWAY" | "INTEGRATED" | "OPTED_OUT";
+                status?: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "AWAY" | "INTEGRATED" | "REMOTE" | "OPTED_OUT";
             };
             header?: never;
             path?: never;
@@ -28239,6 +28329,43 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    NavPermissionsController_updateGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNavGrantDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -37489,7 +37616,7 @@ export interface operations {
                 "multipart/form-data": {
                     /**
                      * Format: binary
-                     * @description Image file (JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO, HEIC/HEIF — max 8 MB)
+                     * @description Image file (JPG, PNG, WebP, GIF, AVIF, HEIC/HEIF, TIFF — max 8 MB; the dashboard converts other types to PNG before upload)
                      */
                     file?: string;
                 };

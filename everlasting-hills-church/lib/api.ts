@@ -1,3 +1,4 @@
+import { datedFilename } from "@/lib/export-date";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 import { queryKeys } from "@/lib/api/queryKeys";
@@ -481,18 +482,17 @@ async function triggerDownload(path: string, filename: string, params?: Record<s
   const res = await apiClient.get(path, { params, responseType: 'blob' });
   const blob = new Blob([res.data as BlobPart], { type: XLSX_MIME });
   const href = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = href;
+  const a = Object.assign(document.createElement('a'), { href });
   a.download = filename;
   a.click();
   URL.revokeObjectURL(href);
 }
 
 export const reports = {
-  monthly: (month: string) => triggerDownload('/reports/monthly', `attendance-${month}.xlsx`, { month }),
-  member: (userId: string) => triggerDownload(`/reports/member/${userId}`, `member-history.xlsx`),
-  range: (from: string, to: string) => triggerDownload('/reports/range', `attendance-${from}_${to}.xlsx`, { from, to }),
-  serviceComparison: (period: string) => triggerDownload('/reports/service-comparison', `service-comparison-${period}.xlsx`, { period, format: 'xlsx' }),
+  monthly: (month: string) => triggerDownload('/reports/monthly', datedFilename(`attendance-${month}`, "xlsx"), { month }),
+  member: (userId: string) => triggerDownload(`/reports/member/${userId}`, datedFilename("member-history", "xlsx")),
+  range: (from: string, to: string) => triggerDownload('/reports/range', datedFilename(`attendance-${from}_${to}`, "xlsx"), { from, to }),
+  serviceComparison: (period: string) => triggerDownload('/reports/service-comparison', datedFilename(`service-comparison-${period}`, "xlsx"), { period, format: 'xlsx' }),
 };
 
 export interface RoleEntry {
