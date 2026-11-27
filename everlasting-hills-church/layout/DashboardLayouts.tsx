@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useSidebar } from '@/context/SidebarContext';
 import AppSidebar from '@/layout/AppSidebar';
 import AppHeader from '@/layout/AppHeader';
+import DashboardAnnouncementBar from '@/components/dashboard/shell/DashboardAnnouncementBar';
 
 export default function DashboardLayouts({ children }: { children: React.ReactNode }) {
   const { isExpanded, isHovered, isMobileOpen, toggleMobileSidebar } = useSidebar();
@@ -42,8 +43,11 @@ export default function DashboardLayouts({ children }: { children: React.ReactNo
         />
       )}
       <div className={`flex flex-col min-h-screen transition-all duration-300 ease-in-out ${sidebarWidth}`}>
+        {/* The top bar and, right under it, the announcements strip: pinned together, full
+            width against the sidebar, on every dashboard page. */}
         <div ref={headerRef} className="sticky top-0 z-50">
           <AppHeader />
+          <DashboardAnnouncementBar />
         </div>
         {/* overflow-x-clip, not hidden: it trims sideways spill without making <main> a scroll box, so sticky headers in a page stick to the window. */}
         <main ref={mainRef} className="flex-1 overflow-x-clip p-4 md:p-6 xl:px-8 2xl:px-10">
