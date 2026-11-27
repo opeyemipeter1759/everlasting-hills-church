@@ -1,3 +1,4 @@
+import { datedFilename } from "@/lib/export-date";
 export interface HistoryRow {
   id: string;
   serviceName: string;
@@ -82,7 +83,7 @@ export function exportCsv(rows: AttendanceRow[]) {
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
   const a = document.createElement("a");
   a.href = url;
-  a.download = "my-attendance.csv";
+  a.download = datedFilename("my-attendance", "csv");
   a.click();
   URL.revokeObjectURL(url);
 }

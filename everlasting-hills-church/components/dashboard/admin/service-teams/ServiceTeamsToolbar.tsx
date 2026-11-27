@@ -1,3 +1,4 @@
+import { exportDate } from "@/lib/export-date";
 import { Download, Loader2, RefreshCw, Search } from "lucide-react";
 import { Select } from "@/components/ui/select";
 import { serviceTeamCsv, type ServiceTeamFilters, type ServiceTeamRoster, type ServiceTeamSummary, type TeamRole } from "@/lib/api/service-teams";
@@ -8,7 +9,7 @@ function downloadCsv(data: ServiceTeamRoster) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `service-teams-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `service-teams-${exportDate()}.csv`;
   link.click();
   URL.revokeObjectURL(url);
 }

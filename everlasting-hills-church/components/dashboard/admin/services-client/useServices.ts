@@ -1,3 +1,4 @@
+import { datedFilename } from "@/lib/export-date";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/axios";
 import { showToast } from "@/components/ui/toast/toast";
@@ -74,7 +75,7 @@ export function useServices() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = res.data.filename;
+    a.download = datedFilename(res.data.filename);
     a.click();
     URL.revokeObjectURL(url);
   }

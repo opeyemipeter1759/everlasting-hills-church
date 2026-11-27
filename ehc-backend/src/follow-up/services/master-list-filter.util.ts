@@ -16,8 +16,8 @@ export function inScope(status: string, scope: MasterListScope = 'ALL'): boolean
   // Someone who has opted out has asked not to be followed up: they leave the
   // working lists and wait on the Opted out tab, in case they come back.
   if (scope === 'OPTED_OUT') return status === 'OPTED_OUT';
-  if (scope === 'FOLLOW_UP') return status !== 'INTEGRATED' && status !== 'OPTED_OUT';
-  if (scope === 'INTEGRATION') return status === 'INTEGRATED' || status === 'AWAY';
+  if (scope === 'FOLLOW_UP') return status !== 'INTEGRATED' && status !== 'REMOTE' && status !== 'OPTED_OUT';
+  if (scope === 'INTEGRATION') return status === 'INTEGRATED' || status === 'AWAY' || status === 'REMOTE';
   return true;
 }
 

@@ -1,3 +1,4 @@
+import { datedFilename } from "@/lib/export-date";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 
@@ -95,7 +96,7 @@ export async function downloadAttendanceCsv(params: AttendanceListQuery = {}) {
   const href = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = href;
-  a.download = "attendance-export.xlsx";
+  a.download = datedFilename("attendance-export", "xlsx");
   a.click();
   URL.revokeObjectURL(href);
 }

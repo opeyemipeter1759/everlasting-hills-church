@@ -52,5 +52,6 @@ const LABEL: Record<MasterListStatus, string> = {
   FOURTH_TIMER: "Fourth timer",
   INTEGRATED: "Integrated",
   AWAY: "Away",
+  REMOTE: "EHC Remote Church",
   OPTED_OUT: "Opted out",
 };

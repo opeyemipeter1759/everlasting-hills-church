@@ -1,5 +1,6 @@
 "use client";
 
+import { datedFilename } from "@/lib/export-date";
 import { useMemo, useState } from "react";
 import { Download, Loader2, Paperclip, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
@@ -85,9 +86,8 @@ function financeCsv(data: FinanceSummary, entries: FinanceEntry[]): string {
 
 function downloadFinanceCsv(data: FinanceSummary, entries: FinanceEntry[], periodLabel: string) {
   const url = URL.createObjectURL(new Blob([financeCsv(data, entries)], { type: "text/csv;charset=utf-8" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `finance-${periodLabel.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.csv`;
+  const link = Object.assign(document.createElement("a"), { href: url });
+  link.download = datedFilename(`finance-${periodLabel.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`, "csv");
   document.body.appendChild(link);
   link.click();
   link.remove();

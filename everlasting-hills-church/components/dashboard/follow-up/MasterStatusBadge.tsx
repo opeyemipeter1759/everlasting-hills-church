@@ -25,6 +25,10 @@ const STATUS: Record<MasterListStatus, { label: string; className: string }> = {
     label: "Away",
     className: "bg-amber-50 text-amber-700 ring-amber-600/15 dark:bg-amber-500/10 dark:text-amber-300",
   },
+  REMOTE: {
+    label: "EHC Remote Church",
+    className: "bg-teal-50 text-teal-700 ring-teal-600/15 dark:bg-teal-500/10 dark:text-teal-300",
+  },
   OPTED_OUT: {
     label: "Opted out",
     className: "bg-gray-100 text-gray-600 ring-gray-500/15 dark:bg-white/[0.07] dark:text-white/50",

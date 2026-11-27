@@ -1,5 +1,6 @@
 "use client";
 
+import { datedFilename } from "@/lib/export-date";
 import { useMemo, useState } from "react";
 import { ArrowRightLeft, CheckCircle2, Clock3, Download, Loader2, MessageCircle, Printer, RefreshCw, Send, Trash2, XCircle } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
@@ -44,9 +45,8 @@ function downloadCsv(rows: SignupListRow[], watchTitle: string) {
   ];
   const csv = lines.map((row) => row.map(csvCell).join(",")).join("\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${watchTitle.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-signups.csv`;
+  const link = Object.assign(document.createElement("a"), { href: url });
+  link.download = datedFilename(`${watchTitle.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-signups`, "csv");
   document.body.appendChild(link);
   link.click();
   link.remove();

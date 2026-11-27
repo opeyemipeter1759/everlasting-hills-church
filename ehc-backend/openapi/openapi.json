@@ -2383,7 +2383,7 @@
             "type": "boolean"
           },
           "picnic": {
-            "description": "Come to the picnic",
+            "description": "Come to the picnic (includes the gift exchange)",
             "type": "boolean"
           }
         },
@@ -5022,6 +5022,10 @@
             "type": "object"
           }
         },
+        "type": "object"
+      },
+      "UpdateNavGrantDto": {
+        "properties": {},
         "type": "object"
       },
       "UpdatePrayerRequestStatusDto": {
@@ -23014,6 +23018,126 @@
         ]
       }
     },
+    "/follow-up/first-timers/{visitorId}/record": {
+      "get": {
+        "operationId": "FollowUpRecordController_record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "A first-timer's record without the prayer request, and whether the viewer may edit it",
+        "tags": [
+          "follow-up"
+        ]
+      },
+      "patch": {
+        "operationId": "FollowUpRecordController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVisitorDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Correct a first-timer's record (their assignee, the Follow-Up lead, heads of department, admins)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/first-timers/{visitorId}/restore": {
       "post": {
         "operationId": "FollowUpStageController_restore",
@@ -24184,6 +24308,7 @@
                 "FOURTH_TIMER",
                 "AWAY",
                 "INTEGRATED",
+                "REMOTE",
                 "OPTED_OUT"
               ],
               "type": "string"
@@ -31277,6 +31402,70 @@
           }
         ],
         "summary": "Remove a named exception (SUPER_ADMIN only)",
+        "tags": [
+          "nav-permissions"
+        ]
+      },
+      "patch": {
+        "operationId": "NavPermissionsController_updateGrant",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNavGrantDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Make a grant view only or full access (SUPER_ADMIN only)",
         "tags": [
           "nav-permissions"
         ]
@@ -46916,7 +47105,7 @@
               "schema": {
                 "properties": {
                   "file": {
-                    "description": "Image file (JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO, HEIC/HEIF — max 8 MB)",
+                    "description": "Image file (JPG, PNG, WebP, GIF, AVIF, HEIC/HEIF, TIFF — max 8 MB; the dashboard converts other types to PNG before upload)",
                     "format": "binary",
                     "type": "string"
                   }

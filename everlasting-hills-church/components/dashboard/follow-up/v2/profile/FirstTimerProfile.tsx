@@ -13,6 +13,7 @@ import OpeningMessageSection from "./OpeningMessageSection";
 import PhotoSection from "./PhotoSection";
 import VisitsSection from "./VisitsSection";
 import { StickyName } from "./StickyName";
+import { EditRecordButton } from "./EditRecordButton";
 
 /**
  * A first-timer's full profile: who they are, where they stand, and every
@@ -59,6 +60,7 @@ export default function FirstTimerProfile() {
             <PhoneCell phone={person.phone} />
           </div>
         </div>
+        <EditRecordButton visitorId={person.visitorId} onSaved={refresh} />
       </header>
       <OpeningMessageSection {...props} />
       <ApprovalSection {...props} />

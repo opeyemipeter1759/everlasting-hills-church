@@ -7,7 +7,7 @@ import { isFutureMonth, monthHref, reachedLong, reachedShort } from "./overview-
 const january: MonthSummary = {
   month: "2026-01-01",
   total: 50,
-  counts: { FIRST_TIMER: 10, SECOND_TIMER: 12, THIRD_TIMER: 15, FOURTH_TIMER: 0, AWAY: 0, INTEGRATED: 10, OPTED_OUT: 3 },
+  counts: { FIRST_TIMER: 10, SECOND_TIMER: 12, THIRD_TIMER: 15, FOURTH_TIMER: 0, AWAY: 0, INTEGRATED: 10, REMOTE: 0, OPTED_OUT: 3 },
   due48: 50,
   reached48: 42,
   tracked: true,
@@ -28,7 +28,7 @@ describe("MonthCard", () => {
   });
 
   it("mutes a month that has not started and makes it not clickable", () => {
-    const empty = { ...january, total: 0, counts: { FIRST_TIMER: 0, SECOND_TIMER: 0, THIRD_TIMER: 0, FOURTH_TIMER: 0, AWAY: 0, INTEGRATED: 0, OPTED_OUT: 0 }, due48: 0, reached48: 0 };
+    const empty = { ...january, total: 0, counts: { FIRST_TIMER: 0, SECOND_TIMER: 0, THIRD_TIMER: 0, FOURTH_TIMER: 0, AWAY: 0, INTEGRATED: 0, REMOTE: 0, OPTED_OUT: 0 }, due48: 0, reached48: 0 };
     render(<MonthCard summary={empty} title="December" href={monthHref(2026, 12)} muted />);
     expect(screen.queryByRole("link")).toBeNull();
     expect(screen.getByText("Not started yet")).toBeTruthy();

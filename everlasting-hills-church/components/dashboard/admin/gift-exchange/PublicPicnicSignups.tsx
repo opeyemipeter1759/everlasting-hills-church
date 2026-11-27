@@ -1,5 +1,6 @@
 "use client";
 
+import { datedFilename } from "@/lib/export-date";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Download, Loader2, Search, Users } from "lucide-react";
@@ -45,7 +46,7 @@ export default function PublicPicnicSignups() {
     const blob = new Blob([toCsv(data?.rsvps ?? [])], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "picnic-registrations.csv";
+    a.download = datedFilename("picnic-registrations", "csv");
     a.click();
     URL.revokeObjectURL(a.href);
   }

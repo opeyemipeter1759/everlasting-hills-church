@@ -64,8 +64,8 @@ export function pipelineCte(tenantId: string): Prisma.Sql {
              COALESCE(vs.n, 1) AS visits, COALESCE(vs.dates, ARRAY[]::text[]) AS "visitDates",
              CASE
                WHEN e.stage = 'OPTED_OUT' OR (p."memberStatus" IS NOT NULL AND p."memberStatus" <> 'ACTIVE') THEN 'OPTED_OUT'
-               -- Integrated, unless the Integration Team has marked them Away since.
-               WHEN e.stage = 'CONFIRMED' THEN CASE WHEN p."statusOverride" = 'AWAY' THEN 'AWAY' ELSE 'INTEGRATED' END
+               -- Integrated, unless the Integration Team has since marked them Away or EHC Remote Church.
+               WHEN e.stage = 'CONFIRMED' THEN CASE WHEN p."statusOverride" IN ('AWAY', 'REMOTE') THEN p."statusOverride" ELSE 'INTEGRATED' END
                -- Set by hand on the board: wins over their visits until it is cleared.
                WHEN p."statusOverride" IS NOT NULL THEN p."statusOverride"
                WHEN COALESCE(vs.n, 1) >= 4 THEN 'FOURTH_TIMER'

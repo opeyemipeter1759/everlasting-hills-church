@@ -67,6 +67,7 @@ export function StatusSelect({ visitorId, firstName, fallback }: { visitorId: st
             options={integrated ? [
               { value: FOLLOW, label: "Integrated" },
               { value: "AWAY", label: STATUS_META.AWAY.label },
+              { value: "REMOTE", label: STATUS_META.REMOTE.label },
             ] : [
               { value: FOLLOW, label: `Follow their visits${byHand ? "" : ` (${STATUS_META[status].label})`}` },
               ...CHOICES.map((s) => ({ value: s, label: STATUS_META[s].label })),
@@ -81,7 +82,9 @@ export function StatusSelect({ visitorId, firstName, fallback }: { visitorId: st
         {integrated && onTeam
           ? status === "AWAY"
             ? "Integrated, but marked Away. Pick Integrated when they are back."
-            : "Integrated by the team leads' approval. Mark them Away if they stop coming."
+            : status === "REMOTE"
+              ? "Integrated, and worshipping with EHC Remote Church."
+              : "Integrated by the team leads' approval. Mark them Away if they stop coming, or EHC Remote Church if they worship remotely."
           : status === "INTEGRATED"
           ? "Integrated by the team leads' approval."
           : status === "OPTED_OUT"

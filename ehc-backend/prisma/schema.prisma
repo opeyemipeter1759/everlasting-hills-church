@@ -370,6 +370,8 @@ enum FirstTimerStatusOverride {
   THIRD_TIMER
   FOURTH_TIMER
   AWAY
+  /// Integrated, and worshipping with EHC remotely (set by the Integration Team).
+  REMOTE
 }
 
 enum FollowUpStage {
