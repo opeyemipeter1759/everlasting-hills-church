@@ -224,6 +224,7 @@ function isGoogleCalendarCallback(pathname: string, searchParams: URLSearchParam
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+  if (pathname === "/Pastor") return NextResponse.redirect(new URL("/pastor", request.url), 308); // old links, CMS copy
   if (isGoogleCalendarCallback(pathname, searchParams)) return NextResponse.next();
   if (isLogoutPending(request.cookies.get(LOGOUT_PENDING_COOKIE)?.value)) {
     const response = AUTH_PAGES.has(pathname)
@@ -382,9 +383,8 @@ export const config = {
     "/dashboard/:path*",
     "/admin/:path*",
     "/me", "/couple-dashboard",
-    "/me/:path*",
-    "/login",
-    "/register",
+    "/me/:path*", "/Pastor",
+    "/login", "/register",
     "/forgot-password",
   ],
 };

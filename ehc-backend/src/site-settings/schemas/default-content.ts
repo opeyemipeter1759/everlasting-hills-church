@@ -303,7 +303,7 @@ export const SETMAN_DEFAULT: SectionContent<'SETMAN'> = {
   name: 'Pastor [Lead Name]',
   title: 'Set Man, Everlasting Hills Church',
   photo: null,
-  cta: { label: 'Meet our pastors', href: '/Pastor' },
+  cta: { label: 'Meet our pastors', href: '/pastor' },
 };
 
 export const DEFAULT_CONTENT = {
