@@ -1,0 +1,43 @@
+/* ── Picnic page ──────────────────────────────────────────────────────────── */
+.gingham,
+.gingham-sm {
+  background-color: #fbf6ee;
+  background-image:
+    linear-gradient(90deg, rgba(135, 16, 44, 0.5) 50%, transparent 50%),
+    linear-gradient(rgba(135, 16, 44, 0.5) 50%, transparent 50%);
+  background-size: 44px 44px;
+}
+.gingham-sm { background-size: 14px 14px; }
+/* Paper grain: a fine SVG noise so the cream reads as stock, not a flat fill. */
+.paper-grain {
+  background-color: #f7f0e3;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.27 0 0 0 0 0.18 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* A strip of masking tape holding a print to the page. */
+.tape {
+  position: absolute;
+  width: 96px;
+  height: 26px;
+  background: rgba(242, 228, 196, 0.82);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  clip-path: polygon(3% 0, 97% 4%, 100% 50%, 97% 100%, 2% 94%, 0 45%);
+}
+.lined-paper {
+  background-color: #fffdf8;
+  background-image: linear-gradient(transparent 39px, rgba(30, 58, 42, 0.12) 40px);
+  background-size: 100% 40px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .picnic-float { animation: picnic-float 7s ease-in-out infinite; }
+  @keyframes picnic-float {
+    0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+    50% { transform: translateY(-8px) rotate(var(--r, 0deg)); }
+  }
+  /* The hangout strip: slides left by one of its two identical runs, then loops. */
+  .picnic-drift { animation: picnic-drift 45s linear infinite; }
+  .picnic-drift:hover { animation-play-state: paused; }
+  @keyframes picnic-drift {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+}

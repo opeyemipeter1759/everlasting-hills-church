@@ -1,5 +1,6 @@
 "use client";
 
+import { exportDate } from "@/lib/export-date";
 /**
  * Downloads an array of rows as a CSV file.
  *
@@ -44,7 +45,7 @@ function filenameFor(title: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-  return `${slug || "export"}-${new Date().toISOString().slice(0, 10)}.csv`;
+  return `${slug || "export"}-${exportDate()}.csv`;
 }
 
 export function downloadCsv<T extends object>(

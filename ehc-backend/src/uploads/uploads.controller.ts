@@ -32,9 +32,10 @@ const IMAGE_MIME = [
   'image/vnd.microsoft.icon',
   // HEIC/HEIF (iPhone's default photo format) is accepted here and converted to
   // JPEG before storage — see UploadsService.convertHeicToJpeg — since no browser
-  // renders it via <img>. TIFF is still excluded: no equivalent conversion path.
+  // renders it via <img>. TIFF is converted to JPEG the same way, with sharp.
   'image/heic',
   'image/heif',
+  'image/tiff',
 ];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB
 
@@ -84,7 +85,7 @@ export class UploadsController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Image file (JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO, HEIC/HEIF — max 8 MB)',
+          description: 'Image file (JPG, PNG, WebP, GIF, AVIF, HEIC/HEIF, TIFF — max 8 MB; the dashboard converts other types to PNG before upload)',
         },
       },
     },
@@ -103,16 +104,13 @@ export class UploadsController {
       throw new BadRequestException('Image must be under 8 MB');
     }
     if (!IMAGE_MIME.includes(file.mimetype)) {
-      throw new BadRequestException('Unsupported image format (use JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO, HEIC, or HEIF)');
+      throw new BadRequestException('Unsupported image format (use JPG, PNG, WebP, GIF, AVIF, HEIC, HEIF or TIFF)');
     }
     if (!hasValidFileSignature(file)) {
       throw new BadRequestException('Image content does not match its declared format');
     }
 
-    const stored =
-      file.mimetype === 'image/heic' || file.mimetype === 'image/heif'
-        ? await this.uploads.convertHeicToJpeg(file)
-        : file;
+    const stored = await this.uploads.toWebImage(file);
 
     // Return the bare payload — the global ResponseEnvelopeInterceptor wraps it
     // in { data, meta }, which the frontend axios client unwraps to { url, key }.

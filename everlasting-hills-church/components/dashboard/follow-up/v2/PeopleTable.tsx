@@ -66,7 +66,7 @@ export function PeopleTable(props: PeopleTableProps) {
               <Fragment key={row.visitorId}>
                 <tr>
                   <td className={TD}>
-                    <Link href={profileHref(row)} className="flex items-center gap-2.5 font-semibold text-[#111] hover:text-[#87102C] dark:text-white dark:hover:text-[#FFB3C1]">
+                    <Link href={profileHref(row)} className="-mx-2 -my-1 inline-flex items-center gap-2.5 rounded-lg px-2 py-1 font-semibold text-[#111] transition-colors hover:bg-[#FFE8ED] hover:text-[#87102C] focus-visible:bg-[#FFE8ED] focus-visible:outline-none dark:text-white dark:hover:bg-white/10 dark:hover:text-[#FFB3C1] dark:focus-visible:bg-white/10">
                       <PersonAvatar row={row} />
                       <span>
                         {row.firstName} {row.lastName}

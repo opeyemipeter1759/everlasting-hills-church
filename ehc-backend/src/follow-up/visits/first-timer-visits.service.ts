@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
@@ -129,11 +129,26 @@ export class FirstTimerVisitsService {
    * Put them at a status by hand, which wins over their visits, or null to
    * follow their visits again. Integrated and opted out have their own flows
    * (the team leads' approval, Opt out and Restore), so neither is set here.
+   * Someone integrated can only be marked Away or EHC Remote Church, or back
+   * to Integrated (null), and only by the Integration Team (`integrationTeam`).
+   * EHC Remote Church is for integrated members alone.
    */
-  async setStatus(actor: AuthUser, visitorId: string, status: OverrideStatus | null): Promise<PipelineRow> {
+  async setStatus(
+    actor: AuthUser,
+    visitorId: string,
+    status: OverrideStatus | null,
+    integrationTeam: () => Promise<boolean> = async () => false,
+  ): Promise<PipelineRow> {
     const before = await this.person(visitorId);
     if (before.status === 'OPTED_OUT') throw new BadRequestException('They have opted out. Restore them from their profile first.');
-    if (before.status === 'INTEGRATED') throw new BadRequestException('They are already integrated');
+    if (before.stage === 'CONFIRMED') {
+      if (status !== 'AWAY' && status !== 'REMOTE' && status !== null) {
+        throw new BadRequestException('They are integrated: they can only be marked Away or EHC Remote Church, or back to Integrated');
+      }
+      if (!(await integrationTeam())) throw new ForbiddenException('Only the Integration Team can change an integrated member’s status');
+    } else if (status === 'REMOTE') {
+      throw new BadRequestException('Only an integrated member can be marked EHC Remote Church');
+    }
     await this.prisma.visitor.update({
       where: { id: visitorId },
       data: { statusOverride: status, statusOverrideAt: status ? new Date() : null, statusOverrideById: status ? (actor.profileId ?? null) : null },

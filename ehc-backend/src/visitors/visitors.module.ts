@@ -7,10 +7,12 @@ import { VisitorsService } from './visitors.service';
 import { VisitorBulkImportService } from './services/visitor-bulk-import.service';
 import { FirstTimerTeamController } from './first-timer-team.controller';
 import { FirstTimerTeamAccess } from './first-timer-team.access';
+import { FollowUpRecordController } from './follow-up-record.controller';
+import { FollowUpAuthService } from '../follow-up/services/follow-up-auth.service';
 
 @Module({
   imports: [PrismaModule, AttendanceModule, FirstTimerPhotosModule],
-  controllers: [FirstTimerTeamController, VisitorsController],
-  providers: [VisitorsService, VisitorBulkImportService, FirstTimerTeamAccess],
+  controllers: [FirstTimerTeamController, FollowUpRecordController, VisitorsController],
+  providers: [VisitorsService, VisitorBulkImportService, FirstTimerTeamAccess, FollowUpAuthService],
 })
 export class VisitorsModule {}

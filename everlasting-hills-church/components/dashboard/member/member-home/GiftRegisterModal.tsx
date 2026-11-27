@@ -4,23 +4,25 @@ import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
-import { GiftPartyHeader } from "./GiftPartyHeader";
+import { GiftModalAside } from "./GiftModalAside";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   title: string;
-  dayLabel: string | null;
+  /** One line under the title. */
+  subtitle: string;
   children: React.ReactNode;
 }
 
 const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
 /**
- * The register / change modal for the gift exchange & picnic: the card's party banner on top,
- * a springy entrance and exit, focus kept inside, Escape and the backdrop close it.
+ * The register / change modal for the picnic & gift exchange: an invitation panel
+ * (photo, date, what happens) beside the form. Springy entrance and exit, focus
+ * kept inside, Escape and the backdrop close it.
  */
-export function GiftRegisterModal({ open, onClose, title, dayLabel, children }: Props) {
+export function GiftRegisterModal({ open, onClose, title, subtitle, children }: Props) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const still = useReducedMotion() ?? false;
@@ -69,7 +71,7 @@ export function GiftRegisterModal({ open, onClose, title, dayLabel, children }: 
       {open && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-[#140C06]/70 backdrop-blur-sm"
             aria-hidden="true"
             onClick={onClose}
             initial={{ opacity: 0 }}
@@ -84,22 +86,29 @@ export function GiftRegisterModal({ open, onClose, title, dayLabel, children }: 
               aria-modal="true"
               aria-labelledby={titleId}
               tabIndex={-1}
-              className="pointer-events-auto relative w-full max-w-md overflow-hidden rounded-2xl border border-[#E7CDD3]/60 bg-white shadow-2xl outline-none dark:border-white/10 dark:bg-[#1c1c1e]"
+              className="pointer-events-auto relative flex max-h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-[#FFFDF8] shadow-[0_40px_100px_-30px_rgba(20,12,6,0.7)] outline-none ring-1 ring-black/5 md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] dark:bg-[#1c1a18] dark:ring-white/10"
               initial={still ? { opacity: 0 } : { opacity: 0, scale: 0.92, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={still ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 12 }}
               transition={{ type: "spring", stiffness: 340, damping: 26 }}
             >
-              <GiftPartyHeader titleId={titleId} kicker="Gift exchange & picnic" title={title} dayLabel={dayLabel} level="h2" className="pr-12" />
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Close"
-                className="absolute right-3 top-7 flex h-8 w-8 items-center justify-center rounded-lg text-white/75 transition-colors hover:bg-white/15 hover:text-white"
-              >
-                <X size={16} />
-              </button>
-              <div className="px-5 py-5 sm:px-6">{children}</div>
+              <GiftModalAside />
+              <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pt-6 sm:px-7 md:max-h-[80vh]">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close"
+                  className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-[#1B1714]/55 transition-colors hover:bg-[#1B1714]/[0.06] hover:text-[#1B1714] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+                <p className="pr-10 text-sm font-medium text-[#87102C] dark:text-[#FFB3C1]">Picnic &amp; gift exchange</p>
+                <h2 id={titleId} className="mt-1 pr-10 font-serif text-[1.6rem] leading-[1.15] text-[#1B1714] sm:text-[1.75rem] dark:text-white">
+                  {title}
+                </h2>
+                <p className="mt-1.5 max-w-md text-sm leading-relaxed text-[#1B1714]/65 dark:text-white/60">{subtitle}</p>
+                <div className="mt-5 flex-1">{children}</div>
+              </div>
             </motion.div>
           </div>
         </div>

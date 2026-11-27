@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { ArrowClockwise, CircleNotch, FileText, Icon, Image as ImageIcon, MusicNotes, X } from "@/components/icons";
 import { apiClient } from '@/lib/api/axios';
 import { uploadAudioDirect } from '@/lib/api/direct-audio-upload';
+import { pastedImage, prepareImage } from '@/lib/image-upload';
 
 export type FileUploadType = 'audio' | 'image' | 'document';
 
@@ -42,12 +43,13 @@ export default function FileUpload({
   const [dragging, setDragging] = useState(false);
 
   const upload = useCallback(
-    async (file: File) => {
+    async (picked: File) => {
       setError(null);
       setUploading(true);
       setProgress(0);
       try {
         let url: string;
+        const file = type === 'image' ? await prepareImage(picked) : picked;
         if (type === 'audio' && directUploadEndpoint) {
           url = await uploadAudioDirect(file, directUploadEndpoint, setProgress);
         } else {
@@ -85,8 +87,7 @@ export default function FileUpload({
   );
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) upload(file);
+    if (e.target.files?.[0]) upload(e.target.files[0]);
     e.target.value = '';
   }
 
@@ -97,15 +98,14 @@ export default function FileUpload({
     if (file && !uploading && !disabled) upload(file);
   }
 
-  const isAudio = type === 'audio';
-  const isDocument = type === 'document';
-  const accept = isAudio ? 'audio/*' : isDocument ? 'application/pdf' : 'image/*';
+  const isAudio = type === 'audio', isDocument = type === 'document';
+  const accept = isAudio ? 'audio/*' : isDocument ? 'application/pdf' : 'image/*,.heic,.heif,.tif,.tiff';
   const hint = isAudio
     ? `MP3, WAV, M4A, OGG${directUploadEndpoint ? ' · up to 1 GB' : ''}`
-    : isDocument ? 'PDF' : 'JPG, PNG, WebP, GIF';
+    : isDocument ? 'PDF' : 'Any image type · or click here and paste (Ctrl+V)';
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" onPaste={(e) => { const f = type === 'image' && !uploading && !disabled ? pastedImage(e) : null; if (f) { e.preventDefault(); void upload(f); } }}>
       <input ref={inputRef} type="file" accept={accept} onChange={handleInputChange} disabled={disabled || uploading} className="hidden" />
       {!value ? (
         <div

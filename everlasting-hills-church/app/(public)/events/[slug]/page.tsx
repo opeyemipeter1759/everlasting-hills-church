@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { getSiteUrl } from "@/lib/site-url";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { serverApi, type ApiError } from "@/lib/api/server";
+import type { ApiError } from "@/lib/api/server";
+import { getEventsAsViewer, isSignedIn } from "@/lib/api/events-server";
 import type { EventDetail } from "@/types";
 import EventHero from "@/components/events/detail/EventHero";
 import EventRsvpForm from "@/components/events/detail/EventRsvpForm";
@@ -51,11 +52,7 @@ type FetchResult =
 
 async function fetchEvent(slug: string): Promise<FetchResult> {
   try {
-    const event = await serverApi.get<EventDetail>(`/events/${slug}`, {
-      withAuth: false,
-      revalidate: 300,
-      tags: ["events", `event:${slug}`],
-    });
+    const event = await getEventsAsViewer<EventDetail>(`/events/${slug}`, ["events", `event:${slug}`]);
     return event ? { state: "ok", event: normalize(event) } : { state: "missing" };
   } catch (error) {
     const status = (error as ApiError).status;
@@ -84,7 +81,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function EventDetailPage({ params }: { params: { slug: string } }) {
   const result = await fetchEvent(params.slug);
-  if (result.state === "missing") notFound();
+  if (result.state === "missing") {
+    // Private events are hidden from visitors who aren't signed in (the API 404s
+    // so it never confirms they exist). Offer sign-in; members get a real 404.
+    if (!isSignedIn()) redirect(`/login?next=${encodeURIComponent(`/events/${params.slug}`)}`);
+    notFound();
+  }
   if (result.state === "unavailable") return <EventUnavailable />;
   const event = result.event;
   if (event.customPath && event.customPath !== `/events/${params.slug}`) redirect(event.customPath);

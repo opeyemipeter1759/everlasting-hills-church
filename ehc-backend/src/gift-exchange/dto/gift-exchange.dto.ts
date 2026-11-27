@@ -7,7 +7,7 @@ export class GiftExchangeChoiceDto {
   @IsBoolean()
   giftExchange!: boolean;
 
-  @ApiProperty({ description: 'Come to the picnic' })
+  @ApiProperty({ description: 'Come to the picnic (includes the gift exchange)' })
   @IsBoolean()
   picnic!: boolean;
 }

@@ -7,6 +7,7 @@ import ContactSection from "@/components/home/ContactSection";
 import HeroSection from "@/components/home/HeroSection";
 import SermonsSection from "@/components/home/SermonsSection";
 import AttendanceSection from "@/components/home/AttendanceSection";
+import HomeAnnouncementBar from "@/components/home/HomeAnnouncementBar";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import { getAllSiteSettings, SETMAN_FALLBACK, type SermonsContent, type SetmanContent } from "@/lib/site-settings";
 import { getStructuredContent } from "@/lib/cms-page";
@@ -64,6 +65,7 @@ export default async function HomePage({
         </div>
       )}
       <HeroSection content={settings.HERO} />
+      <HomeAnnouncementBar />
       {/* <PublicDailyScriptureSection />
       <WordOfTheDaySection /> */}
       <SetmanSection content={home.setman} />

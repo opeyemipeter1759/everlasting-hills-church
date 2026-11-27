@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, NotFoundException, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { BadRequestException, Controller, ForbiddenException, Get, NotFoundException, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -11,6 +11,7 @@ import { allAnswers, publicAnswers, teamAnswers } from '../visitors/first-timer-
 import { ADMIN_PLUS } from './follow-up.types';
 import { FollowUpAuthService } from './services/follow-up-auth.service';
 import { PhotoUrlService } from './photos/photo-url.service';
+import { MyFollowUpService } from './services/my-follow-up.service';
 
 const STAGES = ['UNASSIGNED', 'ASSIGNED', 'IN_PROGRESS', 'AWAITING_REVIEW', 'CONFIRMED', 'REOPENED', 'OPTED_OUT'];
 
@@ -35,6 +36,7 @@ export function parsePipelineFilters(q: Record<string, string | undefined>): Pip
     month,
     search: q.search || undefined,
     notContacted: q.notContacted === 'true',
+    integrated: q.integrated === 'true',
     absentFromServiceId: q.absentFrom || undefined,
     presentAtServiceId: q.presentAt || undefined,
     possibleReturn: q.possibleReturn === 'true',
@@ -59,7 +61,15 @@ export class FollowUpPipelineController {
     private readonly auth: FollowUpAuthService,
     private readonly prisma: PrismaService,
     private readonly photos: PhotoUrlService,
+    private readonly myFollowUp: MyFollowUpService,
   ) {}
+
+  @Get('my-activity')
+  @ApiOperation({ summary: "The caller's own follow-up: who they have, and what they have logged this month and in all" })
+  async myActivity(@CurrentUser() actor: AuthUser) {
+    await this.auth.requireAccess(actor);
+    return this.myFollowUp.activity(actor);
+  }
 
   @Get('pipeline')
   @ApiOperation({ summary: 'First-timers and the status counts beside them, under the same filters' })
@@ -69,13 +79,17 @@ export class FollowUpPipelineController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'assigneeId', required: false, description: 'A member id, or "none"' })
   @ApiQuery({ name: 'notContacted', required: false })
+  @ApiQuery({ name: 'integrated', required: false, description: 'true: only integrated members (and any since marked Away)' })
   @ApiQuery({ name: 'absentFrom', required: false, description: 'A service id: who missed it' })
   @ApiQuery({ name: 'presentAt', required: false, description: 'A service id: who came' })
   @ApiQuery({ name: 'take', required: false })
   @ApiQuery({ name: 'skip', required: false })
   async people(@CurrentUser() actor: AuthUser, @Query() query: Record<string, string | undefined>) {
     await this.auth.requireAccess(actor);
-    const page = await this.pipeline.list(parsePipelineFilters(query));
+    // A team member gets only their own first-timers, whatever they ask for.
+    const own = await this.auth.firstTimerScope(actor);
+    const filters = parsePipelineFilters(query);
+    const page = await this.pipeline.list(own ? { ...filters, assigneeId: own } : filters);
     // Only keys from rows this tenant's own query returned are signed, the whole page in one call.
     return { ...page, rows: await this.photos.attach(page.rows) };
   }
@@ -85,7 +99,7 @@ export class FollowUpPipelineController {
   async year(@CurrentUser() actor: AuthUser, @Param('year', ParseIntPipe) year: number) {
     await this.auth.requireAccess(actor);
     if (year < 2000 || year > 2100) throw new BadRequestException('Bad year');
-    return this.pipeline.year(year);
+    return this.pipeline.year(year, new Date(), (await this.auth.firstTimerScope(actor)) ?? undefined);
   }
 
   @Get('overview/:year/:month/breakdowns')
@@ -96,7 +110,9 @@ export class FollowUpPipelineController {
     @Param('month', ParseIntPipe) month: number,
   ) {
     await this.auth.requireAccess(actor);
-    return this.pipeline.breakdowns(parsePipelineFilters({ year: String(year), month: String(month) }));
+    const own = await this.auth.firstTimerScope(actor);
+    const filters = parsePipelineFilters({ year: String(year), month: String(month) });
+    return this.pipeline.breakdowns(own ? { ...filters, assigneeId: own } : filters);
   }
 
   @Get('first-timers/:visitorId')
@@ -107,6 +123,7 @@ export class FollowUpPipelineController {
     const person = await this.pipeline.one(visitorId);
     const visitor = person ? await this.prisma.visitor.findUnique({ where: { id: visitorId } }) : null;
     if (!person || !visitor) throw new NotFoundException('First-timer not found');
+    await this.requireOwn(actor, person.assigneeId);
     const [withPhoto] = await this.photos.attach([person]);
     const readsPrayer = actor.effectiveRoles?.some((r) => ADMIN_PLUS.includes(r)) ?? false;
     return { person: withPhoto, answers: readsPrayer ? allAnswers(visitor) : teamAnswers(visitor) };
@@ -118,7 +135,14 @@ export class FollowUpPipelineController {
     await this.auth.requireAccess(actor);
     const person = await this.pipeline.one(visitorId);
     const visitor = person ? await this.prisma.visitor.findUnique({ where: { id: visitorId } }) : null;
-    if (!visitor) throw new NotFoundException('First-timer not found');
+    if (!person || !visitor) throw new NotFoundException('First-timer not found');
+    await this.requireOwn(actor, person.assigneeId);
     return publicAnswers(visitor);
+  }
+
+  /** A team member may open only a first-timer assigned to them. */
+  private async requireOwn(actor: AuthUser, assigneeId: string | null) {
+    const own = await this.auth.firstTimerScope(actor);
+    if (own && assigneeId !== own) throw new ForbiddenException('This first-timer is not assigned to you');
   }
 }

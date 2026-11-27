@@ -19,6 +19,15 @@ export class ProgramsPublicController {
     return this.programs.list();
   }
 
+  /** Declared before :slug, which is why "anchor" is a reserved slug. */
+  @Public()
+  @Get('anchor')
+  @ApiOperation({ summary: 'The scripture under the Programs hero (Genesis 49:26), from the Bible tables' })
+  anchor(@Res({ passthrough: true }) res: Response) {
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return this.programs.anchor();
+  }
+
   @Public()
   @Get(':slug')
   @ApiOperation({ summary: 'One published program: schedule, watches, editions and the full scripture text' })

@@ -60,7 +60,8 @@ export class GiftExchangeService {
     if (!choice.giftExchange && !choice.picnic) {
       throw new BadRequestException('Choose the gift exchange, the picnic, or both.');
     }
-    const data = { giftExchange: choice.giftExchange, picnic: choice.picnic };
+    // The picnic includes the gift exchange: anyone coming to the picnic takes part in both.
+    const data = { giftExchange: choice.giftExchange || choice.picnic, picnic: choice.picnic };
     const existing = await this.prisma.giftExchangeEntry.findUnique({ where: { memberId }, select: { status: true } });
     if (existing?.status === GiftEntryStatus.REJECTED) throw new ForbiddenException(REJECTED_MESSAGE);
     if (existing) {

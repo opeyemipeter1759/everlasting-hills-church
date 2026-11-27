@@ -12,11 +12,14 @@ export function MasterListChips({
   counts,
   value,
   onChange,
+  statuses = PIPELINE_STATUSES,
 }: {
   /** From the pipeline page; undefined while loading. */
   counts?: StatusCounts & { all: number };
   value: PipelineStatus | "";
   onChange: (status: PipelineStatus | "") => void;
+  /** Which statuses get a chip; every one when left out. */
+  statuses?: PipelineStatus[];
 }) {
   const chip = (key: PipelineStatus | "", label: string, n: number | undefined, dot?: string) => {
     const on = value === key;
@@ -46,7 +49,7 @@ export function MasterListChips({
   return (
     <div role="group" aria-label="Filter by status" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 no-scrollbar sm:flex-wrap">
       {chip("", "All", counts?.all)}
-      {PIPELINE_STATUSES.map((s) => chip(s, STATUS_META[s].label, counts?.[s], STATUS_META[s].dot))}
+      {statuses.map((s) => chip(s, STATUS_META[s].label, counts?.[s], STATUS_META[s].dot))}
     </div>
   );
 }

@@ -42,6 +42,16 @@ export class ProgramsPublicService {
     return rows.map((r) => cardView(r, r.Scriptures.map(() => scriptures[i++]), now));
   }
 
+  /**
+   * Genesis 49:26, the quiet anchor of the Programs page, in the KJV: its "unto the
+   * utmost bound of the everlasting hills" is where the church's name comes from
+   * (the default WEB reads "ancient hills"). Falls back to the default translation.
+   */
+  async anchor() {
+    const [resolved] = await resolveScriptures(this.prisma, [{ bookId: 1, chapter: 49, verseStart: 26, chapterEnd: null, verseEnd: null }], 'KJV');
+    return { ...resolved, status: 'CONFIRMED' as const };
+  }
+
   async detail(slug: string, now = new Date()) {
     const row = await this.published(slug);
     const scriptures = await resolveScriptures(this.prisma, row.Scriptures);

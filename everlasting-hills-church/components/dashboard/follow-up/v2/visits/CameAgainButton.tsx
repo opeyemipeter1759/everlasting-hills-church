@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { CalendarPlus } from "lucide-react";
 import FormModal from "@/components/ui/overlay/FormModal";
 import { useCameAgain, useFirstTimerVisits } from "@/lib/api/first-timer-visits";
-import { visitDayError } from "@/lib/first-timer/visit-day";
+import { daysAgo, visitDayError } from "@/lib/first-timer/visit-day";
 import { shortDate } from "../status";
 import { VisitDayField } from "./VisitDayField";
 
@@ -89,7 +89,7 @@ export function CameAgainButton({
         {visits.isLoading && !picked ? (
           <div className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-white/[0.05]" aria-label="Loading the latest service" />
         ) : (
-          <VisitDayField label="Which day did they come?" value={day} onChange={setPicked} min={first} error={error} />
+          <VisitDayField label="Which day did they come?" value={day} onChange={setPicked} min={daysAgo(14)} error={error} />
         )}
       </FormModal>
     </>

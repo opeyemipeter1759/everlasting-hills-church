@@ -57,7 +57,16 @@ describe('a member showing interest', () => {
     const already = build({ status: 'INTERESTED' });
     await already.svc.register(member(), { giftExchange: false, picnic: true });
     expect(already.prisma.giftExchangeEntry.create).not.toHaveBeenCalled();
-    expect(already.prisma.giftExchangeEntry.update).toHaveBeenCalledWith({ where: { memberId: 'm1' }, data: { giftExchange: false, picnic: true } });
+    expect(already.prisma.giftExchangeEntry.update).toHaveBeenCalledWith({ where: { memberId: 'm1' }, data: { giftExchange: true, picnic: true } });
+  });
+
+  it('signs anyone coming to the picnic up for the gift exchange too', async () => {
+    const fresh = build();
+    await fresh.svc.register(member('m7'), { giftExchange: false, picnic: true });
+    expect(fresh.prisma.giftExchangeEntry.create.mock.calls[0][0].data).toMatchObject({ giftExchange: true, picnic: true });
+    const giftOnlyEntry = build();
+    await giftOnlyEntry.svc.register(member('m8'), giftOnly);
+    expect(giftOnlyEntry.prisma.giftExchangeEntry.create.mock.calls[0][0].data).toMatchObject({ giftExchange: true, picnic: false });
   });
 
   it('refuses a sign-up with neither the gift exchange nor the picnic', async () => {

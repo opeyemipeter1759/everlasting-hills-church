@@ -1,3 +1,4 @@
+import { VersionWatcher } from "@/components/system/VersionWatcher";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import localFont from "next/font/local";
@@ -83,6 +84,9 @@ export default function RootLayout({
       <body className="antialiased bg-white dark:bg-[#111111] transition-colors">
         <Suspense fallback={null}>
           <NavigationProgress />
+        </Suspense>
+        <Suspense fallback={null}>
+          <VersionWatcher />
         </Suspense>
         <QueryProvider>
           <SermonPlayerProvider>

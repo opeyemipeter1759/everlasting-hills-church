@@ -59,6 +59,29 @@ export class UploadsService {
   }
 
   /**
+   * TIFF (scans, some cameras) isn't shown by browsers either; sharp reads it
+   * and it is stored as JPEG.
+   */
+  async convertTiffToJpeg(file: UploadFile): Promise<UploadFile> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const sharp = require('sharp');
+      const jpegBuffer: Buffer = await sharp(file.buffer).rotate().jpeg({ quality: 90 }).toBuffer();
+      return { buffer: jpegBuffer, mimetype: 'image/jpeg', originalname: file.originalname.replace(/\.tiff?$/i, '.jpg'), size: jpegBuffer.length };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      throw new BadRequestException(`Couldn't convert this TIFF image: ${msg}`);
+    }
+  }
+
+  /** HEIC/HEIF and TIFF become JPEG; every other accepted image is stored as it is. */
+  toWebImage(file: UploadFile): Promise<UploadFile> {
+    if (file.mimetype === 'image/heic' || file.mimetype === 'image/heif') return this.convertHeicToJpeg(file);
+    if (file.mimetype === 'image/tiff') return this.convertTiffToJpeg(file);
+    return Promise.resolve(file);
+  }
+
+  /**
    * Upload a file buffer into Supabase Storage under `<prefix>/<timestamp>-<rand>.<ext>`
    * and return its public URL + key. Reuses the same project credentials as auth
    * (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY) rather than a separate R2 account —

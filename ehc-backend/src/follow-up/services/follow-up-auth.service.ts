@@ -4,7 +4,7 @@ import { Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
-import { findFollowUpUnit } from '../follow-up-unit.util';
+import { findFollowUpUnit, findIntegrationUnit } from '../follow-up-unit.util';
 import { ADMIN_PLUS } from '../follow-up.types';
 
 /** Authorization + unit-resolution helpers shared across the Follow-Up pipeline. */
@@ -31,6 +31,19 @@ export class FollowUpAuthService {
     if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) return true;
     if (actor.unitLeadOf.includes(unitId)) return true;
     return !!departmentId && this.headsDepartment(actor, departmentId);
+  }
+
+  /**
+   * On the Integration Team: a member of its unit, or someone who may lead it
+   * (its lead, their head of department, church-wide staff).
+   */
+  async onIntegrationTeam(actor: AuthUser): Promise<boolean> {
+    const unit = await findIntegrationUnit(this.prisma, this.tenantId);
+    if (!unit) return actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r));
+    if (await this.canLeadUnit(actor, unit.id)) return true;
+    if (!actor.memberId) return false;
+    const member = await this.prisma.unitMember.findFirst({ where: { tenantId: this.tenantId, unitId: unit.id, memberId: actor.memberId }, select: { id: true } });
+    return !!member;
   }
 
   /** `canLead()` for call sites that don't already have the unit's department. */
@@ -78,6 +91,36 @@ export class FollowUpAuthService {
       select: { id: true },
     });
     return !!membership;
+  }
+
+  /**
+   * Whose first-timers this person may read. The whole list goes to whoever
+   * runs or feeds the work: admins, the first-timer contact, the Follow-Up
+   * lead, heads of department, and the Integration Team (who work the
+   * integrated). Everyone else, a Follow-Up team member included, sees only the
+   * first-timers assigned to them. Returns null for the whole list, otherwise
+   * the member id to pin the list to.
+   */
+  async firstTimerScope(actor: AuthUser): Promise<string | null> {
+    if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) return null;
+    if (actor.effectiveRoles.includes(Role.FIRST_TIMER_CONTACT)) return null;
+    if (actor.hodOf?.length) return null;
+    if (await this.resolveReportsUnit(actor)) return null;
+    if (await this.onIntegrationTeam(actor)) return null;
+    // No member record means nothing can be assigned to them: an id no one has.
+    return actor.memberId ?? 'no-member';
+  }
+
+  /**
+   * May correct a first-timer's record (name, phone, answers): a Follow-Up
+   * team member for the first-timers assigned to them, and the Follow-Up lead,
+   * heads of department and admins for anyone.
+   */
+  async canEditRecord(actor: AuthUser, assigneeId: string | null): Promise<boolean> {
+    if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) return true;
+    if (actor.hodOf?.length) return true;
+    if (await this.resolveReportsUnit(actor)) return true;
+    return !!actor.memberId && assigneeId === actor.memberId;
   }
 
   /** Same gate as hasUnitAccess, for routes that must refuse rather than report. */

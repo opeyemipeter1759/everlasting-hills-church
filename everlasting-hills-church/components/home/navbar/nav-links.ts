@@ -15,6 +15,7 @@ import {
   PrayerRequestIcon,
   PrayerWatchIcon,
   PreMaritalIcon,
+  ProgramsIcon,
   SalvationIcon,
   SermonsIcon,
   ServeIcon,
@@ -50,7 +51,7 @@ export const navLinks: NavLink[] = [
     children: [
       { label: "About Us", href: "/about", description: "Our story, vision and beliefs", icon: AboutIcon },
       { label: "Our Culture", href: "/cultures", description: "The values that shape us", icon: CultureIcon },
-      { label: "Our Pastors", href: "/Pastor", description: "Meet the people who lead us", icon: PastorsIcon },
+      { label: "Our Pastors", href: "/pastor", description: "Meet the people who lead us", icon: PastorsIcon },
       { label: "Plan a Visit", href: "/visit", description: "What to expect on a Sunday", icon: PlanVisitIcon },
       { label: "Find Us", href: "/contact", description: "Directions and contact details", icon: FindUsIcon },
     ],
@@ -60,6 +61,7 @@ export const navLinks: NavLink[] = [
     label: "Media",
     children: [
       { label: "Sermons", href: "/sermons", description: "Watch and listen to past messages", icon: SermonsIcon },
+      { label: "Programs", href: "/programs", description: "The rhythm of the house", icon: ProgramsIcon },
       { label: "Articles", href: "/articles", description: "Devotionals and teaching to read", icon: ArticlesIcon },
     ],
   },
@@ -107,7 +109,7 @@ export const giveLink: NavLink = {
 export const ATTENDANCE_HREF = "/#attendance";
 
 /** Public pages that open on a light background, so the bar starts with dark text. */
-export const LIGHT_PAGES = ["/articles", "/Pastor", "/pledge"];
+export const LIGHT_PAGES = ["/articles", "/pastor", "/pledge", "/picnic"];
 
 /** Mega-menu (two columns) for dropdowns with more items than this. */
 export const MEGA_THRESHOLD = 4;

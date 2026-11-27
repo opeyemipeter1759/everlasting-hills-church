@@ -1033,6 +1033,15 @@
           },
           "venueName": {
             "type": "string"
+          },
+          "visibility": {
+            "default": "PUBLIC",
+            "description": "PUBLIC: everyone can see it. PRIVATE: only signed-in users.",
+            "enum": [
+              "PUBLIC",
+              "PRIVATE"
+            ],
+            "type": "string"
           }
         },
         "required": [
@@ -2374,7 +2383,7 @@
             "type": "boolean"
           },
           "picnic": {
-            "description": "Come to the picnic",
+            "description": "Come to the picnic (includes the gift exchange)",
             "type": "boolean"
           }
         },
@@ -4778,6 +4787,15 @@
           },
           "venueName": {
             "type": "string"
+          },
+          "visibility": {
+            "default": "PUBLIC",
+            "description": "PUBLIC: everyone can see it. PRIVATE: only signed-in users.",
+            "enum": [
+              "PUBLIC",
+              "PRIVATE"
+            ],
+            "type": "string"
           }
         },
         "type": "object"
@@ -5004,6 +5022,10 @@
             "type": "object"
           }
         },
+        "type": "object"
+      },
+      "UpdateNavGrantDto": {
+        "properties": {},
         "type": "object"
       },
       "UpdatePrayerRequestStatusDto": {
@@ -19753,7 +19775,7 @@
             "description": "Error response"
           }
         },
-        "summary": "List published events (public)",
+        "summary": "List published events (public; private events included when signed in)",
         "tags": [
           "events"
         ]
@@ -19804,7 +19826,7 @@
             "description": "Error response"
           }
         },
-        "summary": "Get a published event by slug (public)",
+        "summary": "Get a published event by slug (public; private events need sign-in)",
         "tags": [
           "events"
         ]
@@ -21264,7 +21286,7 @@
             "access-token": []
           }
         ],
-        "summary": "Correct a first-timer record; the prayer request is not editable here (First Timer Team)",
+        "summary": "Correct a first-timer record; the prayer request is not editable here (the First Timer Team's lead, its head of department, or an admin)",
         "tags": [
           "first-timer-team"
         ]
@@ -22996,6 +23018,126 @@
         ]
       }
     },
+    "/follow-up/first-timers/{visitorId}/record": {
+      "get": {
+        "operationId": "FollowUpRecordController_record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "A first-timer's record without the prayer request, and whether the viewer may edit it",
+        "tags": [
+          "follow-up"
+        ]
+      },
+      "patch": {
+        "operationId": "FollowUpRecordController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVisitorDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Correct a first-timer's record (their assignee, the Follow-Up lead, heads of department, admins)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/first-timers/{visitorId}/restore": {
       "post": {
         "operationId": "FollowUpStageController_restore",
@@ -23481,6 +23623,53 @@
           }
         ],
         "summary": "Every church member with their follow-up status (Follow-Up team only)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/my-activity": {
+      "get": {
+        "operationId": "FollowUpPipelineController_myActivity",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "The caller's own follow-up: who they have, and what they have logged this month and in all",
         "tags": [
           "follow-up"
         ]
@@ -24070,6 +24259,13 @@
             "schema": {}
           },
           {
+            "description": "true: only integrated members (and any since marked Away)",
+            "in": "query",
+            "name": "integrated",
+            "required": false,
+            "schema": {}
+          },
+          {
             "in": "query",
             "name": "notContacted",
             "required": false,
@@ -24112,6 +24308,7 @@
                 "FOURTH_TIMER",
                 "AWAY",
                 "INTEGRATED",
+                "REMOTE",
                 "OPTED_OUT"
               ],
               "type": "string"
@@ -31208,6 +31405,70 @@
         "tags": [
           "nav-permissions"
         ]
+      },
+      "patch": {
+        "operationId": "NavPermissionsController_updateGrant",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNavGrantDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Make a grant view only or full access (SUPER_ADMIN only)",
+        "tags": [
+          "nav-permissions"
+        ]
       }
     },
     "/nav-permissions/my-grants": {
@@ -33637,7 +33898,7 @@
             "access-token": []
           }
         ],
-        "summary": "First-timers nobody has contacted yet, oldest first, each with a ready WhatsApp link",
+        "summary": "First-timers nobody has contacted yet, newest registration first, each with a ready WhatsApp link",
         "tags": [
           "opening-message"
         ]
@@ -39244,6 +39505,48 @@
           }
         },
         "summary": "Add a program to a calendar (confirmed dates only)",
+        "tags": [
+          "programs-public"
+        ]
+      }
+    },
+    "/public/programs/anchor": {
+      "get": {
+        "operationId": "ProgramsPublicController_anchor",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "The scripture under the Programs hero (Genesis 49:26), from the Bible tables",
         "tags": [
           "programs-public"
         ]
@@ -46802,7 +47105,7 @@
               "schema": {
                 "properties": {
                   "file": {
-                    "description": "Image file (JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO, HEIC/HEIF — max 8 MB)",
+                    "description": "Image file (JPG, PNG, WebP, GIF, AVIF, HEIC/HEIF, TIFF — max 8 MB; the dashboard converts other types to PNG before upload)",
                     "format": "binary",
                     "type": "string"
                   }

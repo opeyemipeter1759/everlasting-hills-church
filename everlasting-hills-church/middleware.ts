@@ -41,6 +41,7 @@ import {
 } from "@/lib/nav-permissions-core";
 // A signed-in person with no church role: a couple dashboard account goes to its dashboard, anyone else to their profile.
 import { rolelessHome } from "@/lib/auth/couple-routing";
+import { ownerPageFor } from "@/lib/nav-owner-page";
 
 // Sermon management is PASTOR+ by role, but every member of the Audio
 // (Post) Production unit gets full Super Admin power over the whole Sermons
@@ -128,12 +129,9 @@ async function refreshSessionRaw(refreshToken: string, deadline: number): Promis
   }
 }
 
-// Supabase refresh tokens are single-use — redeeming one invalidates it and
-// issues a new one. Several requests can land on the same warm edge isolate
-// around the same moment (a navigation plus its prefetches, say) all holding
-// the same stale-looking refresh token; without de-duping, all but the first
-// would get rejected by Supabase and read as "refresh failed", clearing a
-// session that had just been renewed a moment earlier by its sibling.
+// Supabase refresh tokens are single-use. A navigation plus its prefetches can hit one
+// warm isolate with the same token; without de-duping, all but the first would be
+// rejected and read as "refresh failed", clearing a session its sibling just renewed.
 const inFlightRefreshes = new Map<string, Promise<RefreshResult>>();
 
 async function refreshSession(refreshToken: string, deadline: number): Promise<RefreshResult> {
@@ -215,21 +213,18 @@ function withSessionCookies(response: NextResponse, session: BackendSession | nu
   return response;
 }
 
-// Google's OAuth redirect_uri points at the calendar page itself (see
-// app/dashboard/(member)/calendar/page.tsx), which forwards code+state on to
-// the real Nest handler, so the flow stays on the app's own branded domain
-// instead of a separate route. That page normally requires a session like
-// any other /dashboard/* route — but identity for this one specific request
-// shape travels in Google's signed `state`, not a session cookie, so a
-// session that lapsed during the consent round trip shouldn't strand the
-// user on a login redirect instead of completing the connection. Scoped to
-// exactly this path + query shape so a normal calendar visit is unaffected.
+// Google's OAuth redirect_uri is the calendar page itself (app/dashboard/(member)/calendar/page.tsx),
+// which forwards code+state to Nest, keeping the flow on the church's own domain. Identity for
+// this one request shape travels in Google's signed `state`, not a session cookie, so a session
+// that lapsed during consent mustn't strand the user on login. Scoped to exactly this path + query
+// shape so a normal calendar visit is unaffected.
 function isGoogleCalendarCallback(pathname: string, searchParams: URLSearchParams): boolean {
   return pathname === "/dashboard/calendar" && searchParams.has("code") && searchParams.has("state");
 }
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+  if (pathname === "/Pastor") return NextResponse.redirect(new URL("/pastor", request.url), 308); // old links, CMS copy
   if (isGoogleCalendarCallback(pathname, searchParams)) return NextResponse.next();
   if (isLogoutPending(request.cookies.get(LOGOUT_PENDING_COOKIE)?.value)) {
     const response = AUTH_PAGES.has(pathname)
@@ -324,12 +319,9 @@ export async function middleware(request: NextRequest) {
     const liveRoles = await loadLiveRoles();
     roleAllowed = hasAnyMinRole(liveRoles?.effectiveRoles ?? [], requiredRole);
   }
-  // Admin-configured Role Access Permissions: if the matched nav item has a
-  // saved override, that explicit role set is authoritative for this request
-  // — it replaces (not adds to) the hierarchy-based result above, so an admin
-  // can both grant beyond the default minRole and revoke below it. Items no
-  // admin has ever touched have no map entry, so this leaves roleAllowed
-  // exactly as already computed.
+  // Role Access Permissions: a saved role list for the matched nav item replaces (not adds
+  // to) the hierarchy result above, so an admin can grant beyond the default minRole and
+  // revoke below it. Items never touched have no map entry and keep roleAllowed as is.
   if (accessToken) {
     const matchedItem = matchNavItemForPath(pathname, NAV_ITEMS_FLAT);
     if (matchedItem) {
@@ -358,13 +350,18 @@ export async function middleware(request: NextRequest) {
     roleAllowed = await isAudioProductionMember(accessToken, deadline);
   }
 
-  // Named exceptions: only consulted once every role-based path above has
-  // already said no, since these only ever widen access, never narrow it.
+  // Named exceptions, then a screen opened from another page (the CMS's homepage
+  // editor) for anyone that page lets in by role list or grant. Consulted only once
+  // every role-based path above said no: these only ever widen access.
   if (!roleAllowed && accessToken) {
     const matchedItem = matchNavItemForPath(pathname, NAV_ITEMS_FLAT);
-    if (matchedItem) {
-      const grantedHrefs = await fetchMyGrantedHrefs(accessToken, deadline);
-      if (grantedHrefs?.has(matchedItem.href)) roleAllowed = true;
+    const owner = ownerPageFor(pathname, NAV_ITEMS_FLAT);
+    const granted = matchedItem || owner ? await fetchMyGrantedHrefs(accessToken, deadline) : null;
+    roleAllowed = !!(matchedItem && granted?.has(matchedItem.href)) || !!(owner && granted?.has(owner.href));
+    if (!roleAllowed && owner) {
+      const overrides = (await fetchNavPermissionsMap(accessToken, deadline)) ?? new Map();
+      const roles = [effectiveRole, ...((await loadLiveRoles())?.effectiveRoles ?? [])].map(normalizeRole);
+      roleAllowed = roles.some((role) => !!role && canRoleAccessItem(role, owner, overrides));
     }
   }
 
@@ -386,9 +383,8 @@ export const config = {
     "/dashboard/:path*",
     "/admin/:path*",
     "/me", "/couple-dashboard",
-    "/me/:path*",
-    "/login",
-    "/register",
+    "/me/:path*", "/Pastor",
+    "/login", "/register",
     "/forgot-password",
   ],
 };

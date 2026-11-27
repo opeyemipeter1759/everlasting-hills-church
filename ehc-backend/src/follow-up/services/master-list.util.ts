@@ -18,6 +18,7 @@ export type MasterListStatus =
   | 'FOURTH_TIMER'
   | 'INTEGRATED'
   | 'AWAY'
+  | 'REMOTE'
   | 'OPTED_OUT';
 
 export interface MasterListRow {

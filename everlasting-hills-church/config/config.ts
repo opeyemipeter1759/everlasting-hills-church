@@ -105,8 +105,7 @@ export const ROLE_BADGE_CLASS: Record<UserRole, string> = {
 };
 
 import {
-  PanelsTopLeft,
-  LayoutDashboard,
+  PanelsTopLeft, LayoutDashboard,
   User,
   CheckCircle,
   Heart,
@@ -134,7 +133,7 @@ import {
   School,
   Compass,
   Users2,
-  Wifi, CalendarClock,
+  Wifi, CalendarClock, Repeat,
   BookMarked,
   Newspaper,
   UserCog,
@@ -207,12 +206,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Bible Reading", href: "/dashboard/admin/reading",       icon: BookMarked,    minRole: "ADMIN" },
       { label: "Pledges",       href: "/dashboard/admin/pledges",       icon: HandCoins,     minRole: "ADMIN" },
       { label: "Prayer Watch",  href: "/dashboard/admin/prayer-watch",  icon: Clock,      minRole: "ADMIN" },
-      { label: "Gift Exchange", href: "/dashboard/admin/gift-exchange", icon: Gift,          minRole: "ADMIN" },
       { label: "Finance",       href: "/dashboard/admin/finance",       icon: DollarSign,    minRole: "FINANCE_HEAD" },
       { label: "Online Audience", href: "/dashboard/admin/online-audience", icon: Wifi, minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/admin/events",        icon: CalendarDays,  minRole: "ADMIN" },
+      { label: "Picnic & Gift Exchange", href: "/dashboard/admin/gift-exchange", icon: Gift, minRole: "ADMIN" },
+      { label: "Programs",      href: "/dashboard/admin/programs",      icon: Repeat,        minRole: "ADMIN" },
       { label: "Calendar",      href: "/dashboard/admin/calendar",      icon: CalendarRange, minRole: "ADMIN" },
       { label: "Usher",         href: "/dashboard/admin/usher",         icon: Tally5,        minRole: "HEAD_USHER" },
       { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },

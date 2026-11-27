@@ -5,21 +5,24 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
+      # The trigger's backend URL is baked into the browser bundle, so the
+      # develop site's trigger can point at the development backend.
+      - '--build-arg=API_BASE_URL_OVERRIDE=${_NEXT_PUBLIC_API_BASE_URL}'
       - '-t'
-      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/everlasting-hills-church-git'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/${_SERVICE}'
       - '.'
     dir: 'everlasting-hills-church'
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/everlasting-hills-church-git']
+    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/${_SERVICE}']
 
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
     entrypoint: gcloud
     args:
       - 'run'
       - 'deploy'
-      - 'everlasting-hills-church-git'
-      - '--image=europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/everlasting-hills-church-git'
+      - '${_SERVICE}'
+      - '--image=europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/${_SERVICE}'
       - '--region=europe-west1'
       - '--port=8080'
       - '--allow-unauthenticated'
@@ -29,7 +32,7 @@ steps:
       - '--update-env-vars=API_BASE_URL=${_NEXT_PUBLIC_API_BASE_URL},NEXT_PUBLIC_API_BASE_URL=${_NEXT_PUBLIC_API_BASE_URL},DEFAULT_TENANT_ID=${_DEFAULT_TENANT_ID},GEMINI_API_KEY=${_GEMINI_API_KEY}'
 
 images:
-  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/everlasting-hills-church-git'
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/${_SERVICE}'
 
 # The Developer Connect trigger runs this build as a user-specified service
 # account. Cloud Build refuses to start such a build unless it is told where the
@@ -40,3 +43,8 @@ images:
 # and the logs stay in the same place as the Cloud Run service's.
 options:
   logging: CLOUD_LOGGING_ONLY
+
+# A trigger can override these. The develop site's trigger sets _SERVICE to its
+# own Cloud Run service and _NEXT_PUBLIC_API_BASE_URL to the development backend.
+substitutions:
+  _SERVICE: 'everlasting-hills-church-git'

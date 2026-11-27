@@ -5,7 +5,8 @@ import { eventChips, focusRing } from "./event-card-utils";
 
 /** Date tile beside the title, theme line, and chips. */
 export default function EventCardHeading({ event, href, compact = false }: { event: EventSummary; href: string; compact?: boolean }) {
-  const start = new Date(event.startAt);
+  // Recurring events show their current/next session date, not their first day.
+  const start = new Date(event.nextStartAt ?? event.startAt);
   const weekday = start.toLocaleDateString("en-GB", { weekday: "short", timeZone: TZ });
   const dayNum = start.toLocaleDateString("en-GB", { day: "numeric", timeZone: TZ });
   const monthShort = start.toLocaleDateString("en-GB", { month: "short", timeZone: TZ });

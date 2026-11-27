@@ -3369,7 +3369,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List published events (public) */
+        /** List published events (public; private events included when signed in) */
         get: operations["EventsController_listPublished"];
         put?: never;
         post?: never;
@@ -3386,7 +3386,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a published event by slug (public) */
+        /** Get a published event by slug (public; private events need sign-in) */
         get: operations["EventsController_getBySlug"];
         put?: never;
         post?: never;
@@ -3688,7 +3688,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Correct a first-timer record; the prayer request is not editable here (First Timer Team) */
+        /** Correct a first-timer record; the prayer request is not editable here (the First Timer Team's lead, its head of department, or an admin) */
         patch: operations["FirstTimerTeamController_update"];
         trace?: never;
     };
@@ -4153,6 +4153,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/follow-up/first-timers/{visitorId}/record": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A first-timer's record without the prayer request, and whether the viewer may edit it */
+        get: operations["FollowUpRecordController_record"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Correct a first-timer's record (their assignee, the Follow-Up lead, heads of department, admins) */
+        patch: operations["FollowUpRecordController_update"];
+        trace?: never;
+    };
     "/follow-up/first-timers/{visitorId}/restore": {
         parameters: {
             query?: never;
@@ -4248,6 +4266,23 @@ export interface paths {
         };
         /** Every church member with their follow-up status (Follow-Up team only) */
         get: operations["FollowUpController_masterList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/my-activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's own follow-up: who they have, and what they have logged this month and in all */
+        get: operations["FollowUpPipelineController_myActivity"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6153,7 +6188,8 @@ export interface paths {
         delete: operations["NavPermissionsController_removeGrant"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Make a grant view only or full access (SUPER_ADMIN only) */
+        patch: operations["NavPermissionsController_updateGrant"];
         trace?: never;
     };
     "/nav-permissions/my-grants": {
@@ -6794,7 +6830,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** First-timers nobody has contacted yet, oldest first, each with a ready WhatsApp link */
+        /** First-timers nobody has contacted yet, newest registration first, each with a ready WhatsApp link */
         get: operations["OpeningMessageController_list"];
         put?: never;
         post?: never;
@@ -8421,6 +8457,23 @@ export interface paths {
         };
         /** Add a program to a calendar (confirmed dates only) */
         get: operations["ProgramsPublicController_calendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/programs/anchor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The scripture under the Programs hero (Genesis 49:26), from the Bible tables */
+        get: operations["ProgramsPublicController_anchor"];
         put?: never;
         post?: never;
         delete?: never;
@@ -11038,6 +11091,12 @@ export interface components {
             title: string;
             venueAddress?: string;
             venueName?: string;
+            /**
+             * @description PUBLIC: everyone can see it. PRIVATE: only signed-in users.
+             * @default PUBLIC
+             * @enum {string}
+             */
+            visibility: "PUBLIC" | "PRIVATE";
         };
         CreateEventRsvpDto: {
             /** @default 1 */
@@ -11629,7 +11688,7 @@ export interface components {
         GiftExchangeChoiceDto: {
             /** @description Take part in the gift exchange */
             giftExchange: boolean;
-            /** @description Come to the picnic */
+            /** @description Come to the picnic (includes the gift exchange) */
             picnic: boolean;
         };
         HeartbeatDto: {
@@ -12646,6 +12705,12 @@ export interface components {
             title?: string;
             venueAddress?: string;
             venueName?: string;
+            /**
+             * @description PUBLIC: everyone can see it. PRIVATE: only signed-in users.
+             * @default PUBLIC
+             * @enum {string}
+             */
+            visibility: "PUBLIC" | "PRIVATE";
         };
         UpdateFinanceEntryDto: {
             /** @example 50000 */
@@ -12768,6 +12833,7 @@ export interface components {
              */
             weddingAnniversary?: Record<string, never>;
         };
+        UpdateNavGrantDto: Record<string, never>;
         UpdatePrayerRequestStatusDto: {
             /**
              * @example PRAYED
@@ -23215,6 +23281,76 @@ export interface operations {
             };
         };
     };
+    FollowUpRecordController_record: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visitorId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpRecordController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visitorId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateVisitorDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpStageController_restore: {
         parameters: {
             query?: never;
@@ -23434,6 +23570,37 @@ export interface operations {
                 /** @description FOLLOW_UP leaves out anyone integrated or opted out; INTEGRATION shows only the integrated and anyone who has gone away; OPTED_OUT only those who have opted out. */
                 scope?: "FOLLOW_UP" | "INTEGRATION" | "OPTED_OUT" | "ALL";
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpPipelineController_myActivity: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -23782,13 +23949,15 @@ export interface operations {
                 presentAt?: unknown;
                 /** @description A service id: who missed it */
                 absentFrom?: unknown;
+                /** @description true: only integrated members (and any since marked Away) */
+                integrated?: unknown;
                 notContacted?: unknown;
                 /** @description A member id, or "none" */
                 assigneeId?: unknown;
                 search?: unknown;
                 month?: unknown;
                 year?: unknown;
-                status?: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "AWAY" | "INTEGRATED" | "OPTED_OUT";
+                status?: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "FOURTH_TIMER" | "AWAY" | "INTEGRATED" | "REMOTE" | "OPTED_OUT";
             };
             header?: never;
             path?: never;
@@ -28160,6 +28329,43 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    NavPermissionsController_updateGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNavGrantDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -32966,6 +33172,37 @@ export interface operations {
             };
         };
     };
+    ProgramsPublicController_anchor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     PushController_getPreferences: {
         parameters: {
             query?: never;
@@ -37379,7 +37616,7 @@ export interface operations {
                 "multipart/form-data": {
                     /**
                      * Format: binary
-                     * @description Image file (JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO, HEIC/HEIF — max 8 MB)
+                     * @description Image file (JPG, PNG, WebP, GIF, AVIF, HEIC/HEIF, TIFF — max 8 MB; the dashboard converts other types to PNG before upload)
                      */
                     file?: string;
                 };

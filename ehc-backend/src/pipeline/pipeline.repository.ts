@@ -87,7 +87,8 @@ export class PipelineRepository {
    * generate_series fills the empty months; ROLLUP adds the total row.
    * A month holds the people whose first visit fell in it, as they stand today.
    */
-  async year(year: number, now = new Date()): Promise<YearSummary> {
+  /** `assigneeId` narrows every count to one team member's own first-timers. */
+  async year(year: number, now = new Date(), assigneeId?: string): Promise<YearSummary> {
     const rows = await this.prisma.$queryRaw<Record<string, unknown>[]>(Prisma.sql`
       WITH ${pipelineCte(this.tenantId)},
       tracking AS (SELECT date_trunc('month', MIN(pl."firstContactedAt")) AS since FROM pipeline pl),
@@ -102,6 +103,7 @@ export class PipelineRepository {
              COUNT(pl."visitorId") FILTER (WHERE pl.status = 'THIRD_TIMER')::int AS "THIRD_TIMER",
              COUNT(pl."visitorId") FILTER (WHERE pl.status = 'FOURTH_TIMER')::int AS "FOURTH_TIMER",
              COUNT(pl."visitorId") FILTER (WHERE pl.status = 'AWAY')::int AS "AWAY",
+             COUNT(pl."visitorId") FILTER (WHERE pl.status = 'REMOTE')::int AS "REMOTE",
              COUNT(pl."visitorId") FILTER (WHERE pl.status = 'INTEGRATED')::int AS "INTEGRATED",
              COUNT(pl."visitorId") FILTER (WHERE pl.status = 'OPTED_OUT')::int AS "OPTED_OUT",
              COUNT(pl."visitorId") FILTER (
@@ -119,6 +121,7 @@ export class PipelineRepository {
         FROM months m
         LEFT JOIN pipeline pl
           ON pl."firstVisitDate" >= m.month AND pl."firstVisitDate" < (m.month + interval '1 month')::date
+         ${assigneeId ? Prisma.sql`AND pl."assigneeId" = ${assigneeId}` : Prisma.empty}
        GROUP BY ROLLUP (m.month)
        ORDER BY m.month NULLS LAST`);
 

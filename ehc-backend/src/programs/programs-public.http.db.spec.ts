@@ -45,9 +45,11 @@ maybe('Public programs API against Postgres', () => {
       cleanup.push(() => prisma.bibleTranslation.delete({ where: { id } }));
     }
     translationCode = translation.code;
-    if (!(await prisma.bibleBook.findUnique({ where: { id: 23 } }))) {
-      await prisma.bibleBook.create({ data: { id: 23, osisCode: 'Isa', name: 'Isaiah', shortName: 'Isa', testament: 'OT', chapterCount: 66 } });
-      cleanup.push(() => prisma.bibleBook.delete({ where: { id: 23 } }));
+    for (const [id, osisCode, name, chapterCount] of [[23, 'Isa', 'Isaiah', 66], [1, 'Gen', 'Genesis', 50]] as const) {
+      if (!(await prisma.bibleBook.findUnique({ where: { id } }))) {
+        await prisma.bibleBook.create({ data: { id, osisCode, name, shortName: osisCode, testament: 'OT', chapterCount } });
+        cleanup.push(() => prisma.bibleBook.delete({ where: { id } }));
+      }
     }
     for (const [verse, text] of [[6, 'I have set watchmen on your walls.'], [7, 'And give him no rest.']] as const) {
       const verseId = 23062000 + verse;
@@ -115,6 +117,11 @@ maybe('Public programs API against Postgres', () => {
     const furnace = await service.detail('furnace', new Date('2026-11-24T12:00:00Z'));
     expect(furnace.editions.archive.map((e) => [e.label, e.theme])).toEqual([["Furnace '26", 'Dominion']]);
     expect(furnace.editions.upcoming.map((e) => [e.label, e.dateStatus])).toEqual([["Furnace '27", 'TBA']]);
+  });
+
+  it('gives the page its anchor verse, Genesis 49:26, from the Bible tables', async () => {
+    const res = await http().get('/public/programs/anchor').expect(200);
+    expect(res.body.data).toMatchObject({ reference: 'Genesis 49:26', status: 'CONFIRMED' });
   });
 
   it('answers 404 for a draft and for another church\'s program', async () => {

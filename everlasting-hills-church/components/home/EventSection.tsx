@@ -1,18 +1,18 @@
-import { serverApi } from "@/lib/api/server";
+import { getEventsAsViewer } from "@/lib/api/events-server";
 import type { EventSummary } from "@/types";
-import { isPastEventDate } from "@/components/events/detail/event-format";
+import { getEventTiming } from "@/components/events/detail/event-format";
 import EventSpotlight from "./EventSpotlight";
 
 async function fetchSpotlightEvents(): Promise<EventSummary[]> {
   try {
-    const events = await serverApi.get<EventSummary[]>("/events", {
-      withAuth: false,
-      revalidate: 300,
-      tags: ["events"],
-    });
+    const events = await getEventsAsViewer<EventSummary[]>("/events");
+    const now = new Date();
+    // Recurring events show their next (or current) session, not their first day.
     const upcoming = events
-      .filter((e) => !isPastEventDate(e.startAt, e.endAt))
-      .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+      .map((e) => ({ e: e, t: getEventTiming(e, now) }))
+      .filter(({ t }) => t.status !== "past")
+      .sort((a, b) => a.t.occurrence.start.getTime() - b.t.occurrence.start.getTime())
+      .map(({ e, t }) => ({ ...e, nextStartAt: t.occurrence.start.toISOString() }));
     const featured = upcoming.filter((e) => e.featured);
     const rest = upcoming.filter((e) => !e.featured);
     return [...featured, ...rest].slice(0, 3);

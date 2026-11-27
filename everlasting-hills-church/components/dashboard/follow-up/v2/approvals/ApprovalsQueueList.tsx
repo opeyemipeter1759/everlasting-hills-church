@@ -8,6 +8,7 @@ import { PersonAvatar } from "../PersonCells";
 import { approvalDate } from "./ApprovalSummary";
 import AssignmentDecision from "./AssignmentDecision";
 import AccountDecision from "./AccountDecision";
+import IntegrationDecision from "./IntegrationDecision";
 
 /** What the request is, in a line. */
 function line(item: ApprovalQueueItem): string {
@@ -19,8 +20,8 @@ function line(item: ApprovalQueueItem): string {
 }
 
 /**
- * Everything waiting on the viewer. Assignments and accounts are decided right
- * here; an integration opens the person's profile, so nobody approves blind.
+ * Everything waiting on the viewer, each decided right here on its card the
+ * same way. Tapping the name opens their profile, visits and notes first.
  */
 export default function ApprovalsQueueList({ items }: { items: ApprovalQueueItem[] }) {
   return (
@@ -51,6 +52,7 @@ export default function ApprovalsQueueList({ items }: { items: ApprovalQueueItem
           </Link>
           <div className="pl-[52px]">
             {item.kind === "FIRST_TIMER_ASSIGNMENT" && <AssignmentDecision request={item} firstName={item.person.firstName} />}
+            {item.kind === "FIRST_TIMER_INTEGRATION" && <IntegrationDecision request={item} firstName={item.person.firstName} />}
             {item.kind === "MEMBER_ACCOUNT" && <AccountDecision request={item} person={item.person} />}
           </div>
         </li>

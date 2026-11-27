@@ -1,119 +1,23 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { ImagePlus, Trash2, UploadCloud, X } from "lucide-react";
+import { ImagePlus, Trash2 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
-import {
-  useDeleteMedia,
-  useMedia,
-  useUploadMedia,
-  type MediaAsset,
-} from "@/lib/api/cms";
+import MediaUploadZone from "@/components/dashboard/admin/cms/MediaUploadZone";
+import { useDeleteMedia, useMedia, type MediaAsset } from "@/lib/api/cms";
 
-function fmtBytes(n: number) {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
-  return `${(n / 1024 / 1024).toFixed(1)} MB`;
-}
+const fmtBytes = (n: number) =>
+  n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`;
 
 export default function CmsMediaLibrary() {
   const { data: media, isLoading } = useMedia();
-  const upload = useUploadMedia();
   const del = useDeleteMedia();
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const [pending, setPending] = useState<{ file: File; preview: string } | null>(null);
-  const [alt, setAlt] = useState("");
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<MediaAsset | null>(null);
-
-  function pick(file: File | undefined) {
-    if (!file) return;
-    setUploadError(null);
-    setAlt("");
-    setPending({ file, preview: URL.createObjectURL(file) });
-  }
-
-  async function doUpload() {
-    if (!pending || !alt.trim()) return;
-    setUploadError(null);
-    try {
-      // Capture natural dimensions for images before upload.
-      let width: number | undefined;
-      let height: number | undefined;
-      if (pending.file.type.startsWith("image/")) {
-        const dims = await imageDims(pending.preview);
-        width = dims?.width;
-        height = dims?.height;
-      }
-      await upload.mutateAsync({ file: pending.file, alt: alt.trim(), width, height });
-      URL.revokeObjectURL(pending.preview);
-      setPending(null);
-      setAlt("");
-    } catch (err) {
-      setUploadError((err as { message?: string }).message ?? "Upload failed");
-    }
-  }
 
   return (
     <div className="space-y-6">
-      {/* Upload zone */}
-      <div className="rounded-2xl border border-dashed border-[#E7CDD3] dark:border-white/15 bg-[#FFF4F6]/40 dark:bg-white/[0.02] p-4 xs:p-6">
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => pick(e.target.files?.[0])}
-        />
-        {!pending ? (
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="w-full flex flex-col items-center justify-center gap-2 py-6 text-[#87102C] dark:text-[#e8768a]"
-          >
-            <UploadCloud size={28} />
-            <span className="text-sm font-semibold">Click to upload an image</span>
-            <span className="text-xs text-gray-400 dark:text-white/40">Stored in Cloudflare R2 · alt text required</span>
-          </button>
-        ) : (
-          <div className="flex flex-col sm:flex-row gap-4 items-start">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={pending.preview} alt="" className="h-28 w-28 rounded-xl object-cover border border-[#E7CDD3] dark:border-white/10" />
-            <div className="flex-1 w-full">
-              <label className="block text-xs font-semibold text-gray-500 dark:text-white/50 mb-1.5">
-                Alt text <span className="text-red-500">*</span> (describe the image for accessibility)
-              </label>
-              <input
-                autoFocus
-                value={alt}
-                onChange={(e) => setAlt(e.target.value)}
-                placeholder="e.g. Congregation worshipping on Sunday morning"
-                className="w-full text-sm rounded-xl border border-[#E7CDD3] dark:border-white/10 bg-white dark:bg-white/5 px-3.5 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 focus:border-[#87102C]/40"
-              />
-              {uploadError && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{uploadError}</p>}
-              <div className="flex items-center gap-2 mt-3">
-                <button
-                  type="button"
-                  disabled={!alt.trim() || upload.isPending}
-                  onClick={doUpload}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] disabled:opacity-50 transition-colors"
-                >
-                  <ImagePlus size={15} /> {upload.isPending ? "Uploading…" : "Upload"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { if (pending) URL.revokeObjectURL(pending.preview); setPending(null); }}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-gray-500 dark:text-white/60 hover:bg-gray-100 dark:hover:bg-white/5"
-                >
-                  <X size={15} /> Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <MediaUploadZone />
 
       {/* Grid */}
       {isLoading ? (
@@ -176,13 +80,4 @@ export default function CmsMediaLibrary() {
       />
     </div>
   );
-}
-
-function imageDims(src: string): Promise<{ width: number; height: number } | null> {
-  return new Promise((resolve) => {
-    const img = new window.Image();
-    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
 }

@@ -22,7 +22,10 @@ COPY . .
 # in: they are set on the Cloud Run service and read at runtime (the YouTube
 # key included: /api/youtube-videos reads it per request).
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
+# A build for another backend (the develop site's) passes its URL here; it
+# beats .env.production. Left empty, .env.production's URL is used as before.
+ARG API_BASE_URL_OVERRIDE=""
+RUN if [ -n "$API_BASE_URL_OVERRIDE" ]; then export NEXT_PUBLIC_API_BASE_URL="$API_BASE_URL_OVERRIDE"; fi && npm run build
 
 # ── Stage 3: runner ──────────────────────────────────────────────────────────
 FROM base AS runner

@@ -55,6 +55,7 @@ export default function EventTicketCard({ event, onNeedsRsvpModal, registeredEve
           <EventCardFooter
             event={event}
             href={href}
+            live={status === "Happening now"}
             takingRsvps={takingRsvps}
             registering={registering}
             registered={registered}

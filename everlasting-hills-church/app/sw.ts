@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import {
   Serwist,
-  NetworkOnly,
+  NetworkFirst, NetworkOnly,
   StaleWhileRevalidate,
   CacheFirst,
   ExpirationPlugin,
@@ -99,9 +99,8 @@ const runtimeCaching: RuntimeCaching[] = [
     },
   },
 
-  // ── Stale-while-revalidate, short TTL ─────────────────────────────────────
-  // Member dashboard API reads. SWR so a cold launch on a bad connection paints
-  // the last known state immediately and corrects it when the network answers.
+  // ── Network first, cache as the fallback ──────────────────────────────────
+  // Member dashboard API reads: fresh from the network, the cached copy only offline or after 4 s.
   //
   // These responses are member-specific, so the cache is keyed by user: the
   // cacheKeyWillBeUsed hook folds the current member id into the cache key,
@@ -116,8 +115,9 @@ const runtimeCaching: RuntimeCaching[] = [
       !/^\/api\/(?:backend\/)?(?:auth|login|logout|session)(?:\/|$)/.test(
         url.pathname,
       ),
-    handler: new StaleWhileRevalidate({
+    handler: new NetworkFirst({
       cacheName: MEMBER_API_CACHE,
+      networkTimeoutSeconds: 4,
       plugins: [
         {
           cacheKeyWillBeUsed: async ({ request }) => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { exportDate } from "@/lib/export-date";
 /**
  * Rasterises a chart's SVG to a PNG the user can save.
  *
@@ -78,7 +79,7 @@ function filenameFor(title: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-  return `${slug || "chart"}-${new Date().toISOString().slice(0, 10)}.png`;
+  return `${slug || "chart"}-${exportDate()}.png`;
 }
 
 /**

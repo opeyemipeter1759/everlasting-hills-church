@@ -1,5 +1,6 @@
 "use client";
 
+import { exportDate } from "@/lib/export-date";
 import { useMemo, useState } from "react";
 import { CheckCircle2, CircleDollarSign, Download, HandCoins, Loader2, PhoneCall, RefreshCw, Search, Trash2, Users } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
@@ -61,9 +62,8 @@ export function pledgesCsv(pledges: Pledge[]) {
 
 function downloadCsv(pledges: Pledge[]) {
   const url = URL.createObjectURL(new Blob([pledgesCsv(pledges)], { type: "text/csv;charset=utf-8" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `sound-media-pledges-${new Date().toISOString().slice(0, 10)}.csv`;
+  const link = Object.assign(document.createElement("a"), { href: url });
+  link.download = `sound-media-pledges-${exportDate()}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();

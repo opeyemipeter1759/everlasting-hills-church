@@ -2,12 +2,13 @@
  * Where a first-timer stands, worked out from their stage and their visits and
  * never stored. First match wins: opted out, integrated, then 3+, 2 or 1 visits.
  */
-export type PipelineStatus = 'FIRST_TIMER' | 'SECOND_TIMER' | 'THIRD_TIMER' | 'FOURTH_TIMER' | 'AWAY' | 'INTEGRATED' | 'OPTED_OUT';
+export type PipelineStatus = 'FIRST_TIMER' | 'SECOND_TIMER' | 'THIRD_TIMER' | 'FOURTH_TIMER' | 'AWAY' | 'INTEGRATED' | 'REMOTE' | 'OPTED_OUT';
 
-export const PIPELINE_STATUSES: PipelineStatus[] = ['FIRST_TIMER', 'SECOND_TIMER', 'THIRD_TIMER', 'FOURTH_TIMER', 'AWAY', 'INTEGRATED', 'OPTED_OUT'];
+export const PIPELINE_STATUSES: PipelineStatus[] = ['FIRST_TIMER', 'SECOND_TIMER', 'THIRD_TIMER', 'FOURTH_TIMER', 'AWAY', 'INTEGRATED', 'REMOTE', 'OPTED_OUT'];
 
 /** What the board may set by hand. Integrated and opted out keep their own flows (approval, Opt out). */
-export const OVERRIDE_STATUSES = ['FIRST_TIMER', 'SECOND_TIMER', 'THIRD_TIMER', 'FOURTH_TIMER', 'AWAY'] as const;
+/** REMOTE (EHC Remote Church) is only for someone integrated, and only the Integration Team sets it. */
+export const OVERRIDE_STATUSES = ['FIRST_TIMER', 'SECOND_TIMER', 'THIRD_TIMER', 'FOURTH_TIMER', 'AWAY', 'REMOTE'] as const;
 export type OverrideStatus = (typeof OVERRIDE_STATUSES)[number];
 
 export interface PipelineFilters {
@@ -27,6 +28,8 @@ export interface PipelineFilters {
   search?: string;
   /** Only people nobody has contacted yet. */
   notContacted?: boolean;
+  /** Only integrated members, including any the Integration Team has since marked Away. */
+  integrated?: boolean;
   /** A service id: only people with an account who missed that service. */
   absentFromServiceId?: string;
   /** A service id: only people with an account who were checked in at that service. */
@@ -37,8 +40,8 @@ export interface PipelineFilters {
   visitorIds?: string[];
   take?: number;
   skip?: number;
-  /** newest (first visit, newest first, the default), oldest, or name. */
-  sort?: 'newest' | 'oldest' | 'name';
+  /** newest (first visit, newest first, the default), oldest, name, or registered (newest registration first). */
+  sort?: 'newest' | 'oldest' | 'name' | 'registered';
 }
 
 export interface PipelineRow {

@@ -11,8 +11,9 @@ function joinAnd(items: Words[]): Words {
 }
 
 /** Who is still being followed up, by how many times they have come. Every figure is the API's. */
-export function rollWords(s: Pick<FollowUpSummary, "followingUp" | "firstTimers" | "secondTimers" | "thirdTimers">): Words {
-  if (s.followingUp === 0) return ["Nobody is being followed up right now."];
+export function rollWords(s: Pick<FollowUpSummary, "followingUp" | "firstTimers" | "secondTimers" | "thirdTimers">, who: "team" | "you" = "team"): Words {
+  if (s.followingUp === 0) return [who === "you" ? "Nobody is assigned to you to follow up right now." : "Nobody is being followed up right now."];
+  const lead = who === "you" ? "You are following up " : "The team is following up ";
   const groups: Words[] = (
     [
       [s.firstTimers, plural(s.firstTimers, " first timer", " first timers")],
@@ -20,8 +21,8 @@ export function rollWords(s: Pick<FollowUpSummary, "followingUp" | "firstTimers"
       [s.thirdTimers, plural(s.thirdTimers, " third timer", " third timers")],
     ] as [number, string][]
   ).filter(([n]) => n > 0);
-  if (groups.length === 1) return ["The team is following up ", ...groups[0], "."];
-  return ["The team is following up ", s.followingUp, plural(s.followingUp, " person", " people"), ": ", ...joinAnd(groups), "."];
+  if (groups.length === 1) return [lead, ...groups[0], "."];
+  return [lead, s.followingUp, plural(s.followingUp, " person", " people"), ": ", ...joinAnd(groups), "."];
 }
 
 /** What needs doing this week, among the people still being followed up. */
@@ -36,4 +37,12 @@ export function weekWords(w: NonNullable<FollowUpSummary["thisWeek"]>): Words {
     w.quiet > 0 ? [w.quiet, plural(w.quiet, " has had no activity logged in the past week", " have had no activity logged in the past week")] : [],
   ].filter((clause) => clause.length > 0);
   return [...joinAnd(clauses), "."];
+}
+
+/** A team member's own week: who is still waiting for them, and what they have logged this month. */
+export function myWords(m: { waitingFirstContact: number; contactsThisMonth: number }): Words {
+  const waiting: Words = m.waitingFirstContact > 0
+    ? [m.waitingFirstContact, plural(m.waitingFirstContact, " is still waiting for your first contact", " are still waiting for your first contact")]
+    : ["Everyone has had a first contact from you"];
+  return [...waiting, ", and you have logged ", m.contactsThisMonth, plural(m.contactsThisMonth, " contact", " contacts"), " this month."];
 }

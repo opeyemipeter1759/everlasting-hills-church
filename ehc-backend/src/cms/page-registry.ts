@@ -40,6 +40,7 @@ export const PAGE_REGISTRY: PageDef[] = [
   { key: 'ministries/couples', title: "Couple's Ministry", route: '/ministries/couples', group: 'Ministries', editor: 'structured', contentType: 'ministryCouples' },
   { key: 'sermons', title: 'Sermons (library header)', route: '/sermons', group: 'Sermons', editor: 'structured', contentType: 'sermonsIntro' },
   { key: 'events', title: 'Events (intro copy)', route: '/events', group: 'Events', editor: 'structured', contentType: 'eventsIntro' },
+  { key: 'picnic', title: 'Picnic', route: '/picnic', group: 'Events', editor: 'structured', contentType: 'picnic' },
 
   { key: 'visit', title: 'Plan a Visit', route: '/visit', group: 'Visit', editor: 'structured', contentType: 'visit' },
   { key: 'contact', title: 'Contact', route: '/contact', group: 'Contact', editor: 'structured', contentType: 'contact' },

@@ -31,6 +31,8 @@ export function hasValidFileSignature(file: UploadLike): boolean {
         ascii(buffer, 4, 8) === 'ftyp' &&
         /heic|heix|hevc|hevx|heim|heis|hevm|hevs|mif1|msf1/.test(ascii(buffer, 8, 32))
       );
+    case 'image/tiff':
+      return startsWith(buffer, [0x49, 0x49, 0x2a, 0x00]) || startsWith(buffer, [0x4d, 0x4d, 0x00, 0x2a]);
     case 'application/pdf':
       return ascii(buffer, 0, 5) === '%PDF-';
     case 'application/msword':

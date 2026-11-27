@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
-import { NavGrantType, Role } from '@prisma/client';
+import { NavGrantAccess, NavGrantType, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
@@ -19,6 +19,7 @@ export interface NavPermissionGrantEntry {
   itemHref: string;
   type: NavGrantType;
   targetId: string;
+  access: NavGrantAccess;
   /** Member full name (MEMBER) or unit name (UNIT_MEMBER/UNIT_LEAD) — null if the referenced row was deleted after the grant was made. */
   name: string | null;
   photoUrl: string | null;
@@ -117,6 +118,7 @@ export class NavPermissionsService {
           itemHref: row.itemHref,
           type: row.type,
           targetId: row.targetId,
+          access: row.access,
           name: member ? `${member.firstName} ${member.lastName}` : null,
           photoUrl: member?.photoUrl ?? null,
         };
@@ -127,6 +129,7 @@ export class NavPermissionsService {
         itemHref: row.itemHref,
         type: row.type,
         targetId: row.targetId,
+        access: row.access,
         name: unit?.name ?? null,
         photoUrl: null,
       };
@@ -141,10 +144,10 @@ export class NavPermissionsService {
       });
       if (!member) throw new BadRequestException('No member found for that person');
       const row = await this.prisma.navPermissionGrant.create({
-        data: { id: randomUUID(), tenantId: this.tenantId, itemHref: dto.itemHref, type: dto.type, targetId: dto.targetId },
+        data: { id: randomUUID(), tenantId: this.tenantId, itemHref: dto.itemHref, type: dto.type, targetId: dto.targetId, access: dto.access ?? NavGrantAccess.FULL },
       });
     this.pageAccess.invalidate();
-      return { id: row.id, itemHref: row.itemHref, type: row.type, targetId: row.targetId, name: `${member.firstName} ${member.lastName}`, photoUrl: member.photoUrl };
+      return { id: row.id, itemHref: row.itemHref, type: row.type, targetId: row.targetId, access: row.access, name: `${member.firstName} ${member.lastName}`, photoUrl: member.photoUrl };
     }
 
     const unit = await this.prisma.unit.findFirst({
@@ -153,10 +156,18 @@ export class NavPermissionsService {
     });
     if (!unit) throw new BadRequestException('No unit found for that selection');
     const row = await this.prisma.navPermissionGrant.create({
-      data: { id: randomUUID(), tenantId: this.tenantId, itemHref: dto.itemHref, type: dto.type, targetId: dto.targetId },
+      data: { id: randomUUID(), tenantId: this.tenantId, itemHref: dto.itemHref, type: dto.type, targetId: dto.targetId, access: dto.access ?? NavGrantAccess.FULL },
     });
     this.pageAccess.invalidate();
-    return { id: row.id, itemHref: row.itemHref, type: row.type, targetId: row.targetId, name: unit.name, photoUrl: null };
+    return { id: row.id, itemHref: row.itemHref, type: row.type, targetId: row.targetId, access: row.access, name: unit.name, photoUrl: null };
+  }
+
+  /** Switch a grant between view only and full access. */
+  async setGrantAccess(id: string, access: NavGrantAccess): Promise<{ id: string; access: NavGrantAccess }> {
+    const { count } = await this.prisma.navPermissionGrant.updateMany({ where: { id, tenantId: this.tenantId }, data: { access } });
+    if (count === 0) throw new NotFoundException('Grant not found');
+    this.pageAccess.invalidate();
+    return { id, access };
   }
 
   async removeGrant(id: string): Promise<void> {
@@ -172,8 +183,10 @@ export class NavPermissionsService {
    * `unitLeadOf` comes straight off the already-resolved AuthUser, so no
    * extra lookup is needed for the lead case.
    */
-  getGrantedHrefsForActor(actor: AuthUser): Promise<string[]> {
-    return this.pageAccess.getGrantedHrefsForActor(actor);
+  async getGrantedHrefsForActor(actor: AuthUser): Promise<{ hrefs: string[]; viewOnly: string[] }> {
+    const grants = await this.pageAccess.getGrantsForActor(actor);
+    const hrefs = Array.from(grants.keys());
+    return { hrefs, viewOnly: hrefs.filter((href) => grants.get(href) === NavGrantAccess.VIEW) };
   }
 
 }

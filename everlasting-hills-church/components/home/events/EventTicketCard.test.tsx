@@ -97,4 +97,30 @@ describe("EventTicketCard", () => {
       "/events/special",
     );
   });
+  describe("Watch live", () => {
+    // Furnace starts 2026-10-02 05:00 UTC; with no end it counts as on for two hours.
+    afterEach(() => vi.useRealTimers());
+    const at = (iso: string) => vi.useFakeTimers({ toFake: ["Date"] }).setSystemTime(new Date(iso));
+
+    it("shows Watch live, to the event's own stream, while the event is on", async () => {
+      at("2026-10-02T05:30:00.000Z");
+      renderCard({ liveUrl: "https://youtube.com/live/abc" });
+      const link = await screen.findByRole("link", { name: /watch live/i });
+      expect(link).toHaveAttribute("href", "https://youtube.com/live/abc");
+      expect(screen.queryByRole("button", { name: /register/i })).toBeNull();
+    });
+
+    it("sends people to the church's live page when the event has no stream link", async () => {
+      at("2026-10-02T06:00:00.000Z");
+      renderCard({ liveUrl: null });
+      expect(await screen.findByRole("link", { name: /watch live/i })).toHaveAttribute("href", "https://www.youtube.com/@everlastinghillschurch/live");
+    });
+
+    it("keeps the usual action before the event starts, even with a stream link", () => {
+      at("2026-10-01T12:00:00.000Z");
+      renderCard({ liveUrl: "https://youtube.com/live/abc" });
+      expect(screen.queryByRole("link", { name: /watch live/i })).toBeNull();
+      expect(screen.getByRole("button", { name: /register/i })).toBeInTheDocument();
+    });
+  });
 });

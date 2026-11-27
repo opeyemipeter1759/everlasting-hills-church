@@ -77,8 +77,8 @@ maybe('Approvals against Postgres', () => {
 
   it('only the assignee or an admin may ask', async () => {
     const visitorId = await firstTimer('Bola');
-    await expect(svc.approvals.request(fx.actor(outsider), { visitorId })).rejects.toBeInstanceOf(ForbiddenException);
-    await expect(svc.approvals.request(fx.actor(admin, { roles: [Role.ADMIN] }), { visitorId })).resolves.toMatchObject({ latest: { status: 'PENDING' } });
+    await expect(svc.approvals.request(fx.actor(outsider), { visitorId, note: 'Ready' })).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(svc.approvals.request(fx.actor(admin, { roles: [Role.ADMIN] }), { visitorId, note: 'Ready' })).resolves.toMatchObject({ latest: { status: 'PENDING' } });
   });
 
   it('two decisions at the same moment: exactly one wins, and only it leaves an event', async () => {

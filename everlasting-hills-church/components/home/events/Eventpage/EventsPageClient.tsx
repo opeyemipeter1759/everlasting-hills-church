@@ -42,13 +42,21 @@ export default function EventsPageClient({ ongoing, upcoming, past, hero }: Even
         {events.length === 0 ? (
           <EventsEmptyState tab={tab} />
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          // Same grid as the homepage spotlight: one column until md, roomier gaps,
+          // and a third column only once there are three or more events.
+          <div
+            className={`grid grid-cols-1 gap-6 lg:gap-8 ${
+              events.length >= 3 ? "md:grid-cols-2 lg:grid-cols-3" : "md:grid-cols-2"
+            }`}
+          >
             {events.map((event) => (
               <EventTicketCard
                 key={event.id}
                 event={event}
                 onNeedsRsvpModal={() => setRsvpModalEvent(event)}
                 registeredEvents={registeredEvents}
+                // Same card as the homepage: identical type sizes, weights, banner and padding.
+                compact
               />
             ))}
           </div>

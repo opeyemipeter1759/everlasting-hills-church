@@ -41,10 +41,17 @@ describe("the first-timer table, by who is looking", () => {
     expect(screen.getByRole("button", { name: /delete ada/i })).toBeTruthy();
   });
 
-  it("lets the First Timer Team edit, but not make accounts or delete", () => {
-    table(TEAM_MODE);
+  it("lets the First Timer Team's lead edit, but not make accounts or delete", () => {
+    table({ ...TEAM_MODE, canEdit: true });
     expect(screen.getByRole("button", { name: /edit ada/i })).toBeTruthy();
     expect(screen.queryByRole("button", { name: /create account/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /delete ada/i })).toBeNull();
+  });
+
+  it("leaves the rest of the First Timer Team reading, with no Edit", () => {
+    table(TEAM_MODE);
+    expect(screen.queryByRole("columnheader", { name: "Action" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /edit ada/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /delete ada/i })).toBeNull();
   });
 });

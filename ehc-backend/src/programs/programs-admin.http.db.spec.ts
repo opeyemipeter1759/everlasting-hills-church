@@ -138,7 +138,7 @@ maybe('Programs manager API against Postgres', () => {
     revalidate.trigger.mockClear();
     expect((await admin().post(`/programs/${id}/publish`).expect(200)).body.data.status).toBe('PUBLISHED');
     expect((await admin().post(`/programs/${id}/archive`).expect(200)).body.data.status).toBe('ARCHIVED');
-    expect(revalidate.trigger).toHaveBeenCalledWith([`programs:${tenantId}`], ['/programs']);
+    expect(revalidate.trigger).toHaveBeenCalledWith(['programs', `programs:${tenantId}`], ['/programs']);
     expect(await prisma.auditLog.count({ where: { tenantId, entity: 'Program', entityId: id, action: { in: ['PUBLISH', 'ARCHIVE'] } } })).toBe(2);
     await admin().post(`/programs/${id}/publish`).expect(200);
     await admin().del(`/programs/${id}`).expect(409);

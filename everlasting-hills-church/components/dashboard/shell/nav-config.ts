@@ -1,9 +1,7 @@
 import {
-  LayoutDashboard,
-  User,
-  CheckCircle,
-  Heart,
-  MessageSquare,
+  Repeat, LayoutDashboard,
+  User, CheckCircle,
+  Heart, MessageSquare,
   Users,
   UserPlus,
   Calendar,
@@ -33,7 +31,7 @@ import {
   HandCoins,
   ClipboardCheck,
   Award,
-  Sunrise,
+  Sunrise, Gift,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -75,9 +73,8 @@ export const NAV_GROUPS: NavGroup[] = [
       // should not have to know it lives behind Sermons.
       { label: "Sermons",         href: "/dashboard/sermon",           icon: Headphones,      minRole: "MEMBER" },
       { label: "Bible Plan",      href: "/dashboard/reading",          icon: BookOpen,        minRole: "MEMBER" },
-      // Member-written articles: what people are learning, published to the
-      // church. It sits beside the reading plan because that is where most of
-      // them start.
+      // Member-written articles, published to the church. Beside the reading
+      // plan because that is where most of them start.
       { label: "Articles",        href: "/dashboard/articles",         icon: Newspaper,       minRole: "MEMBER" },
       { label: "Books",           href: "/dashboard/books",            icon: Library,         minRole: "MEMBER" },
       { label: "Notifications",   href: "/dashboard/settings/notifications", icon: Bell,      minRole: "MEMBER" },
@@ -119,12 +116,14 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/admin/events",        icon: CalendarDays,  minRole: "ADMIN" },
+      { label: "Picnic & Gift Exchange", href: "/dashboard/admin/gift-exchange", icon: Gift, minRole: "ADMIN" },
       { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },
       // The queue already existed, reachable only from a tab inside Articles.
       { label: "Article Approvals", href: "/dashboard/articles/review", icon: ClipboardCheck, minRole: "ADMIN" },
       { label: "Articles",      href: "/dashboard/admin/articles",     icon: Newspaper,     minRole: "ADMIN" },
       { label: "Books",         href: "/dashboard/admin/books",   icon: Library,       minRole: "ADMIN" },
       { label: "Gatherings",    href: "/dashboard/admin/gatherings", icon: CalendarClock, minRole: "ADMIN" },
+      { label: "Programs",      href: "/dashboard/admin/programs",   icon: Repeat,        minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory", icon: Package,     minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",   icon: Network,       minRole: "ADMIN" },
       // The Roles page existed with no way in but the URL — the third screen in

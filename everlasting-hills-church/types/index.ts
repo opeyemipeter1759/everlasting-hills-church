@@ -1,4 +1,6 @@
 import { UserRole } from "@/config/config";
+export * from "./events";
+import type { EventSummary } from "./events";
 
 export type VideoCategory =
   | "Sunday"
@@ -249,36 +251,6 @@ export type EventSection =
       introduction?: string;
       actions: { heading: string; body?: string; buttonLabel: string; url?: string; note?: string }[];
     }>;
-
-/** Slim shape returned by GET /events (public index). */
-export interface EventSummary {
-  id: string;
-  slug: string;
-  title: string;
-  tagline: string | null;
-  theme: string | null;
-  shortDescription: string | null;
-  startAt: string;
-  endAt: string | null;
-  timezone: string;
-  locationType: EventLocationType;
-  venueName: string | null;
-  flyerImageUrl: string | null;
-  coverImageUrl: string | null;
-  heroImageUrl: string | null;
-  socialImageUrl: string | null;
-  liveUrl: string | null;
-  registrationUrl: string | null;
-  primaryCtaLabel: string | null;
-  primaryCtaUrl: string | null;
-  featured: boolean;
-  customPath: string | null;
-  /** Whether this event is taking RSVPs at all. Cards must not offer to
-   * register somebody for an event that was never accepting them. */
-  rsvpEnabled: boolean;
-  registrationRequired: boolean;
-  Schedules: EventSchedule[];
-}
 
 /** Full event returned by GET /events/:slug and the admin endpoints. */
 export interface EventDetail extends EventSummary {

@@ -9,6 +9,12 @@ const CUSTOM_EDITORS: Record<string, string> = {
   home: "/dashboard/settings/homepage",
 };
 
+// Parts of a page edited in the CMS's own editor when its main Edit goes elsewhere:
+// the homepage's hero and sections live in site settings, its Set Man section here.
+const EXTRA_EDITORS: Record<string, { label: string; href: string }> = {
+  home: { label: "Edit Set Man", href: "/dashboard/cms/pages/home" },
+};
+
 function StatusBadge({ row }: { row: CmsPageRow }) {
   if (row.published) {
     return (
@@ -90,6 +96,11 @@ export default function CmsPagesOverview() {
                   >
                     <Pencil size={12} /> Edit
                   </Link>
+                  {EXTRA_EDITORS[row.key] && (
+                    <Link href={EXTRA_EDITORS[row.key].href} className="inline-flex items-center gap-1 text-xs font-semibold text-[#87102C] dark:text-[#e8768a] hover:underline">
+                      <Pencil size={12} /> {EXTRA_EDITORS[row.key].label}
+                    </Link>
+                  )}
                   <a
                     href={row.route}
                     target="_blank"

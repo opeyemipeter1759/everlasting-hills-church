@@ -12,6 +12,7 @@ export const STATUS_DOT: Record<MasterListStatus, string> = {
   FOURTH_TIMER: "bg-cyan-500",
   INTEGRATED: "bg-emerald-500",
   AWAY: "bg-amber-500",
+  REMOTE: "bg-teal-500",
   OPTED_OUT: "bg-gray-400",
 };
 
@@ -22,6 +23,7 @@ export const STATUS_OPTIONS: { value: MasterListStatus; label: string; swatch: s
   { value: "FOURTH_TIMER", label: "Fourth timer", swatch: STATUS_DOT.FOURTH_TIMER },
   { value: "INTEGRATED", label: "Integrated", swatch: STATUS_DOT.INTEGRATED },
   { value: "AWAY", label: "Away", swatch: STATUS_DOT.AWAY },
+  { value: "REMOTE", label: "EHC Remote Church", swatch: STATUS_DOT.REMOTE },
   { value: "OPTED_OUT", label: "Opted out", swatch: STATUS_DOT.OPTED_OUT },
 ];
 
@@ -32,9 +34,9 @@ export const STATUS_OPTIONS: { value: MasterListStatus; label: string; swatch: s
 export function statusOptionsFor(scope?: "FOLLOW_UP" | "INTEGRATION" | "OPTED_OUT" | "ALL") {
   const filterable = STATUS_OPTIONS.filter((option) => option.value !== "OPTED_OUT");
   if (scope === "OPTED_OUT") return [];
-  if (scope === "FOLLOW_UP") return filterable.filter((option) => option.value !== "INTEGRATED");
+  if (scope === "FOLLOW_UP") return filterable.filter((option) => option.value !== "INTEGRATED" && option.value !== "REMOTE");
   if (scope === "INTEGRATION") {
-    return filterable.filter((option) => option.value === "INTEGRATED" || option.value === "AWAY");
+    return filterable.filter((option) => option.value === "INTEGRATED" || option.value === "AWAY" || option.value === "REMOTE");
   }
   return filterable;
 }

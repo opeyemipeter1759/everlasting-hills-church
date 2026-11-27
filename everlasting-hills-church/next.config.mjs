@@ -29,8 +29,22 @@ const withSerwist = withSerwistInit({
   exclude: [/\.(?:mp3|m4a|aac|ogg|wav|mp4|webm|m3u8)$/i, /\/_next\/static\/media\/.*\.(mp3|mp4)$/i],
 });
 
+/**
+ * One id per build, known to both the server and the browser, so an open app
+ * can tell when a newer version has been deployed (see VersionWatcher).
+ */
+const BUILD_ID = process.env.BUILD_ID || process.env.K_REVISION || String(Date.now());
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  generateBuildId: async () => BUILD_ID,
+  env: { NEXT_PUBLIC_BUILD_ID: BUILD_ID },
+  // `next dev` gets its own build folder. In Next 14 dev and `next build` both
+  // write to .next, so building (or `npm start`) while dev is running corrupts
+  // each other's output — stale pages, missing chunks, "works in dev, not in
+  // start". Separate folders let both run side by side.
+  distDir: process.env.NODE_ENV === "development" ? ".next-dev" : ".next",
+
   // Whitelist external image hosts so <Image /> can load them in production.
   // Wildcards are required because Cloudflare R2 public URLs use per-bucket subdomains
   // (pub-XXXX.r2.dev) and Supabase storage uses per-project subdomains.
@@ -44,6 +58,8 @@ const nextConfig = {
       // YouTube thumbnails (if videoUrl points at YouTube)
       { protocol: "https", hostname: "i.ytimg.com" },
       { protocol: "https", hostname: "img.youtube.com" },
+      // Unsplash photography (picnic page) — free licence, hotlinked as Unsplash asks.
+      { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
 

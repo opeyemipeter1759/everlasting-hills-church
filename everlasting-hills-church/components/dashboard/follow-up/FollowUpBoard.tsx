@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FollowUpHeader } from "./FollowUpHeader";
 import { FollowUpTabs, TABS_BOTTOM_SPACE } from "./FollowUpTabs";
 import { useFollowUpTabs, type FollowUpTab } from "./useFollowUpTabs";
@@ -16,17 +17,34 @@ import OverviewYear from "./v2/overview/OverviewYear";
  * Master list, your caseload on Assigned to me, the opted out on Opted out.
  */
 export default function FollowUpBoard() {
+  return (
+    <Suspense fallback={null}>
+      <Board />
+    </Suspense>
+  );
+}
+
+function Board() {
   const tabs = useFollowUpTabs();
   const summary = useFollowUpSummary();
-  const [active, setActive] = useState<FollowUpTab>("master");
+  // The open tab lives in the address (?tab=mine), so Back from a profile returns to it.
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const picked = (params.get("tab") as FollowUpTab | null) ?? "master";
+  const setActive = (tab: FollowUpTab) => {
+    const q = new URLSearchParams(params.toString());
+    q.set("tab", tab);
+    router.replace(`${pathname}?${q}`, { scroll: false });
+  };
+  // A tab the viewer doesn't get falls back to their first, without being
+  // remembered, so a lead whose access is still loading still lands on the Master list.
+  const active = tabs.some((tab) => tab.id === picked) ? picked : (tabs[0]?.id ?? "mine");
 
   // Report is a write-up, not a list, so it carries no count. While the
   // figures load there are no counts at all: a badge reading 0 would be read
   // as "none", which is a different thing from "not known yet".
   const counts = summary.isLoading ? {} : { master: summary.total, mine: summary.assignedToMe, optedOut: summary.optedOut };
-  useEffect(() => {
-    if (tabs.length > 0 && !tabs.some((tab) => tab.id === active)) setActive(tabs[0].id);
-  }, [tabs, active]);
 
   return (
     <div className={`space-y-4 md:px-5 ${TABS_BOTTOM_SPACE}`}>

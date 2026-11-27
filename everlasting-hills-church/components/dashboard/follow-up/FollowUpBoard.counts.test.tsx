@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import FollowUpBoard from "./FollowUpBoard";
@@ -25,6 +25,13 @@ vi.mock("./useFollowUpTabs", () => ({
   ],
 }));
 vi.mock("./FollowUpHeader", () => ({ FollowUpHeader: () => null }));
+// The open tab lives in the address: ?tab= is read from here, and replaced on a tap.
+const nav = vi.hoisted(() => ({ query: "", replace: vi.fn() }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: nav.replace }),
+  usePathname: () => "/dashboard/membership-assimilation/u1",
+  useSearchParams: () => new URLSearchParams(nav.query),
+}));
 vi.mock("./MasterListPipeline", () => ({ default: () => null }));
 vi.mock("./AssignedToMe", () => ({ default: () => null }));
 vi.mock("./FollowUpReport", () => ({ FollowUpReport: () => null }));
@@ -45,5 +52,27 @@ describe("the Follow Up tab badges", () => {
     expect(badge("Master list")).toBe(Object.values(counts.byStatus).reduce((n, c) => n + c, 0));
     expect(badge("Assigned to me")).toBe(counts.assignedToMe);
     expect(badge("Opted out")).toBe(counts.byStatus.OPTED_OUT);
+  });
+});
+
+describe("the open Follow Up tab", () => {
+  const board = () =>
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <FollowUpBoard />
+      </QueryClientProvider>,
+    );
+
+  it("comes back from the address, so Back from a profile returns to Assigned to me", () => {
+    nav.query = "tab=mine";
+    board();
+    expect(screen.getByRole("tab", { name: /Assigned to me/ }).getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("is written to the address when picked", () => {
+    nav.query = "";
+    board();
+    fireEvent.click(screen.getByRole("tab", { name: /Assigned to me/ }));
+    expect(nav.replace).toHaveBeenCalledWith("/dashboard/membership-assimilation/u1?tab=mine", { scroll: false });
   });
 });
