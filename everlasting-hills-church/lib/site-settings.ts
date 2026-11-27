@@ -467,7 +467,7 @@ export const SETMAN_FALLBACK: SetmanContent = {
   name: "Pastor [Lead Name]",
   title: "Set Man, Everlasting Hills Church",
   photo: null,
-  cta: { label: "Meet our pastors", href: "/Pastor" },
+  cta: { label: "Meet our pastors", href: "/pastor" },
 };
 
 const FALLBACKS: SiteSettingsMap = {
