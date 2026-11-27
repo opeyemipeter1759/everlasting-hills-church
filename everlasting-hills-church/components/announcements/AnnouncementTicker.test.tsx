@@ -29,7 +29,7 @@ describe("the announcements strip on the dashboard", () => {
 
   it("scrolls at the same reading speed however many there are", () => {
     const { container } = render(<AnnouncementTicker announcements={[...items, { id: "a3", title: "T", body: "", createdAt: at }]} />);
-    const track = container.querySelector(".motion-safe\\:animate-marquee") as HTMLElement;
+    const track = container.querySelector(".animate-marquee") as HTMLElement;
     expect(track.style.animationDuration).toBe("27s");
   });
 });

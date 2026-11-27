@@ -12,8 +12,10 @@ const SECONDS_EACH = 9;
 /**
  * The announcements as a strip scrolling like a shop's sale banner: a card at
  * the top of the dashboard, or a bar across the whole screen on the homepage. It pauses under the pointer or keyboard focus, and tapping
- * one opens it in full. With reduced motion it stands still and scrolls sideways
- * by hand. Nothing shows when there are no announcements.
+ * one opens it in full. It scrolls on every device, including ones set to reduce
+ * motion (Windows with animation effects off, phones with "Remove animations"),
+ * where it used to stand still; it is slow, text-only and stops on hover, focus
+ * or touch. Nothing shows when there are no announcements.
  */
 export function AnnouncementTicker({ announcements, variant = "card" }: { announcements: Announcement[]; variant?: "card" | "bar" }) {
   const [open, setOpen] = useState<Announcement | null>(null);
@@ -50,14 +52,14 @@ export function AnnouncementTicker({ announcements, variant = "card" }: { announ
           <span className="md:hidden">Info</span>
           <span className="hidden md:inline">Announcements</span>
         </span>
-        <div className="relative min-w-0 flex-1 overflow-x-auto no-scrollbar motion-safe:overflow-hidden">
+        <div className="relative min-w-0 flex-1 overflow-hidden">
           <div
-            className="flex w-max items-center py-2.5 motion-safe:animate-marquee group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused]"
+            className="flex w-max items-center py-2.5 animate-marquee group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused] group-active:[animation-play-state:paused]"
             style={{ animationDuration: `${Math.max(20, announcements.length * SECONDS_EACH)}s` }}
           >
             {announcements.map((a) => item(a, 0))}
             {/* A second copy, so the loop runs on without a gap (the animation slides exactly half way). */}
-            <span className="hidden motion-safe:contents">{announcements.map((a) => item(a, 1))}</span>
+            <span className="contents">{announcements.map((a) => item(a, 1))}</span>
           </div>
         </div>
       </section>

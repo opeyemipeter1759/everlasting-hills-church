@@ -65,6 +65,13 @@ export default function MemberHome(props: MemberHomePropsOptional) {
 
   return (
     <div className="max-w-full space-y-5">
+      {/* Fixed like the top bar: it sticks right under it (h-16) while the page scrolls, flush
+          against the sidebar. The negative margins cancel <main>'s padding. Below the top bar's
+          z-30 so its menus open over the strip. */}
+      <div className="sticky top-16 z-20 -mx-4 -mt-4 empty:hidden sm:-mx-6 sm:-mt-6">
+        <AnnouncementTicker announcements={announcements} variant="bar" />
+      </div>
+
       {/* Notices: only shown when there is something to act on. */}
       <div className="space-y-3 empty:hidden">
         <ProfileCompletionToast member={member} />
@@ -72,8 +79,6 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         <SpouseRequestsInbox />
         <PushOptInCard />
       </div>
-
-      <AnnouncementTicker announcements={announcements} />
 
       <WelcomeHero
         firstName={firstName}
